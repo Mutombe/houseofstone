@@ -6,8 +6,8 @@ from .settings import BASE_DIR
 # SECURITY SETTINGS
 ALLOWED_HOSTS = [
     os.environ.get('RENDER_EXTERNAL_HOSTNAME'),
-    'auto-eden-backend.onrender.com',
-    'auto-eden.onrender.com',
+    'houseofstone-backend.onrender.com',
+    'houseofstone.onrender.com',
 ]
 
 DEBUG = False
@@ -15,8 +15,8 @@ SECRET_KEY = SECRET_KEY
 
 # CORS SETTINGS
 CORS_ALLOWED_ORIGINS = [
-    'https://auto-eden.onrender.com',
-    'https://www.auto-eden.onrender.com'
+    'https://houseofstone.onrender.com',
+    'https://www.houseofstone.onrender.com'
     'http://localhost:5173',
 ]
 
@@ -51,8 +51,8 @@ CORS_EXPOSE_HEADERS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://auto-eden.onrender.com',
-    'https://auto-eden-backend.onrender.com'
+    'https://houseofstone.onrender.com',
+    'https://houseofstone-backend.onrender.com/'
 ]
 
 # MIDDLEWARE CONFIGURATION
