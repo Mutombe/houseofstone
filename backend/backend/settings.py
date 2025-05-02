@@ -1,5 +1,7 @@
 from datetime import timedelta
 from pathlib import Path
+import os
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -104,6 +106,21 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
+
+CELERY_BEAT_SCHEDULE = {
+    'check-property-alerts': {
+        'task': 'your_app.tasks.check_property_alerts',
+        'schedule': crontab(hour=8, minute=0),  # Daily at 8 AM
+    },
+}
+
+# For Celery
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_TIMEZONE = 'UTC'
+
+# For sharing links
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
 
 AUTHENTICATION_BACKENDS = [
    'django.contrib.auth.backends.ModelBackend',

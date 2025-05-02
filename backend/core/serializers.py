@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User  
-from .models import Profile
+from .models import BlogPost, Profile, Property, Neighborhood, SavedSearch, FavoriteProperty, Inquiry, PropertyImage, PropertyAlert
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from decimal import Decimal
 
@@ -59,3 +60,54 @@ class ProfileSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+    
+class PropertyImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PropertyImage
+        fields = ['image', 'caption']
+
+class PropertySerializer(serializers.ModelSerializer):
+    images = PropertyImageSerializer(many=True, read_only=True)
+    agent = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = Property
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at']
+
+class NeighborhoodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Neighborhood
+        fields = '__all__'
+
+class SavedSearchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SavedSearch
+        fields = '__all__'
+        read_only_fields = ['user', 'created_at']
+
+class FavoritePropertySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoriteProperty
+        fields = '__all__'
+        read_only_fields = ['user', 'created_at']
+
+class InquirySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Inquiry
+        fields = '__all__'
+        read_only_fields = ['user', 'created_at']
+
+class BlogPostSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+
+    class Meta:
+        model = BlogPost
+        fields = '__all__'
+        read_only_fields = ['created_at']
+
+class PropertyAlertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PropertyAlert
+        fields = '__all__'
+        read_only_fields = ['user', 'created_at']
