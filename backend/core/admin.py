@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Profile, Inquiry, Property, Neighborhood, SavedSearch, FavoriteProperty, PropertyImage
+from .models import Profile, Inquiry, Property, Neighborhood, SavedSearch, FavoriteProperty, PropertyImage, PropertyAlert, BlogPost, PropertyInteraction, AdminActionLog
+from django.contrib.auth.models import User
 
 class AdminProfileOverview(admin.ModelAdmin):
     list_display = (
@@ -47,7 +48,6 @@ class AdminProperty(admin.ModelAdmin):
     )
 
     ordering = ("-created_at",)
-    prepopulated_fields = {"id": ("title",)}
 
 class AdminNeighborhood(admin.ModelAdmin):
     list_display = (
@@ -105,6 +105,52 @@ class AdminPropertyImage(admin.ModelAdmin):
         "property",
     )
 
+class AdminPropertyAlert(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "search_parameters",
+        "is_active",
+        "created_at",
+    )
+    search_fields = (
+        "user__username",
+    )
+    list_filter = (
+        "is_active",
+        "created_at",
+    )
+
+class AdminBlogPost(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "author",
+        "created_at",
+    )
+    search_fields = (
+        "title",
+        "author__username",
+    )
+    list_filter = (
+        "created_at",
+    )
+
+class AdminActionLogOverview(admin.ModelAdmin):
+    list_display = (
+        "admin",
+        "action_type",
+        "target_user",
+        "timestamp",
+    )
+    search_fields = (
+        "admin__username",
+        "target_user__username",
+    )
+    list_filter = (
+        "action_type",
+        "timestamp",
+    )
+
+    ordering = ("-timestamp",)
 
 
 admin.site.register(Profile, AdminProfileOverview)
@@ -114,3 +160,7 @@ admin.site.register(Neighborhood, AdminNeighborhood)
 admin.site.register(SavedSearch, AdminSavedSearch)
 admin.site.register(FavoriteProperty, AdminFavoriteProperty)
 admin.site.register(PropertyImage, AdminPropertyImage)
+admin.site.register(PropertyAlert, AdminPropertyAlert)
+admin.site.register(BlogPost, AdminBlogPost)    
+admin.site.register(PropertyInteraction)
+admin.site.register(AdminActionLog, AdminActionLogOverview)

@@ -89,3 +89,37 @@ class PropertyShare(models.Model):
     share_token = models.UUIDField(default=uuid.uuid4, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
+
+# models.py
+class PropertyInteraction(models.Model):
+    INTERACTION_TYPES = [
+        ('view', 'View'),
+        ('favorite', 'Favorite'),
+        ('share', 'Share'),
+        ('inquiry', 'Inquiry')
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)  # Null for anonymous
+    property = models.ForeignKey(Property, on_delete=models.CASCADE)
+    interaction_type = models.CharField(max_length=20, choices=INTERACTION_TYPES)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    session_key = models.CharField(max_length=40, blank=True)  # For anonymous users
+
+class AdminActionLog(models.Model):
+    ACTION_TYPES = [
+        ('user_modified', 'User Modified'),
+        ('content_deleted', 'Content Deleted'),
+        ('permission_changed', 'Permission Changed'),
+        ('system_config', 'System Configuration Changed'),
+    ]
+    
+    admin = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    action_type = models.CharField(max_length=50, choices=ACTION_TYPES)
+    target_user = models.ForeignKey(User, null=True, blank=True, 
+                                   on_delete=models.SET_NULL, related_name='admin_actions')
+    details = models.JSONField(default=dict)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.admin} performed {self.action_type} at {self.timestamp}"

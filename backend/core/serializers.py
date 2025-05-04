@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User  
-from .models import BlogPost, Profile, Property, Neighborhood, SavedSearch, FavoriteProperty, Inquiry, PropertyImage, PropertyAlert
+from .models import BlogPost, Profile, Property, Neighborhood, SavedSearch, FavoriteProperty, Inquiry, PropertyImage, PropertyAlert, AdminActionLog
+from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from decimal import Decimal
@@ -111,3 +112,11 @@ class PropertyAlertSerializer(serializers.ModelSerializer):
         model = PropertyAlert
         fields = '__all__'
         read_only_fields = ['user', 'created_at']
+
+class AdminActionLogSerializer(serializers.ModelSerializer):
+    admin = UserSerializer(read_only=True)
+    target_user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = AdminActionLog
+        fields = '__all__'

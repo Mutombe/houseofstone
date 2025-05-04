@@ -2,6 +2,7 @@ from datetime import timedelta, timezone
 from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from django.contrib.auth.hashers import make_password
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
@@ -10,7 +11,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
-from .serializers import BlogPostSerializer, PropertyAlertSerializer, UserSerializer, ProfileSerializer
+from .serializers import AdminActionLogSerializer, BlogPostSerializer, PropertyAlertSerializer, UserSerializer, ProfileSerializer
 from .models import BlogPost, Profile, PropertyAlert, PropertyShare
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -18,9 +19,16 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db import transaction
 from rest_framework import viewsets
-from .models import Property, PropertyImage, SavedSearch, FavoriteProperty, Neighborhood, Inquiry
+from .models import Property, PropertyImage, SavedSearch, FavoriteProperty, Neighborhood, Inquiry, PropertyInteraction, AdminActionLog
+from django.db.models import Q, F
+from django.db.models.functions import TruncHour
+from django.db.models import CharField, Value, Case, When
 from .serializers import PropertySerializer, NeighborhoodSerializer, SavedSearchSerializer, FavoritePropertySerializer, InquirySerializer
 from django.core.exceptions import ValidationError
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend
+
 class RegisterView(APIView):
     permission_classes = [AllowAny]
     
@@ -188,7 +196,7 @@ class PropertyShareRedirect(APIView):
         serializer = PropertySerializer(share.property)
         return Response(serializer.data)
     
-class PropertyRecommendationView(APIView):
+class PropertyRecommendationViews(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -210,18 +218,133 @@ class PropertyRecommendationView(APIView):
         
         serializer = PropertySerializer(recommendations[:10], many=True)
         return Response(serializer.data)
-    
+
+class PropertyRecommendationView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        user = request.user if request.user.is_authenticated else None
+        session_key = request.session.session_key
+        
+        # Get base queryset
+        base_queryset = Property.objects.filter(is_published=True)
+        
+        # Strategy 1: Personalized recommendations for logged-in users
+        if user and user.is_authenticated:
+            recommendations = self.get_personalized_recommendations(user)
+            
+        # Strategy 2: Session-based recommendations for anonymous users
+        elif session_key:
+            recommendations = self.get_session_based_recommendations(session_key)
+            
+        # Strategy 3: Fallback global recommendations
+        else:
+            recommendations = self.get_global_recommendations()
+
+        serializer = PropertySerializer(recommendations, many=True)
+        return Response(serializer.data)
+
+    def get_personalized_recommendations(self, user):
+        # Collaborative filtering based on similar users
+        similar_users = self.find_similar_users(user)
+        
+        # Content-based filtering based on user preferences
+        user_preferences = self.extract_user_preferences(user)
+        
+        return Property.objects.filter(
+            Q(propertyinteraction__user__in=similar_users) |
+            Q(**user_preferences)
+        ).distinct().order_by('-created_at')[:10]
+
+    def get_session_based_recommendations(self, session_key):
+        # Get recent interactions from session
+        recent_properties = PropertyInteraction.objects.filter(
+            session_key=session_key
+        ).values_list('property', flat=True)[:5]
+        
+        if recent_properties:
+            # Find properties with similar features
+            return Property.objects.filter(
+                Q(property_type__in=Property.objects.filter(
+                    id__in=recent_properties).values('property_type')) |
+                Q(location__in=Property.objects.filter(
+                    id__in=recent_properties).values('location'))
+            ).exclude(id__in=recent_properties)[:10]
+        
+        return self.get_global_recommendations()
+
+    def get_global_recommendations(self):
+        # Combine popularity and freshness
+        return Property.objects.annotate(
+            popularity_score=Count('propertyinteraction') + F('price')/1000
+        ).order_by('-popularity_score', '-created_at')[:10]
+
+    def find_similar_users(self, user):
+        # Find users with similar interaction patterns
+        user_properties = user.propertyinteraction_set.values_list('property', flat=True)
+        return User.objects.annotate(
+            common_interactions=Count(
+                'propertyinteraction',
+                filter=Q(propertyinteraction__property__in=user_properties)
+        ).order_by('-common_interactions')[:5])
+
+    def extract_user_preferences(self, user):
+        # Extract preferences from user's historical data
+        preferences = {
+            'price__lte': user.propertyinteraction_set.aggregate(
+                avg_price=Avg('property__price'))['avg_price'] * 1.2,
+            'property_type__in': user.propertyinteraction_set.values_list(
+                'property__property_type', flat=True).distinct()
+        }
+        return {k: v for k, v in preferences.items() if v}
+
 class AdminDashboardView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
+        from django.db.models import Count, DateField
+        from django.db.models.functions import Trunc
+        
+        # View statistics
+        view_stats = PropertyInteraction.objects.filter(
+            interaction_type='view'
+        ).annotate(
+            date=Trunc('timestamp', 'day', output_field=DateField())
+        ).values('date').annotate(
+            views=Count('id')
+        ).order_by('-date')[:7]
+
+        popular_properties = Property.objects.annotate(
+            view_count=Count('propertyinteraction')
+        ).order_by('-view_count')[:5]
         stats = {
+            'total_views': PropertyInteraction.objects.filter(interaction_type='view').count(),
+            'views_last_7_days': list(view_stats),
+            'popular_properties': [
+                {
+                    'id': p.id,
+                    'title': p.title,
+                    'views': p.view_count
+                } for p in popular_properties
+            ],
+            # Add this to existing stats
+            'views_by_type': PropertyInteraction.objects.values('interaction_type')
+                              .annotate(count=Count('id')),
             'total_users': User.objects.count(),
             'active_listings': Property.objects.filter(is_published=True).count(),
             'total_inquiries': Inquiry.objects.count(),
             'popular_locations': Property.objects.values('location')
                              .annotate(count=Count('id'))
-                             .order_by('-count')[:5]
+                             .order_by('-count')[:5],
+            'active_admins': User.objects.filter(is_staff=True).count(),
+            'recent_actions': AdminActionLog.objects.filter(admin=request.user)
+                              .order_by('-timestamp')[:10],
+            'user_growth': User.objects.extra({
+                'date': "date(date_joined)"
+            }).values('date').annotate(count=Count('id')).order_by('-date')[:7],
+            'admin_activity': AdminActionLog.objects.values('action_type')
+                               .annotate(total=Count('id'))
+                               .order_by('-total')
         }
         return Response(stats)
     
@@ -237,3 +360,114 @@ class UserDashboardView(APIView):
             'recent_views': [...]  # Implement view tracking if needed
         }
         return Response(stats)
+
+class PropertyStatsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        property = get_object_or_404(Property, pk=pk)
+        
+        # Verify ownership if not admin
+        if not request.user.is_staff and property.agent != request.user:
+            return Response({"detail": "Not authorized"}, status=403)
+
+        stats = {
+            'total_views': PropertyInteraction.objects.filter(
+                property=property,
+                interaction_type='view'
+            ).count(),
+            'view_timeline': PropertyInteraction.objects.filter(property=property)
+                              .annotate(hour=TruncHour('timestamp'))
+                              .values('hour')
+                              .annotate(count=Count('id'))
+                              .order_by('-hour')[:24],
+            'user_types': PropertyInteraction.objects.filter(property=property)
+                           .annotate(
+                               is_authenticated=Case(
+                                   When(user__isnull=False, then=Value('Registered')),
+                                   default=Value('Anonymous'),
+                                   output_field=CharField()
+                               )
+                           )
+                           .values('is_authenticated')
+                           .annotate(count=Count('id'))
+        }
+        
+        return Response(stats)
+
+class AdminUserManagementViewSet(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['is_active', 'is_staff', 'is_superuser']
+    search_fields = ['username', 'email', 'firstname', 'lastname']
+    ordering_fields = ['date_joined', 'last_login']
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        return User.objects.all().order_by('-date_joined')
+
+    @action(detail=True, methods=['post'])
+    def reset_password(self, request, pk=None):
+        user = self.get_object()
+        new_password = request.data.get('new_password')
+        if not new_password:
+            return Response({'error': 'New password required'}, status=400)
+        
+        user.password = make_password(new_password)
+        user.save()
+        
+        AdminActionLog.objects.create(
+            admin=request.user,
+            action_type='user_modified',
+            target_user=user,
+            details={'action': 'password_reset'},
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+        return Response({'status': 'password reset'})
+
+    @action(detail=True, methods=['post'])
+    def modify_roles(self, request, pk=None):
+        user = self.get_object()
+        is_staff = request.data.get('is_staff')
+        is_superuser = request.data.get('is_superuser')
+        
+        if is_staff is not None:
+            user.is_staff = is_staff
+        if is_superuser is not None:
+            user.is_superuser = is_superuser
+        user.save()
+        
+        AdminActionLog.objects.create(
+            admin=request.user,
+            action_type='permission_changed',
+            target_user=user,
+            details={'new_roles': {'is_staff': user.is_staff, 'is_superuser': user.is_superuser}},
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+        return Response(UserSerializer(user).data)
+    
+# views.py
+class AdminActionLogViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = AdminActionLogSerializer
+    permission_classes = [IsAdminUser]
+    filterset_fields = ['action_type', 'admin', 'target_user']
+    search_fields = ['admin__username', 'target_user__username', 'details']
+    ordering_fields = ['timestamp']
+    
+    def get_queryset(self):
+        queryset = AdminActionLog.objects.all().order_by('-timestamp')
+        
+        # For non-superusers, only show their own actions
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(admin=self.request.user)
+            
+        return queryset.select_related('admin', 'target_user')
+
+    @action(detail=False, methods=['get'])
+    def recent_activity(self, request):
+        logs = self.get_queryset().filter(
+            timestamp__gte=timezone.now() - timedelta(days=1)
+        )[:50]
+        serializer = self.get_serializer(logs, many=True)
+        return Response(serializer.data)

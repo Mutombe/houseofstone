@@ -46,32 +46,63 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export const deviceAPI = {
-  getFuelOptions: () => api.get("/fuel-options/"),
-  getTechnologyOptions: (fuelType) =>
-    api.get(`/technology-options/?fuel_type=${fuelType}`),
-  getAll: () => api.get("/devices/"),
-  getById: (id) => api.get(`/devices/${id}/`),
-  getUserDevices: (userId) => api.get(`/devices/?user_id=${userId}`),
-  create: (data) => api.post("/devices/", data),
-  update: (id, data) => api.patch(`/devices/${id}/`, data),
-  delete: (id) => api.delete(`/devices/${id}/`),
-  submit: (id) => api.post(`/devices/${id}/submit/`),
+// Add to existing utils.js
+export const propertyAPI = {
+  getAll: (params) => api.get("/properties/", { params }),
+  getById: (id) => api.get(`/properties/${id}/`),
+  create: (data) => api.post("/properties/", data),
+  update: (id, data) => api.patch(`/properties/${id}/`, data),
+  delete: (id) => api.delete(`/properties/${id}/`),
+  getUserProperties: (userId) => api.get(`/properties/?user_id=${userId}`),
+  getStats: (id) => api.get(`/property-stats/${id}/`),
+  share: (id) => api.post(`/properties/${id}/share/`),
+  getShared: (token) => api.get(`/shared-properties/${token}/`)
 };
 
-export const issueRequestAPI = {
-  create: (data) => api.post("/issue-requests/", {
-    ...data,
-    production_amount: parseFloat(data.production_amount).toFixed(6)
-  }),
-  getAll: () => api.get("/issue-requests/"),
-  getUserRequests: (userId) => api.get(`/issue-requests/?user_id=${userId}`),
-  submit: (id) => api.post(`/issue-requests/${id}/submit/`),
-  update: (id, data) => api.patch(`/issue-requests/${id}/`, {
-    ...data,
-    production_amount: data.production_amount ? 
-      parseFloat(data.production_amount).toFixed(6) : undefined
-  }),
+export const alertAPI = {
+  create: (data) => api.post("/property-alerts/", data),
+  getAll: () => api.get("/property-alerts/"),
+  delete: (id) => api.delete(`/property-alerts/${id}/`)
 };
+
+export const authAPI = {
+  login: (data) => api.post("/auth/login/", data),
+  register: (data) => api.post("/auth/register/", data),
+  logout: () => api.post("/auth/logout/"),
+  refresh: (refresh) => refreshTokens(refresh),
+  resendVerificationEmail: (email) => api.post("/resend-verification/", { email }),
+  verifyEmail: (uid, token) => api.post("/verify-email/", { uid, token }),
+  resetPassword: (email) => api.post("/reset-password/", { email }),
+  changePassword: (data) => api.post("/change-password/", data),
+  verifyResetCode: (uid, token) => api.post("/verify-reset-code/", { uid, token }),
+}
+
+export const userAPI = {
+  getProfile: () => api.get("/profile/"),
+  updateProfile: (data) => api.put("/profile/", data),
+  getDashboard: () => api.get("/dashboard/user/")
+};
+
+export const recommendationsAPI = {
+  getAll: () => api.get("/recommendations/"),
+  getById: (id) => api.get(`/recommendations/${id}/`),
+}
+
+export const mortgageAPI = {
+  calculate: (data) => api.post('/mortgage/', data)
+};
+
+export const adminAPI = {
+  getAllUsers: () => api.get("/admin/users/"),
+  updateUser: (id, data) => api.patch(`/admin/users/${id}/`, data),
+  getDashboard: () => api.get("/dashboard/admin/"),
+  getStats: () => api.get("/admin/stats/"),
+  getUserStats: (userId) => api.get(`/admin/stats/?user_id=${userId}`),
+  adminlogActivity: (userId) => api.get(`/admin/logs/?user_id=${userId}`),
+  getUserLogs: (userId) => api.get(`/admin/logs/?user_id=${userId}`),
+  getActions: () => api.get('/admin/actions/'),
+  resetPassword: (userId, newPassword) => 
+    api.post(`/admin/users/${userId}/reset_password/`, { new_password: newPassword })
+}
 
 export default api;
