@@ -24,7 +24,7 @@ export const refreshTokens = async (refresh) => {
 };
 
 const api = axios.create({
-  baseURL: "https://houseofstone-backend.onrender.com/",
+  baseURL: "http://127.0.0.1:8000/",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -100,7 +100,7 @@ export const adminAPI = {
   getUserStats: (userId) => api.get(`/admin/stats/?user_id=${userId}`),
   adminlogActivity: (userId) => api.get(`/admin/logs/?user_id=${userId}`),
   getUserLogs: (userId) => api.get(`/admin/logs/?user_id=${userId}`),
-  getActions: () => api.get('/admin/actions/'),
+    getActions: () => api.get('/admin/actions/'),
   resetPassword: (userId, newPassword) => 
     api.post(`/admin/users/${userId}/reset_password/`, { new_password: newPassword })
 }

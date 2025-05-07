@@ -13,6 +13,7 @@ import PropertyManagement from './components/properties/management';
 import MarketAnalysis from './components/properties/market';
 import Consulting from './components/properties/consulting';
 import PropertySales from './components/properties/sales';
+import PropertyDashboard from './components/dashboards/admin';
 import { useEffect } from 'react';
 
 const ScrollToTop = () => {
@@ -42,6 +43,7 @@ function App() {
             <Route path="/market" element={<MarketAnalysis />} />
             <Route path="/consulting" element={<Consulting />} />
             <Route path="/sales" element={<PropertySales />} />
+            <Route path="/dashboard" element={<PropertyDashboard />} />
           </Routes>
         </AnimatePresence>
         <Footer />

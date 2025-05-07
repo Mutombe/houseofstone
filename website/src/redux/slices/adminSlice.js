@@ -53,5 +53,6 @@ const adminSlice = createSlice({
   }
 });
 
-export const { actions, reducer } = adminSlice;
+export const { actions } = adminSlice;
 export const { selectProperty } = actions;
+export default adminSlice.reducer;

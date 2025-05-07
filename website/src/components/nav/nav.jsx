@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   User, LogIn, LogOut, Building2, Users, Handshake, 
   TrendingUpDown, PhoneCall, Mail, Phone, Menu, X, Home, 
-  Bell, AlertCircle, AtSign, Lock
+  Bell, AlertCircle, AtSign, Lock, ChartNoAxesColumn
 } from "lucide-react";
 
 // Material UI
@@ -360,6 +360,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [authModal, setAuthModal] = useState(null);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
+  //const isAdmin = user?.is_superuser;
   const dispatch = useDispatch();
 
   const navLinks = [
@@ -369,6 +370,8 @@ const Navbar = () => {
     { path: '/consulting', label: 'Consulting', icon: Handshake },
     { path: '/market', label: 'Market Analysis', icon: TrendingUpDown },
     { path: '/contact', label: 'Contact', icon: PhoneCall },
+    //isAdmin && { path: '/dashboard', label: 'Dashboard', icon: ChartNoAxesColumn },
+
   ];
 
   const handleLogout = () => {
@@ -455,10 +458,6 @@ const Navbar = () => {
                       sx={{
                         color:"#92400e",
                         borderColor: "#92400e",
-                        '&:hover': {
-                          borderColor: "#92400e",
-                          backgroundColor: "#92400e" ,
-                        }
                       }}
                       startIcon={<LogOut className="w-4 h-4" />}
                     >
@@ -570,10 +569,6 @@ const Navbar = () => {
                             sx={{
                               color:"#92400e",
                               borderColor: "#92400e",
-                              '&:hover': {
-                                borderColor: "#92400e",
-                                backgroundColor: "#92400e" ,
-                              }
                             }}
                             startIcon={<LogOut className="w-4 h-4" />}
                           >
