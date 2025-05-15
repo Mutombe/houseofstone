@@ -55,8 +55,9 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
+  
+    'https://houseofstone.onrender.com',  
     'http://localhost:5173',
-    'https://houseofstone.onrender.com',
     'http://127.0.0.1:5173'
 ]
 
