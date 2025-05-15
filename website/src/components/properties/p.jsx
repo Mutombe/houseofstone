@@ -1,29 +1,17 @@
-// src/pages/PropertyDetail.jsx
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
-import { MapPin, Bed, Bath, Square, Heart, Share2, Calendar } from 'lucide-react';
-import { FaWhatsapp } from "react-icons/fa";
-import { Link, useParams } from 'react-router-dom';
-import { properties } from '../data/properties';
-import { fetchProperties } from '../../redux/slices/propertySlice';
-import { useNavigate } from 'react-router-dom';
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { MapPin, Bed, Bath, Square, Heart, Share2, WhatsApp } from 'lucide-react';
+import { fetchProperties, createProperty, updateProperty, deleteProperty } from '../redux/slices/propertySlice';
 import { Helmet } from 'react-helmet';
-import PropertyShareModal from './shareModal';
-import { useSelector } from 'react-redux';
 
-const PropertyDetail = () => {
-  const { id } = useParams();
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const { items: properties, status, error } = useSelector((state) => state.properties);
-  const navigate = useNavigate();
-  const property = properties.find(p => p.id === parseInt(id));
-  
-  if (!property) return <div className="min-h-screen flex justify-center items-center">Loading property...</div>;
+// Property Detail Component
+const PropertyDetail = ({ property, onShare }) => {
+  if (!property) return <div>Loading property...</div>;
 
   // Function to create WhatsApp link
   const getWhatsAppLink = (property) => {
-    return `https://wa.me/263772329569?text=Hello%20I%27m%20interested%20in%20your%20property%20in%20${encodeURIComponent(
+    return `https://wa.me/263775625292?text=Hello%20I%27m%20interested%20in%20your%20property%20in%20${encodeURIComponent(
       property.location
     )}`;
   };
@@ -32,9 +20,9 @@ const PropertyDetail = () => {
     <div className="min-h-screen bg-stone-50">
       <Helmet>
         <title>{property.title} | Real Estate</title>
-        <meta name="description" content={property.description?.substring(0, 160)} />
+        <meta name="description" content={property.description.substring(0, 160)} />
         <meta property="og:title" content={property.title} />
-        <meta property="og:description" content={property.description?.substring(0, 160)} />
+        <meta property="og:description" content={property.description.substring(0, 160)} />
         {property.images && property.images.length > 0 && (
           <meta property="og:image" content={property.images[0].image} />
         )}
@@ -163,7 +151,7 @@ const PropertyDetail = () => {
                   Save
                 </button>
                 <button 
-                  onClick={() => setIsShareModalOpen(true)}
+                  onClick={onShare} 
                   className="flex items-center text-stone-600 hover:text-stone-900"
                 >
                   <Share2 className="w-5 h-5 mr-2" />
@@ -204,22 +192,181 @@ const PropertyDetail = () => {
                 rel="noopener noreferrer"
                 className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center"
               >
-                <span className='px-1'><FaWhatsapp className='w-5 h-5'/></span>
+                <WhatsApp className="w-5 h-5 mr-2" />
                 Contact via WhatsApp
               </a>
             </motion.div>
           </div>
         </div>
       </div>
-      
-      {/* Share Modal */}
-      <PropertyShareModal 
-        property={property}
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-      />
     </div>
   );
 };
 
-export default PropertyDetail;
+// PropertyList Component
+const PropertyList = () => {
+  const dispatch = useDispatch();
+  const { items: properties, status, error } = useSelector((state) => state.properties);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [filters, setFilters] = React.useState({
+    type: 'all',
+    priceRange: 'all',
+  });
+
+  useEffect(() => {
+    dispatch(fetchProperties());
+  }, [dispatch]);
+
+  // Filter properties based on search and filter criteria
+  const filteredProperties = properties.filter(property => {
+    const matchesType = filters.type === 'all' || property.property_type === filters.type;
+    const matchesSearch = property.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         property.location?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    let matchesPriceRange = true;
+    if (filters.priceRange !== 'all') {
+      const [min, max] = filters.priceRange.split('-').map(Number);
+      const price = parseFloat(property.price);
+      matchesPriceRange = price >= min && (!max || price <= max);
+    }
+
+    return matchesType && matchesSearch && matchesPriceRange;
+  });
+
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-stone-900"></div>
+      </div>
+    );
+  }
+
+  if (status === 'failed') {
+    return (
+      <div className="text-red-500 p-4">Error loading properties: {error}</div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {filteredProperties.map((property, i) => (
+        <PropertyCard key={property.id} property={property} index={i} />
+      ))}
+    </div>
+  );
+};
+
+// Property Card Component
+const PropertyCard = ({ property, index }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+    >
+      <div className="relative h-64">
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-500 to-stone-700">
+          {property.images && property.images.length > 0 ? (
+            <img
+              src={property.images[0].image}
+              alt={property.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-white">No Image</div>
+          )}
+        </div>
+        <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-stone-900 font-semibold">
+          ${parseFloat(property.price).toLocaleString()}
+        </div>
+        <div className="absolute bottom-4 left-4 bg-stone-800 bg-opacity-75 px-3 py-1 rounded-full text-white text-sm">
+          {property.status}
+        </div>
+      </div>
+      <div className="p-6">
+        <h3 className="text-xl font-bold text-stone-900 mb-2">
+          {property.title}
+        </h3>
+        <div className="flex items-center text-stone-600 mb-4">
+          <MapPin className="w-4 h-4 mr-1" />
+          {property.location}
+        </div>
+        <div className="flex justify-between text-stone-600">
+          <div className="flex items-center">
+            <Bed className="w-4 h-4 mr-1" />
+            {property.beds || 0} Beds
+          </div>
+          <div className="flex items-center">
+            <Bath className="w-4 h-4 mr-1" />
+            {property.baths || 0} Baths
+          </div>
+          <div className="flex items-center">
+            <Square className="w-4 h-4 mr-1" />
+            {property.sqft || 0} sqft
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Demo component showing both list and selected property detail
+const PropertyDemo = () => {
+  const dispatch = useDispatch();
+  const [selectedProperty, setSelectedProperty] = React.useState(null);
+  const { items: properties } = useSelector((state) => state.properties);
+  
+  useEffect(() => {
+    dispatch(fetchProperties());
+  }, [dispatch]);
+  
+  useEffect(() => {
+    if (properties.length > 0 && !selectedProperty) {
+      setSelectedProperty(properties[0]);
+    }
+  }, [properties, selectedProperty]);
+  
+  const handleShareProperty = async () => {
+    if (!selectedProperty) return;
+    
+    try {
+      const response = await fetch(`/api/properties/${selectedProperty.id}/share/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        }
+      });
+      
+      const data = await response.json();
+      if (data.share_link) {
+        navigator.clipboard.writeText(data.share_link);
+        alert('Share link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Error sharing property:', error);
+      alert('Failed to generate share link');
+    }
+  };
+  
+  return (
+    <div className="flex flex-col gap-8">
+      {selectedProperty ? (
+        <PropertyDetail 
+          property={selectedProperty} 
+          onShare={handleShareProperty}
+        />
+      ) : (
+        <div className="text-center p-8">Select a property to view details</div>
+      )}
+      
+      <div className="p-4 bg-stone-100 rounded-lg">
+        <h2 className="text-2xl font-bold mb-4">All Properties</h2>
+        <PropertyList />
+      </div>
+    </div>
+  );
+};
+
+export { PropertyCard, PropertyList, PropertyDetail, PropertyDemo };

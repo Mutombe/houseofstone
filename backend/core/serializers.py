@@ -127,11 +127,16 @@ class PropertySerializer(serializers.ModelSerializer):
             PropertyFeature.objects.create(property=instance, **feature)
         
         return instance
+    
     def validate_price(self, value):
         if value < 0:
             raise serializers.ValidationError("Price must be a positive number.")
         return value
-
+    
+    def validate_features(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Features must be a list")
+        return value
 class NeighborhoodSerializer(serializers.ModelSerializer):
     class Meta:
         model = Neighborhood

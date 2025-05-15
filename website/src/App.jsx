@@ -4,8 +4,6 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from './components/nav/nav';
 import Home from './components/home/home';
-import Properties from './components/properties/properties';
-import PropertyDetail from './components/properties/details';
 import About from './components/about/about';
 import Contact from './components/contact/contact';
 import Footer from './components/footer/footer';
@@ -14,6 +12,8 @@ import MarketAnalysis from './components/properties/market';
 import Consulting from './components/properties/consulting';
 import PropertySales from './components/properties/sales';
 import PropertyDashboard from './components/dashboards/admin';
+import Properties from './components/properties/properties';
+import PropertyDetail from './components/properties/details';
 import { useEffect } from 'react';
 
 const ScrollToTop = () => {
@@ -43,7 +43,7 @@ function App() {
             <Route path="/market" element={<MarketAnalysis />} />
             <Route path="/consulting" element={<Consulting />} />
             <Route path="/sales" element={<PropertySales />} />
-            <Route path="/dashboard" element={<PropertyDashboard />} />
+            <Route path="/admin" element={<PropertyDashboard />} />
           </Routes>
         </AnimatePresence>
         <Footer />

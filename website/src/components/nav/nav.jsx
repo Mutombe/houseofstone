@@ -1,18 +1,39 @@
 import React, { useState, useEffect } from "react";
-import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Icons
 import {
-  User, LogIn, LogOut, Building2, Users, Handshake, 
-  TrendingUpDown, PhoneCall, Mail, Phone, Menu, X, Home, 
-  Bell, AlertCircle, AtSign, Lock, ChartNoAxesColumn
+  User,
+  LogIn,
+  LogOut,
+  Building2,
+  Users,
+  Handshake,
+  TrendingUpDown,
+  PhoneCall,
+  Mail,
+  Phone,
+  Menu,
+  X,
+  Home,
+  Bell,
+  AlertCircle,
+  AtSign,
+  Lock,
+  ChartNoAxesColumn,
+  BarChart2,
 } from "lucide-react";
 
 // Material UI
 import {
-  Dialog, TextField, Divider, Button, Snackbar, Alert
+  Dialog,
+  TextField,
+  Divider,
+  Button,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 
 // Redux actions
@@ -25,9 +46,9 @@ export function AuthHeader({ view }) {
   return (
     <div className="text-center">
       <div className="mx-auto w-16 h-16 mb-4">
-        <img 
-          src="/logo.png" 
-          alt="HSP Logo" 
+        <img
+          src="/logo.png"
+          alt="HSP Logo"
           className="rounded-2xl w-full h-full"
         />
       </div>
@@ -104,7 +125,7 @@ export const AuthModals = ({ openType, onClose }) => {
             message: "Registration successful. You may Sign-In",
             severity: "success",
           });
-          
+
           // Save auth data to localStorage only if response exists
           if (response && response.access) {
             localStorage.setItem(
@@ -116,7 +137,7 @@ export const AuthModals = ({ openType, onClose }) => {
               })
             );
           }
-          
+
           onClose();
         })
         .catch((err) => {
@@ -140,17 +161,17 @@ export const AuthModals = ({ openType, onClose }) => {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSubmit();
     }
   };
 
   return (
     <>
-      <Dialog 
-        open={!!openType} 
-        onClose={onClose} 
-        maxWidth="xs" 
+      <Dialog
+        open={!!openType}
+        onClose={onClose}
+        maxWidth="xs"
         fullWidth
         aria-labelledby="auth-dialog-title"
       >
@@ -161,14 +182,14 @@ export const AuthModals = ({ openType, onClose }) => {
         >
           <div className="text-center">
             <div className="mx-auto w-20 h-16 mb-4">
-              <img 
-                src="/logo.png" 
-                alt="HSP Logo" 
+              <img
+                src="/logo.png"
+                alt="HSP Logo"
                 className="rounded-2xl w-full h-full"
               />
             </div>
-            <h2 
-              id="auth-dialog-title" 
+            <h2
+              id="auth-dialog-title"
               className="text-2xl font-bold text-gray-900 mb-2"
             >
               {view === "login" ? "Welcome Back!" : "Join HSP"}
@@ -211,13 +232,13 @@ export const AuthModals = ({ openType, onClose }) => {
                   ),
                 }}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#92400e',
+                  "& .MuiOutlinedInput-root": {
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#92400e",
                     },
                   },
-                  '& .MuiFormLabel-root.Mui-focused': {
-                    color: '#92400e',
+                  "& .MuiFormLabel-root.Mui-focused": {
+                    color: "#92400e",
                   },
                 }}
                 aria-label="Email"
@@ -241,21 +262,21 @@ export const AuthModals = ({ openType, onClose }) => {
                 ),
               }}
               sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#92400e',
+                "& .MuiOutlinedInput-root": {
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#92400e",
                   },
                 },
-                '& .MuiFormLabel-root.Mui-focused': {
-                  color: '#92400e',
+                "& .MuiFormLabel-root.Mui-focused": {
+                  color: "#92400e",
                 },
               }}
               aria-label="Username"
               required
             />
-            
+
             <Divider className="my-4" />
-            
+
             <TextField
               fullWidth
               label="Password"
@@ -271,13 +292,13 @@ export const AuthModals = ({ openType, onClose }) => {
                 ),
               }}
               sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#92400e',
+                "& .MuiOutlinedInput-root": {
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#92400e",
                   },
                 },
-                '& .MuiFormLabel-root.Mui-focused': {
-                  color: '#92400e',
+                "& .MuiFormLabel-root.Mui-focused": {
+                  color: "#92400e",
                 },
               }}
               aria-label="Password"
@@ -292,13 +313,13 @@ export const AuthModals = ({ openType, onClose }) => {
             onClick={handleSubmit}
             disabled={status === "loading"}
             sx={{
-              color:"#fffbeb",
+              color: "#fffbeb",
               borderColor: "#92400e",
               backgroundColor: "#92400e",
-              '&:hover': {
+              "&:hover": {
                 borderColor: "#92400e",
-                backgroundColor: "#78350f" ,
-              }
+                backgroundColor: "#78350f",
+              },
             }}
             className="bg-amber-700 hover:bg-amber-700 rounded-xl py-3 text-base font-semibold shadow-lg"
           >
@@ -318,12 +339,12 @@ export const AuthModals = ({ openType, onClose }) => {
             variant="outlined"
             onClick={() => setView(view === "login" ? "register" : "login")}
             sx={{
-              color:"#92400e",
+              color: "#92400e",
               borderColor: "#92400e",
-              '&:hover': {
+              "&:hover": {
                 borderColor: "#92400e",
                 backgroundColor: "#fffbeb",
-              }
+              },
             }}
             className="rounded-xl py-2.5 text-gray-700 border-amber-700 text-amber-700"
           >
@@ -360,18 +381,16 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [authModal, setAuthModal] = useState(null);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
-  //const isAdmin = user?.is_superuser;
+  const isAdmin = user?.is_superuser;
   const dispatch = useDispatch();
 
   const navLinks = [
-    { path: '/', label: 'Home', icon: Home },
-    { path: '/properties', label: 'Properties', icon: Building2 },
-    { path: '/about', label: 'About', icon: Users },
-    { path: '/consulting', label: 'Consulting', icon: Handshake },
-    { path: '/market', label: 'Market Analysis', icon: TrendingUpDown },
-    { path: '/contact', label: 'Contact', icon: PhoneCall },
-    //isAdmin && { path: '/dashboard', label: 'Dashboard', icon: ChartNoAxesColumn },
-
+    { path: "/", label: "Home", icon: Home },
+    { path: "/properties", label: "Properties", icon: Building2 },
+    { path: "/about", label: "About", icon: Users },
+    { path: "/consulting", label: "Consulting", icon: Handshake },
+    { path: "/market", label: "Market Analysis", icon: TrendingUpDown },
+    { path: "/contact", label: "Contact", icon: PhoneCall },
   ];
 
   const handleLogout = () => {
@@ -384,41 +403,65 @@ const Navbar = () => {
       <div className="w-full bg-stone-800 text-white py-2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="flex items-center space-x-4 text-sm">
-            <a href="tel:+263772329569" className="flex items-center hover:text-stone-300" aria-label="Call Us">
+            <a
+              href="tel:+263772329569"
+              className="flex items-center hover:text-stone-300"
+              aria-label="Call Us"
+            >
               <Phone className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">+263 772 329 569</span>
             </a>
-            <a href="mailto:info@hsp.co.zw" className="flex items-center hover:text-stone-300" aria-label="Email Us">
+            <a
+              href="mailto:info@hsp.co.zw"
+              className="flex items-center hover:text-stone-300"
+              aria-label="Email Us"
+            >
               <Mail className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">info@hsp.co.zw</span>
             </a>
           </div>
           <div className="text-xs hidden md:block">
             <span className="flex items-center">
-              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg
+                className="w-3 h-3 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
               Suite 2, First Floor Ballantyne Park Shopping Centre, Harare
             </span>
           </div>
         </div>
       </div>
-      
+
       {/* Main Navigation */}
       <nav className="sticky top-0 w-full bg-white shadow-md z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <NavLink to="/" className="flex items-center">
-                <img 
-                  src="/logo.png" 
-                  alt="House of Stone Properties" 
+                <img
+                  src="/logo.png"
+                  alt="House of Stone Properties"
                   className="h-10 w-auto"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = "";
-                  }}  
+                  }}
                 />
               </NavLink>
             </div>
@@ -432,8 +475,8 @@ const Navbar = () => {
                   className={({ isActive }) =>
                     `text-sm font-medium transition-colors ${
                       isActive
-                        ? 'text-stone-900 border-b-2 border-amber-800'
-                        : 'text-stone-600 hover:text-amber-800'
+                        ? "text-stone-900 border-b-2 border-amber-800"
+                        : "text-stone-600 hover:text-amber-800"
                     } flex items-center space-x-1`
                   }
                 >
@@ -446,17 +489,27 @@ const Navbar = () => {
               <div className="ml-4 flex items-center">
                 {isAuthenticated ? (
                   <div className="flex items-center space-x-4">
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        className="transition flex items-center"
+                      >
+                        <BarChart2 className="mr-1 h-4 w-4" />
+                        Admin
+                      </Link>
+                    )}
                     <span className="text-sm font-medium flex items-center">
                       <User className="w-4 h-4 mr-1" />
-                      {user?.username || 'User'}
+                      {user?.username || "User"}
                     </span>
+
                     <Button
                       variant="outlined"
                       size="small"
                       onClick={handleLogout}
                       className="text-amber-800 border-amber-800 hover:bg-amber-50"
                       sx={{
-                        color:"#92400e",
+                        color: "#92400e",
                         borderColor: "#92400e",
                       }}
                       startIcon={<LogOut className="w-4 h-4" />}
@@ -471,12 +524,12 @@ const Navbar = () => {
                       size="small"
                       onClick={() => setAuthModal("login")}
                       sx={{
-                        color:"#92400e",
+                        color: "#92400e",
                         borderColor: "#92400e",
-                        '&:hover': {
+                        "&:hover": {
                           borderColor: "#92400e",
-                          backgroundColor: "#92400e" ,
-                        }
+                          backgroundColor: "#92400e",
+                        },
                       }}
                       className="text-amber-800 border-amber-800 hover:bg-amber-50 hover:text-white"
                       startIcon={<LogIn className="w-4 h-4" />}
@@ -488,13 +541,13 @@ const Navbar = () => {
                       size="small"
                       onClick={() => setAuthModal("register")}
                       sx={{
-                        color:"#fffbeb",
+                        color: "#fffbeb",
                         borderColor: "#92400e",
                         backgroundColor: "#92400e",
-                        '&:hover': {
+                        "&:hover": {
                           borderColor: "#92400e",
-                          backgroundColor: "#92400e" ,
-                        }
+                          backgroundColor: "#92400e",
+                        },
                       }}
                       className=" hover:bg-amber-900 hover:text-white"
                       startIcon={<User className="w-4 h-4" />}
@@ -515,7 +568,11 @@ const Navbar = () => {
                 aria-expanded={isOpen}
               >
                 <span className="mr-2 text-sm font-medium">Menu</span>
-                {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                {isOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
               </button>
             </div>
           </div>
@@ -524,10 +581,10 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         <AnimatePresence>
           {isOpen && (
-            <motion.div 
+            <motion.div
               className="md:hidden"
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
             >
@@ -540,8 +597,8 @@ const Navbar = () => {
                     className={({ isActive }) =>
                       `flex items-center block px-3 py-2 rounded-md text-base font-medium ${
                         isActive
-                          ? 'bg-amber-800 text-white'
-                          : 'text-stone-600 hover:bg-stone-100 hover:text-amber-800'
+                          ? "bg-amber-800 text-white"
+                          : "text-stone-600 hover:bg-stone-100 hover:text-amber-800"
                       } space-x-2`
                     }
                   >
@@ -559,7 +616,7 @@ const Navbar = () => {
                         <div className="flex items-center justify-between px-3 py-2">
                           <span className="text-sm font-medium flex items-center">
                             <User className="w-4 h-4 mr-1" />
-                            {user?.username || 'User'}
+                            {user?.username || "User"}
                           </span>
                           <Button
                             variant="outlined"
@@ -567,7 +624,7 @@ const Navbar = () => {
                             onClick={handleLogout}
                             className=""
                             sx={{
-                              color:"#92400e",
+                              color: "#92400e",
                               borderColor: "#92400e",
                             }}
                             startIcon={<LogOut className="w-4 h-4" />}
@@ -586,12 +643,12 @@ const Navbar = () => {
                             setIsOpen(false);
                           }}
                           sx={{
-                            color:"#92400e",
+                            color: "#92400e",
                             borderColor: "#92400e",
-                            '&:hover': {
+                            "&:hover": {
                               borderColor: "#92400e",
-                              backgroundColor: "#92400e" ,
-                            }
+                              backgroundColor: "#92400e",
+                            },
                           }}
                           className="justify-start"
                           startIcon={<LogIn className="w-5 h-5" />}
@@ -606,14 +663,14 @@ const Navbar = () => {
                             setIsOpen(false);
                           }}
                           sx={{
-                            color: '#92400e', // amber-800
-                            borderColor: '#92400e', // amber-800
-                            backgroundColor: '#fffbeb', // amber-50
-                            '&:hover': {
-                              borderColor: '#78350f', // amber-900
-                              backgroundColor: '#fffbeb', // amber-50
+                            color: "#92400e", // amber-800
+                            borderColor: "#92400e", // amber-800
+                            backgroundColor: "#fffbeb", // amber-50
+                            "&:hover": {
+                              borderColor: "#78350f", // amber-900
+                              backgroundColor: "#fffbeb", // amber-50
                             },
-                            textTransform: 'none',
+                            textTransform: "none",
                           }}
                           className="bg-amber-800 hover:bg-amber-900 justify-start"
                           startIcon={<User className="w-5 h-5" />}

@@ -1,6 +1,31 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../utils/api";
 
+export const shareProperty = createAsyncThunk(
+  'properties/share',
+  async (propertyId, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`/properties/${propertyId}/share/`);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+// Async thunk for retrieving a shared property using token
+export const getSharedProperty = createAsyncThunk(
+  'properties/getShared',
+  async (token, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/shared-properties/${token}/`);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 export const fetchProperties = createAsyncThunk(
   'properties/fetchAll',
   async (filters, { rejectWithValue }) => {
@@ -49,6 +74,7 @@ const propertySlice = createSlice({
   name: 'properties',
   initialState: {
     items: [],
+    loading: false,
     status: 'idle',
     error: null,
     selectedProperty: null
@@ -65,15 +91,26 @@ const propertySlice = createSlice({
       })
       .addCase(fetchProperties.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.items = action.payload;
+        state.items = action.payload.results;
       })
       .addCase(fetchProperties.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
-      .addCase(createProperty.fulfilled, (state, action) => {
+      .addCase(createProperty.pending, (state) => {
+        state.loading = true;
+        state.status = 'loading';
+    })
+    .addCase(createProperty.fulfilled, (state, action) => {
+      state.loading = false;
+        state.status = 'succeeded';
         state.items.push(action.payload);
-      })
+    })
+    .addCase(createProperty.rejected, (state, action) => {
+      state.loading = false;
+        state.status = 'failed';
+        state.error = action.payload;
+    })
       .addCase(updateProperty.fulfilled, (state, action) => {
         const index = state.items.findIndex(p => p.id === action.payload.id);
         if (index !== -1) state.items[index] = action.payload;

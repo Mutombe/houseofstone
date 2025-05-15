@@ -6,6 +6,7 @@ import {
   MapPin,
   Search,
 } from "lucide-react";
+import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { featuredProperties } from "../data/properties";
 import CountUp from 'react-countup';
@@ -96,6 +97,7 @@ const StatsSection = () => {
 
 const Home = () => {
   const navigate = useNavigate();
+  //const {user, isAuthenticated} = useSelector((state) => state.auth.user);
   const [searchParams, setSearchParams] = useState({
     location: '',
     propertyType: 'Any Type'
