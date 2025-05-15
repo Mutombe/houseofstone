@@ -1,6 +1,7 @@
+import json
 from rest_framework import serializers
 from django.contrib.auth.models import User  
-from .models import BlogPost, Profile, Property, Neighborhood, SavedSearch, FavoriteProperty, Inquiry, PropertyImage, PropertyAlert, AdminActionLog
+from .models import BlogPost, Profile, Property, PropertyFeature, Neighborhood, SavedSearch, FavoriteProperty, Inquiry, PropertyImage, PropertyAlert, AdminActionLog
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -11,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("id", "username", "email", "password", "is_active", "is_staff", "is_superuser")
+        fields = ("id", "username", "email", "password", "is_staff", "is_superuser", 'is_active', 'date_joined', 'last_login')
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
@@ -67,14 +68,69 @@ class PropertyImageSerializer(serializers.ModelSerializer):
         model = PropertyImage
         fields = ['image', 'caption']
 
+class PropertyFeatureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PropertyFeature
+        fields = ['feature']
+
 class PropertySerializer(serializers.ModelSerializer):
-    images = PropertyImageSerializer(many=True, read_only=True)
-    agent = UserSerializer(read_only=True)
+    images = PropertyImageSerializer(many=True, required=False)
+    features = PropertyFeatureSerializer(many=True, required=False)
     
     class Meta:
         model = Property
         fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at', 'agent']
+
+    def create(self, validated_data):
+        images_data = self.context['request'].FILES.getlist('images')
+        features_data = validated_data.pop('features', [])
+        property = super().create(validated_data)
+        
+        # Create images
+        for image_data in images_data:
+            PropertyImage.objects.create(property=property, image=image_data)
+        
+        # Create features
+        for feature in features_data:
+            PropertyFeature.objects.create(property=property, **feature)
+        
+        return property
+
+    def update(self, instance, validated_data):
+        images_data = self.context['request'].FILES.getlist('images')
+        features_data = validated_data.pop('features', [])
+        deleted_images = json.loads(self.context['request'].data.get('deleted_images', '[]'))
+        
+        # Update instance
+        instance = super().update(instance, validated_data)
+        
+        # Delete removed images
+        PropertyImage.objects.filter(id__in=deleted_images).delete()
+        
+        # Add new images with captions
+        image_captions = json.loads(self.context['request'].data.get('image_captions', '[]'))
+        for idx, image_data in enumerate(images_data):
+            caption = image_captions[idx]['caption'] if idx < len(image_captions) else ''
+            PropertyImage.objects.create(property=instance, image=image_data, caption=caption)
+        
+        # Update existing image captions
+        for caption_data in image_captions:
+            if 'id' in caption_data:
+                image = PropertyImage.objects.get(id=caption_data['id'])
+                image.caption = caption_data.get('caption', '')
+                image.save()
+        
+        # Replace features
+        instance.features.all().delete()
+        for feature in features_data:
+            PropertyFeature.objects.create(property=instance, **feature)
+        
+        return instance
+    def validate_price(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Price must be a positive number.")
+        return value
 
 class NeighborhoodSerializer(serializers.ModelSerializer):
     class Meta:

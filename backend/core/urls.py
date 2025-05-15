@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import RegisterView, CustomTokenObtainPairView, ProfileView, PropertyViewSet, NeighborhoodViewSet, SavedSearchViewSet, FavoritePropertyViewSet, InquiryViewSet, MortgageCalculatorView, BlogPostViewSet, PropertyShareView, PropertyShareRedirect, AdminDashboardView, UserDashboardView, PropertyStatsView, AdminUserManagementViewSet, AdminActionLogViewSet
+from .views import RegisterView,UserViewSet, CustomTokenObtainPairView, ProfileView, PropertyViewSet, NeighborhoodViewSet, SavedSearchViewSet, FavoritePropertyViewSet, InquiryViewSet, MortgageCalculatorView, BlogPostViewSet, PropertyShareView, PropertyShareRedirect, AdminDashboardView, UserDashboardView, PropertyStatsView, AdminUserManagementViewSet, AdminActionLogViewSet
 
 router = DefaultRouter()
 router.register(r'properties', PropertyViewSet, basename='property')
@@ -10,6 +10,7 @@ router.register(r'saved-searches', SavedSearchViewSet, basename='saved-search')
 router.register(r'favorites', FavoritePropertyViewSet, basename='favorite-property')
 router.register(r'admin/actions', AdminActionLogViewSet, basename='admin-actions')
 router.register(r'admin/users', AdminUserManagementViewSet, basename='admin-users')
+router.register(r'users', UserViewSet, basename='user')
 router.register(r'blog', BlogPostViewSet, basename='blog-post')
 router.register(r'inquiries', InquiryViewSet, basename='inquiry')
 

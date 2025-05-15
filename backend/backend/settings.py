@@ -55,14 +55,14 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5176',
+    'http://localhost:5173',
     'https://houseofstone.onrender.com',
     'http://127.0.0.1:5173'
 ]
 
 CORS_TRUSTED_ORIGINS = [
     'https://houseofstone.onrender.com/',
-    'http://localhost:5176',
+    'http://localhost:5173',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -122,7 +122,7 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_TIMEZONE = 'UTC'
 
 # For sharing links
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://houseofstone.onrender.com')
 
 AUTHENTICATION_BACKENDS = [
    'django.contrib.auth.backends.ModelBackend',
@@ -182,6 +182,27 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.MultiPartParser',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny',
+    ),
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/

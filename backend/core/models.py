@@ -18,18 +18,36 @@ class Profile(models.Model):
         return f"{self.user.username}'s Profile"
     
 # Property-related models
+
 class Property(models.Model):
     PROPERTY_TYPES = [
         ('house', 'House'),
         ('apartment', 'Apartment'),
         ('land', 'Land'),
         ('commercial', 'Commercial'),
+        ('villa', 'Villa'),  # Added villa as it appears in the JS object
     ]
     title = models.CharField(max_length=200)
     description = models.TextField()
     price = models.DecimalField(max_digits=12, decimal_places=2)
     location = models.CharField(max_length=200)
     property_type = models.CharField(max_length=20, choices=PROPERTY_TYPES)
+    
+    STATUS_CHOICES = [
+        ('available', 'Available'),
+        ('pending', 'Pending'),
+        ('sold', 'Sold'),
+        ('off-market', 'Off Market'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available', db_index=True)
+    beds = models.PositiveIntegerField(null=True, blank=True)
+    baths = models.PositiveIntegerField(null=True, blank=True)
+    sqft = models.PositiveIntegerField(null=True, blank=True)
+    year_built = models.PositiveIntegerField(null=True, blank=True)
+    lot_size = models.CharField(max_length=100, blank=True)
+    garage = models.CharField(max_length=100, blank=True)
+    
+    # Original fields
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     is_published = models.BooleanField(default=True)
@@ -38,10 +56,33 @@ class Property(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = 'Property'
+        verbose_name_plural = 'Properties'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['location', 'property_type', 'price']),  # Common search combination
+            models.Index(fields=['beds', 'baths', 'price']),  # Common filter combination
+        ]
+
+    def __str__(self):
+        return self.title
+
+
 class PropertyImage(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='property_images/')
     caption = models.CharField(max_length=200, blank=True)
+
+    def __str__(self):
+        return f"{self.property.title} - Image {self.id}"
+
+class PropertyFeature(models.Model):
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='features')
+    feature = models.CharField(max_length=200)
+    
+    def __str__(self):
+        return self.feature
 
 class SavedSearch(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -90,6 +90,7 @@ class ProfileView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class PropertyViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = Property.objects.filter(is_published=True)
     serializer_class = PropertySerializer
     filterset_fields = {
@@ -171,7 +172,7 @@ class PropertyAlertViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 class PropertyShareView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request, pk):
         property = get_object_or_404(Property, pk=pk)
@@ -471,3 +472,10 @@ class AdminActionLogViewSet(viewsets.ReadOnlyModelViewSet):
         )[:50]
         serializer = self.get_serializer(logs, many=True)
         return Response(serializer.data)
+    
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
+    filterset_fields = ['is_active', 'is_staff']
+    search_fields = ['email', 'first_name', 'last_name']
