@@ -24,7 +24,7 @@ const PropertyShareModal = ({ property, isOpen, onClose }) => {
       if (shareProperty.fulfilled.match(resultAction)) {
         setShareLink(resultAction.payload.share_link);
       } else {
-        setError('Failed to generate share link. Please try again.');
+        setError('You`re not logged in');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
