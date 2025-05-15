@@ -19,21 +19,24 @@ const Properties = () => {
     // Fetch properties when component mounts
     dispatch(fetchProperties());
   }, [dispatch]);
+  
 
   // Filter properties based on search and filter criteria
-  const filteredProperties = properties.filter(property => {
-    const matchesType = filters.type === 'all' || property.property_type === filters.type;
-    const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.location.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    let matchesPriceRange = true;
-    if (filters.priceRange !== 'all') {
-      const [min, max] = filters.priceRange.split('-').map(Number);
-      matchesPriceRange = property.price >= min && (!max || property.price <= max);
-    }
+  const filteredProperties = Array.isArray(properties) 
+  ? properties.filter(property => {
+      const matchesType = filters.type === 'all' || property.property_type === filters.type;
+      const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           property.location.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      let matchesPriceRange = true;
+      if (filters.priceRange !== 'all') {
+        const [min, max] = filters.priceRange.split('-').map(Number);
+        matchesPriceRange = property.price >= min && (!max || property.price <= max);
+      }
 
-    return matchesType && matchesSearch && matchesPriceRange;
-  });
+      return matchesType && matchesSearch && matchesPriceRange;
+    })
+  : [];
 
   if (status === 'loading') {
     return (
