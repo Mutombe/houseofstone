@@ -1,15 +1,23 @@
 import axios from "axios";
 
+// Get the base URL based on environment
+const getBaseUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return "https://houseofstone-backend.onrender.com/";
+  }
+  return "http://127.0.0.1:8000/";
+};
+
 // Centralized token refresh function
 export const refreshTokens = async (refresh) => {
   try {
+    const baseUrl = getBaseUrl();
     const { data } = await axios.post(
-      "http://127.0.0.1:8000/core/auth/refresh/",
+      `${baseUrl}core/auth/refresh/`,
       { refresh },
       {
         headers: {
           "Content-Type": "application/json",
-
         },
       }
     );
@@ -26,8 +34,7 @@ export const refreshTokens = async (refresh) => {
 const api = axios.create({
   baseURL: "https://houseofstone-backend.onrender.com/",
   headers: {
-    //"Content-Type": "application/json",
-     'Content-Type': 'multipart/form-data',
+    "Content-Type": "application/json",
     Accept: "application/json",
   },
   xsrfCookieName: "csrftoken",
@@ -43,6 +50,9 @@ api.interceptors.request.use((config) => {
 
   if (config.data instanceof FormData) {
     config.headers["Content-Type"] = "multipart/form-data";
+  } else {
+    // Otherwise use JSON
+    config.headers["Content-Type"] = "application/json";
   }
   return config;
 });
