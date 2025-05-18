@@ -8,6 +8,7 @@ import { fetchProperties } from '../../redux/slices/propertySlice';
 const Properties = () => {
   const dispatch = useDispatch();
   const { items: properties, status, error } = useSelector((state) => state.properties);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     type: 'all',
@@ -20,6 +21,8 @@ const Properties = () => {
     console.log('Component mounted, fetching properties');
     dispatch(fetchProperties());
   }, [dispatch]);
+
+  console.log("component properties", properties)
   
   // Fetch properties when filters change
   useEffect(() => {

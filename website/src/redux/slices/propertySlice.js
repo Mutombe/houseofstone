@@ -31,6 +31,7 @@ export const fetchProperties = createAsyncThunk(
   async (filters, { rejectWithValue }) => {
     try {
       const response = await api.get('/properties/', { params: filters });
+      console.log("properties", response.data)
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
