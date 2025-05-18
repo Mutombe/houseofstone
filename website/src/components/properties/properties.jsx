@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -8,8 +8,8 @@ import { fetchProperties } from '../../redux/slices/propertySlice';
 const Properties = () => {
   const dispatch = useDispatch();
   const { items: properties, status, error } = useSelector((state) => state.properties);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [filters, setFilters] = React.useState({
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({
     type: 'all',
     priceRange: 'all',
     bedrooms: 'all',
@@ -49,7 +49,11 @@ const Properties = () => {
   if (status === 'failed') {
     return (
       <div className="min-h-screen pt-16 flex items-center justify-center">
-        <div className="text-red-500">Error loading properties: {error}</div>
+        <div className="text-red-500">
+          Error loading properties: {error && typeof error === 'object' 
+            ? (error.message || error.detail || JSON.stringify(error)) 
+            : String(error)}
+        </div>
       </div>
     );
   }
