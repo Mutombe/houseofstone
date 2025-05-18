@@ -61,6 +61,8 @@ const Properties = () => {
       }
     }, 500); // 500ms debounce
     
+  console.log("properties", properties)
+
     return () => clearTimeout(handler);
   }, [searchTerm, dispatch]);
 

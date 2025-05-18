@@ -738,7 +738,7 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
 
 const PropertyDashboard = () => {
   const dispatch = useDispatch();
-  const properties = useSelector((state) => state.properties.items);
+  const properties = useSelector((state) => state.properties?.items);
   const loadingStatus = useSelector((state) => state.properties.status);
   const error = useSelector((state) => state.properties.error);
   const user = useSelector((state) => state.auth.user);

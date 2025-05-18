@@ -92,7 +92,9 @@ const propertySlice = createSlice({
       })
       .addCase(fetchProperties.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.items = action.payload.results;
+        console.log("resuts", action.payload.results)
+        state.items = action.payload.results || action.payload;
+        console.log("less", action.payload)
         console.log("{redux properties}", state.items)
       })
       .addCase(fetchProperties.rejected, (state, action) => {

@@ -90,7 +90,7 @@ class ProfileView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class PropertyViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [AllowAny]
     queryset = Property.objects.filter(is_published=True)
     serializer_class = PropertySerializer
     filterset_fields = {
