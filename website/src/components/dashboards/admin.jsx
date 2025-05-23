@@ -1410,12 +1410,12 @@ const PropertyDashboard = () => {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Mobile sidebar toggle */}
-      <div className="lg:hidden fixed top-4 left-4 z-20">
+      <div className="lg:hidden fixed top-4 left-4 z-20 pt-20">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="p-2 rounded-md bg-white shadow"
         >
-          {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          {sidebarOpen ? <X size={20} /> : <Menu size={20} className="" />}
         </button>
       </div>
 
@@ -1424,7 +1424,7 @@ const PropertyDashboard = () => {
         className={`fixed inset-y-0 left-0 transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:relative lg:translate-x-0 z-10 transition duration-200 ease-in-out lg:flex`}
-        style={{ backgroundColor: COLORS.dark, width: "250px" }}
+        style={{ backgroundColor: COLORS.dark, width: "250px", paddingTop: "95px" }}
       >
         <div className="flex flex-col h-full">
           <div className="px-4 py-6 text-center">

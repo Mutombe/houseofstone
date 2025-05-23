@@ -614,6 +614,15 @@ const Navbar = () => {
                     {isAuthenticated ? (
                       <>
                         <div className="flex items-center justify-between px-3 py-2">
+                          {isAdmin && (
+                            <Link
+                              to="/admin"
+                              className="transition flex items-center"
+                            >
+                              <BarChart2 className="mr-1 h-4 w-4" />
+                              Admin
+                            </Link>
+                          )}
                           <span className="text-sm font-medium flex items-center">
                             <User className="w-4 h-4 mr-1" />
                             {user?.username || "User"}
