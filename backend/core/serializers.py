@@ -1,7 +1,7 @@
 import json
 from rest_framework import serializers
 from django.contrib.auth.models import User  
-from .models import BlogPost, Profile, Property, PropertyFeature, Neighborhood, SavedSearch, FavoriteProperty, Inquiry, PropertyImage, PropertyAlert, AdminActionLog
+from .models import BlogPost, Profile, Property, PropertyFeature, Neighborhood, SavedSearch, FavoriteProperty, Inquiry, PropertyImage, PropertyAlert, AdminActionLog, Agent, PropertyAgent
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -63,6 +63,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
         return instance
     
+    
 class PropertyImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PropertyImage
@@ -73,58 +74,192 @@ class PropertyFeatureSerializer(serializers.ModelSerializer):
         model = PropertyFeature
         fields = ['feature']
 
+class AgentSerializer(serializers.ModelSerializer):
+    full_name = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = Agent
+        fields = ['id', 'first_name', 'middle_name', 'surname', 'full_name', 
+                 'cell_number', 'email', 'position', 'permissions', 
+                 'agency_name', 'branch', 'address', 'is_active']
+
+
+class PropertyAgentSerializer(serializers.ModelSerializer):
+    agent = AgentSerializer(read_only=True)
+    agent_id = serializers.IntegerField(write_only=True)
+    
+    class Meta:
+        model = PropertyAgent
+        fields = ['id', 'agent', 'agent_id', 'is_primary', 'assigned_date']
+
 class PropertySerializer(serializers.ModelSerializer):
-    images = PropertyImageSerializer(many=True, required=False)
+    images = PropertyImageSerializer(many=True, required=False, read_only=True)
     features = PropertyFeatureSerializer(many=True, required=False)
+    agents = serializers.SerializerMethodField()
+    property_agents = PropertyAgentSerializer(many=True, required=False, read_only=True)
     
     class Meta:
         model = Property
         fields = '__all__'
         read_only_fields = ['created_at', 'updated_at', 'agent']
 
+    def get_agents(self, obj):
+        return PropertyAgentSerializer(
+            obj.property_agents.all(),
+            many=True
+        ).data
+
     def create(self, validated_data):
-        images_data = self.context['request'].FILES.getlist('images')
-        features_data = validated_data.pop('features', [])
-        property = super().create(validated_data)
+        # Extract and remove features data (it's now a JSON string from frontend)
+        features_data = []
+        agents_data = []
+        request = self.context.get('request')
+            
+        if request:
+            # Handle features
+            if 'features' in request.data:
+                try:
+                    features_data = json.loads(request.data.get('features', '[]'))
+                    if 'features' in validated_data:
+                        validated_data.pop('features')
+                except json.JSONDecodeError:
+                    raise serializers.ValidationError("Invalid features format")
+            
+            # Handle agents
+            if 'agents' in request.data:
+                try:
+                    agents_data = json.loads(request.data.get('agents', '[]'))
+                    if 'agents' in validated_data:
+                        validated_data.pop('agents')
+                except json.JSONDecodeError:
+                    raise serializers.ValidationError("Invalid agents format")
         
-        # Create images
-        for image_data in images_data:
-            PropertyImage.objects.create(property=property, image=image_data)
+        # Create property instance first
+        property = Property.objects.create(**validated_data)
+        
+        # Process images
+        images_data = request.FILES.getlist('images') if request else []
+        
+        # Get image captions if provided
+        image_captions = []
+        if request and 'image_captions' in request.data:
+            try:
+                image_captions = json.loads(request.data.get('image_captions', '[]'))
+            except json.JSONDecodeError:
+                pass
+        
+        # Create images with captions
+        for index, image_data in enumerate(images_data):
+            caption = ""
+            # Find caption for this image if it exists
+            for caption_data in image_captions:
+                if caption_data.get('file') == image_data.name:
+                    caption = caption_data.get('caption', '')
+                    break
+            
+            PropertyImage.objects.create(
+                property=property, 
+                image=image_data,
+                caption=caption
+            )
         
         # Create features
         for feature in features_data:
-            PropertyFeature.objects.create(property=property, **feature)
+            if isinstance(feature, dict) and 'feature' in feature:
+                PropertyFeature.objects.create(property=property, feature=feature['feature'])
+
+
+                # Create property-agent relationships
+        for agent_data in agents_data:
+            if isinstance(agent_data, dict) and 'agent_id' in agent_data:
+                try:
+                    agent = Agent.objects.get(id=agent_data['agent_id'])
+                    PropertyAgent.objects.create(
+                        property=property,
+                        agent=agent,
+                        is_primary=agent_data.get('is_primary', False)
+                    )
+                except Agent.DoesNotExist:
+                    continue
         
         return property
 
     def update(self, instance, validated_data):
-        images_data = self.context['request'].FILES.getlist('images')
-        features_data = validated_data.pop('features', [])
-        deleted_images = json.loads(self.context['request'].data.get('deleted_images', '[]'))
+        # Handle features similar to create method
+        features_data = []
+        agents_data = []
+        request = self.context.get('request')
+        
+        if request and 'features' in request.data:
+            try:
+                features_data = json.loads(request.data.get('features', '[]'))
+                if 'features' in validated_data:
+                    validated_data.pop('features')
+            except json.JSONDecodeError:
+                raise serializers.ValidationError("Invalid features format")
+                
+        if 'agents' in self.context['request'].data:
+            agents_data = json.loads(self.context['request'].data['agents'])
         
         # Update instance
         instance = super().update(instance, validated_data)
         
         # Delete removed images
-        PropertyImage.objects.filter(id__in=deleted_images).delete()
+        if request and 'deleted_images' in request.data:
+            try:
+                deleted_images = json.loads(request.data.get('deleted_images', '[]'))
+                PropertyImage.objects.filter(id__in=deleted_images).delete()
+            except json.JSONDecodeError:
+                pass
         
         # Add new images with captions
-        image_captions = json.loads(self.context['request'].data.get('image_captions', '[]'))
-        for idx, image_data in enumerate(images_data):
-            caption = image_captions[idx]['caption'] if idx < len(image_captions) else ''
-            PropertyImage.objects.create(property=instance, image=image_data, caption=caption)
+        images_data = request.FILES.getlist('images') if request else []
+        image_captions = []
+        
+        if request and 'image_captions' in request.data:
+            try:
+                image_captions = json.loads(request.data.get('image_captions', '[]'))
+            except json.JSONDecodeError:
+                pass
+        
+        # Create new images with captions
+        for image_data in images_data:
+            caption = ""
+            # Find caption for this image if it exists
+            for caption_data in image_captions:
+                if caption_data.get('file') == image_data.name:
+                    caption = caption_data.get('caption', '')
+                    break
+            
+            PropertyImage.objects.create(
+                property=instance, 
+                image=image_data,
+                caption=caption
+            )
         
         # Update existing image captions
         for caption_data in image_captions:
-            if 'id' in caption_data:
-                image = PropertyImage.objects.get(id=caption_data['id'])
-                image.caption = caption_data.get('caption', '')
-                image.save()
+            if 'id' in caption_data and caption_data['id']:
+                try:
+                    image = PropertyImage.objects.get(id=caption_data['id'])
+                    image.caption = caption_data.get('caption', '')
+                    image.save()
+                except PropertyImage.DoesNotExist:
+                    pass
         
         # Replace features
         instance.features.all().delete()
         for feature in features_data:
-            PropertyFeature.objects.create(property=instance, **feature)
+            if isinstance(feature, dict) and 'feature' in feature:
+                PropertyFeature.objects.create(property=instance, feature=feature['feature'])
+
+        instance.property_agents.all().delete()
+        for agent_data in agents_data:
+            PropertyAgent.objects.create(
+                property=property,
+                agent_id=agent_data['agent_id'],
+                is_primary=agent_data.get('is_primary', False)
+            )
         
         return instance
     
@@ -137,6 +272,13 @@ class PropertySerializer(serializers.ModelSerializer):
         if not isinstance(value, list):
             raise serializers.ValidationError("Features must be a list")
         return value
+    
+    def validate_area_measurement(self, value):
+        if value is not None and value < 0:
+            raise serializers.ValidationError("Area measurement must be a positive number.")
+        return value
+    
+
 class NeighborhoodSerializer(serializers.ModelSerializer):
     class Meta:
         model = Neighborhood

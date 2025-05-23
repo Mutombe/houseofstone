@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Profile, Inquiry, Property, Neighborhood, SavedSearch, FavoriteProperty, PropertyImage, PropertyAlert, BlogPost, PropertyInteraction, AdminActionLog
+from .models import Profile, Inquiry, Property, Neighborhood, SavedSearch, FavoriteProperty, PropertyImage, PropertyAlert, BlogPost, PropertyInteraction, AdminActionLog, Agent, PropertyAgent
 from django.contrib.auth.models import User
 
 class AdminProfileOverview(admin.ModelAdmin):
@@ -152,6 +152,33 @@ class AdminActionLogOverview(admin.ModelAdmin):
 
     ordering = ("-timestamp",)
 
+class AdminAgent(admin.ModelAdmin):
+    list_display = (
+        "first_name",
+        "surname",
+        "email",
+    )
+    search_fields = (
+        "first_name",
+        "email",
+    )
+
+    ordering = ("first_name",)
+
+class AdminPropertyAgent(admin.ModelAdmin):
+    list_display = (
+        "agent",
+        "property",
+        "assigned_date",
+    )
+    search_fields = (
+        "agent__first_name",
+        "property__title",
+    )
+    list_filter = (
+        "assigned_date",
+    )
+
 
 admin.site.register(Profile, AdminProfileOverview)
 admin.site.register(Inquiry, AdminInquiry)
@@ -162,5 +189,7 @@ admin.site.register(FavoriteProperty, AdminFavoriteProperty)
 admin.site.register(PropertyImage, AdminPropertyImage)
 admin.site.register(PropertyAlert, AdminPropertyAlert)
 admin.site.register(BlogPost, AdminBlogPost)    
+admin.site.register(Agent, AdminAgent)
+admin.site.register(PropertyAgent, AdminPropertyAgent)
 admin.site.register(PropertyInteraction)
 admin.site.register(AdminActionLog, AdminActionLogOverview)

@@ -28,6 +28,11 @@ from django.core.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import filters
+from .models import Agent
+from .serializers import AgentSerializer
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -91,6 +96,7 @@ class ProfileView(APIView):
     
 class PropertyViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
+    queryset = Property.objects.prefetch_related('property_agents__agent')
     queryset = Property.objects.filter(is_published=True)
     serializer_class = PropertySerializer
     filterset_fields = {
@@ -144,7 +150,6 @@ class MortgageCalculatorView(APIView):
         interest_rate = request.data.get('interest_rate')
         loan_term = request.data.get('loan_term')  # In years
         
-        # Validate inputs
         try:
             monthly_rate = (float(interest_rate) / 100) / 12
             payments = int(loan_term) * 12
@@ -185,7 +190,7 @@ class PropertyShareView(APIView):
         )
         
         return Response({
-            'share_link': f"{settings.FRONTEND_URL}/property/{property.id}/share/{share.share_token}/"
+            'share_link': f"{settings.FRONTEND_URL}/properties/{property.id}/"
         })
 
 class PropertyShareRedirect(APIView):
@@ -448,7 +453,6 @@ class AdminUserManagementViewSet(viewsets.ModelViewSet):
         )
         return Response(UserSerializer(user).data)
     
-# views.py
 class AdminActionLogViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = AdminActionLogSerializer
     permission_classes = [IsAdminUser]
@@ -479,3 +483,207 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUser]
     filterset_fields = ['is_active', 'is_staff']
     search_fields = ['email', 'first_name', 'last_name']
+
+class AgentViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing agents with full CRUD operations
+    """
+    queryset = Agent.objects.all()
+    serializer_class = AgentSerializer
+    permission_classes = [AllowAny]  # Adjust permissions as needed
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    
+    # Filter fields
+    filterset_fields = {
+        'position': ['exact'],
+        'permissions': ['exact'],
+        'is_active': ['exact'],
+        'branch': ['exact', 'icontains'],
+        'agency_name': ['exact', 'icontains']
+    }
+    
+    # Search fields
+    search_fields = ['first_name', 'surname', 'email', 'cell_number', 'agency_name', 'branch']
+    
+    # Ordering fields
+    ordering_fields = ['first_name', 'surname', 'created_at', 'updated_at']
+    ordering = ['first_name', 'surname']
+    
+    def get_queryset(self):
+        """
+        Override to filter by active status if needed
+        """
+        queryset = Agent.objects.all()
+        
+        # Filter by active status if specified in query params
+        is_active = self.request.query_params.get('is_active', None)
+        if is_active is not None:
+            queryset = queryset.filter(is_active=is_active.lower() == 'true')
+            
+        return queryset
+    
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new agent
+        """
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            agent = serializer.save()
+            return Response(
+                AgentSerializer(agent).data, 
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def update(self, request, *args, **kwargs):
+        """
+        Update an existing agent
+        """
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        
+        if serializer.is_valid():
+            agent = serializer.save()
+            return Response(AgentSerializer(agent).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete an agent (soft delete by setting is_active to False)
+        """
+        instance = self.get_object()
+        
+        # Soft delete - set is_active to False instead of actual deletion
+        instance.is_active = False
+        instance.save()
+        
+        return Response(
+            {'message': 'Agent deactivated successfully'}, 
+            status=status.HTTP_200_OK
+        )
+    
+    @action(detail=True, methods=['post'])
+    def activate(self, request, pk=None):
+        """
+        Activate a deactivated agent
+        """
+        agent = self.get_object()
+        agent.is_active = True
+        agent.save()
+        return Response(
+            {'message': 'Agent activated successfully'}, 
+            status=status.HTTP_200_OK
+        )
+    
+    @action(detail=True, methods=['post'])
+    def deactivate(self, request, pk=None):
+        """
+        Deactivate an active agent
+        """
+        agent = self.get_object()
+        agent.is_active = False
+        agent.save()
+        return Response(
+            {'message': 'Agent deactivated successfully'}, 
+            status=status.HTTP_200_OK
+        )
+    
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """
+        Get only active agents
+        """
+        active_agents = Agent.objects.filter(is_active=True)
+        serializer = self.get_serializer(active_agents, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def inactive(self, request):
+        """
+        Get only inactive agents
+        """
+        inactive_agents = Agent.objects.filter(is_active=False)
+        serializer = self.get_serializer(inactive_agents, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def by_position(self, request):
+        """
+        Get agents by position
+        """
+        position = request.query_params.get('position', None)
+        if not position:
+            return Response(
+                {'error': 'Position parameter is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        agents = Agent.objects.filter(position=position, is_active=True)
+        serializer = self.get_serializer(agents, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def by_branch(self, request):
+        """
+        Get agents by branch
+        """
+        branch = request.query_params.get('branch', None)
+        if not branch:
+            return Response(
+                {'error': 'Branch parameter is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        agents = Agent.objects.filter(branch__icontains=branch, is_active=True)
+        serializer = self.get_serializer(agents, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def properties(self, request, pk=None):
+        """
+        Get all properties assigned to this agent
+        """
+        agent = self.get_object()
+        properties = agent.agent_properties.all()
+        
+        # Import PropertySerializer here to avoid circular imports
+        from .serializers import PropertySerializer
+        serializer = PropertySerializer(
+            [pa.property for pa in properties], 
+            many=True, 
+            context={'request': request}
+        )
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def stats(self, request, pk=None):
+        """
+        Get agent statistics
+        """
+        agent = self.get_object()
+        
+        # Calculate statistics
+        total_properties = agent.agent_properties.count()
+        primary_properties = agent.agent_properties.filter(is_primary=True).count()
+        
+        # Get property statuses
+        available_properties = agent.agent_properties.filter(
+            property__status='available'
+        ).count()
+        sold_properties = agent.agent_properties.filter(
+            property__status='sold'
+        ).count()
+        pending_properties = agent.agent_properties.filter(
+            property__status='pending'
+        ).count()
+        
+        stats = {
+            'total_properties': total_properties,
+            'primary_properties': primary_properties,
+            'available_properties': available_properties,
+            'sold_properties': sold_properties,
+            'pending_properties': pending_properties,
+        }
+        
+        return Response(stats)

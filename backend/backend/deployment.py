@@ -10,7 +10,7 @@ ALLOWED_HOSTS = [
     'houseofstone.onrender.com',
 ]
 
-DEBUG = False
+DEBUG = True
 SECRET_KEY = SECRET_KEY
 
 # CORS SETTINGS
@@ -59,7 +59,6 @@ CSRF_TRUSTED_ORIGINS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -71,14 +70,12 @@ MIDDLEWARE = [
 # STATIC FILES CONFIGURATION
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # MEDIA FILES CONFIGURATION
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # DATABASE CONFIGURATION
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -89,8 +86,6 @@ DATABASES = {
         'PORT': '50013',
     }
 }
-
-
 
 # SECURITY MIDDLEWARE SETTINGS
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -112,6 +107,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
+        'rest_framework.parsers.MultiPartParser',
     ] if not DEBUG else [
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',

@@ -475,7 +475,7 @@ const Navbar = () => {
                   className={({ isActive }) =>
                     `text-sm font-medium transition-colors ${
                       isActive
-                        ? "text-stone-900 border-b-2 border-amber-800"
+                        ? "text-stone-900 border-b-2 border-amber-800 pb-1"
                         : "text-stone-600 hover:text-amber-800"
                     } flex items-center space-x-1`
                   }

@@ -17,21 +17,74 @@ class Profile(models.Model):
     def __str__(self):
         return f"{self.user.username}'s Profile"
     
-# Property-related models
+class Agent(models.Model):
+    POSITION_CHOICES = [
+        ('agency_admin', 'Agency Admin'),
+        ('agent', 'Agent'),
+    ]
+    
+    PERMISSION_CHOICES = [
+        ('upload', 'Upload'),
+        ('edit', 'Edit'),
+        ('delete', 'Delete'),
+        ('view_only', 'View Only'),
+    ]
+    
+    first_name = models.CharField(max_length=100)
+    middle_name = models.CharField(max_length=100, blank=True)
+    surname = models.CharField(max_length=100)
+    cell_number = models.CharField(max_length=20)
+    email = models.EmailField()
+    position = models.CharField(max_length=20, choices=POSITION_CHOICES)
+    permissions = models.CharField(max_length=20, choices=PERMISSION_CHOICES, default='view_only')
+    
+    # Agency information
+    agency_name = models.CharField(max_length=200, default='House of Stone Properties')
+    branch = models.CharField(max_length=100, default='Borrowdale')
+    address = models.TextField(default='21 Harare Drive Borrowdale, Harare')
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Agent'
+        verbose_name_plural = 'Agents'
+        ordering = ['first_name', 'surname']
+    
+    def __str__(self):
+        return f"{self.first_name} {self.surname}"
+    
+    @property
+    def full_name(self):
+        if self.middle_name:
+            return f"{self.first_name} {self.middle_name} {self.surname}"
+        return f"{self.first_name} {self.surname}"
 
 class Property(models.Model):
+    AREA_UNIT_CHOICES = [
+        ('sqm', 'Square Meters'),
+        ('sqft', 'Square Feet'),
+        ('hectares', 'Hectares'),
+        ('acres', 'Acres'),
+    ]
     PROPERTY_TYPES = [
         ('house', 'House'),
         ('apartment', 'Apartment'),
         ('land', 'Land'),
         ('commercial', 'Commercial'),
-        ('villa', 'Villa'),  # Added villa as it appears in the JS object
+        ('villa', 'Villa'),  
+    ]
+    CATEGORY_TYPES = [
+        ('rental', 'Rental'),
+        ('sale', 'Sale'), 
     ]
     title = models.CharField(max_length=200)
     description = models.TextField()
     price = models.DecimalField(max_digits=12, decimal_places=2)
     location = models.CharField(max_length=200)
     property_type = models.CharField(max_length=20, choices=PROPERTY_TYPES)
+    category = models.CharField(max_length=20, choices=CATEGORY_TYPES, default='sale')
     
     STATUS_CHOICES = [
         ('available', 'Available'),
@@ -42,9 +95,14 @@ class Property(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available', db_index=True)
     beds = models.PositiveIntegerField(null=True, blank=True)
     baths = models.PositiveIntegerField(null=True, blank=True)
+    kitchens = models.PositiveIntegerField(null=True, blank=True)
+    lounges = models.PositiveIntegerField(null=True, blank=True)
+    dining_rooms = models.PositiveIntegerField(null=True, blank=True)
     sqft = models.PositiveIntegerField(null=True, blank=True)
+    area_measurement = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Total area of the property")
+    area_unit = models.CharField(max_length=20, choices=AREA_UNIT_CHOICES, default='sqm')
     year_built = models.PositiveIntegerField(null=True, blank=True)
-    lot_size = models.CharField(max_length=100, blank=True)
+    floor_size = models.CharField(max_length=100, blank=True)
     garage = models.CharField(max_length=100, blank=True)
     
     # Original fields
@@ -68,7 +126,6 @@ class Property(models.Model):
     def __str__(self):
         return self.title
 
-
 class PropertyImage(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='property_images/')
@@ -83,6 +140,20 @@ class PropertyFeature(models.Model):
     
     def __str__(self):
         return self.feature
+    
+class PropertyAgent(models.Model):
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='property_agents')
+    agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name='agent_properties')
+    is_primary = models.BooleanField(default=False, help_text="Primary agent responsible for this property")
+    assigned_date = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Property Agent'
+        verbose_name_plural = 'Property Agents'
+        unique_together = ('property', 'agent')
+    
+    def __str__(self):
+        return f"{self.property.title} - {self.agent.full_name}"
 
 class SavedSearch(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

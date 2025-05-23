@@ -96,13 +96,13 @@ const Properties = () => {
 
   return (
     <div className="min-h-screen pt-16 bg-stone-50">
-      {/* Debug info */}
+      {/* Debug info 
       <div className="max-w-7xl mx-auto p-4 bg-yellow-100 mb-4 rounded">
         <p>Filter Debug Info:</p>
         <p>Status: {status}</p>
         <p>Filters: {JSON.stringify(filters)}</p>
         <p>Properties Count: {Array.isArray(properties) ? properties.length : 'Not an array'}</p>
-      </div>
+      </div>*/}
       
       {/* Filters Section */}
       <div className="bg-white shadow-md">

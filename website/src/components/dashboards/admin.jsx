@@ -4,6 +4,7 @@ import {
   Building2,
   AlertCircle,
   Home,
+  Star,
   MapPin,
   DollarSign,
   Eye,
@@ -26,6 +27,7 @@ import {
 } from "lucide-react";
 import { fetchUsers } from "../../redux/slices/userSlice";
 import { fetchAdminStats } from "../../redux/slices/adminSlice";
+import { fetchAgents } from "../../redux/slices/agentSlice";
 import {
   fetchProperties,
   createProperty,
@@ -64,12 +66,18 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
     price: "",
     location: "",
     property_type: "house",
+    category: "sale",
     status: "available",
     beds: "",
+    lounges: "",
+    kitchens: "",
+    dining_rooms: "",
     baths: "",
+    area_unit: "sqm",
+    area: "",
     sqft: "",
     year_built: "",
-    lot_size: "",
+    floor_size: "",
     garage: "",
     latitude: "",
     longitude: "",
@@ -77,18 +85,33 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
     virtual_tour_url: "",
     images: [],
     features: [],
+    agents: [],
   };
   const dispatch = useDispatch();
   const [formData, setFormData] = useState(initialFormState);
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
   const loading = useSelector((state) => state.properties.loading);
+  const agents = useSelector((state) => state.agent.agents);
+  const [availableAgents, setAvailableAgents] = useState([]);
+  const [selectedAgent, setSelectedAgent] = useState("");
   const [feature, setFeature] = useState("");
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "info",
   });
+
+  const areaUnits = [
+    { value: "sqm", label: "Square Meters" },
+    { value: "sqft", label: "Square Feet" },
+    { value: "hectares", label: "Hectares" },
+    { value: "acres", label: "Acres" },
+  ];
+
+  useEffect(() => {
+    dispatch(fetchAgents());
+  }, [dispatch]);
 
   // Populate form when editing an existing property
   useEffect(() => {
@@ -100,6 +123,14 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
         price: selectedProperty.price.toString(),
         beds: selectedProperty.beds?.toString() || "",
         baths: selectedProperty.baths?.toString() || "",
+        area: selectedProperty.area?.toString() || "",
+        floor_size: selectedProperty.floor_size?.toString() || "",
+        lounges: selectedProperty.lounges?.toString() || "",
+        kitchens: selectedProperty.kitchens?.toString() || "",
+        dining_rooms: selectedProperty.dining_rooms?.toString() || "",
+        garage: selectedProperty.garage?.toString() || "",
+        area_unit: selectedProperty.area_unit || "sqm",
+        virtual_tour_url: selectedProperty.virtual_tour_url || "",
         sqft: selectedProperty.sqft?.toString() || "",
         year_built: selectedProperty.year_built?.toString() || "",
         latitude: selectedProperty.latitude?.toString() || "",
@@ -107,6 +138,11 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
         features: selectedProperty.features.map((f) => f.feature)
           ? selectedProperty.features.map((f) => f.feature || f)
           : [],
+        agents: selectedProperty.property_agents.map((pa) => ({
+          agent_id: pa.agent.id,
+          name: pa.agent.full_name,
+          is_primary: pa.is_primary,
+        })),
       };
       setFormData(propertyForForm);
 
@@ -172,6 +208,46 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
     setImagePreviewUrls(updatedPreviews);
   };
 
+  const handleAddAgent = () => {
+    if (selectedAgent) {
+      const agent = agents.find((a) => a.id.toString() === selectedAgent);
+      if (agent && !formData.agents.some((a) => a.agent_id === agent.id)) {
+        setFormData({
+          ...formData,
+          agents: [
+            ...formData.agents,
+            {
+              agent_id: agent.id,
+              name: agent.full_name,
+              is_primary: formData.agents.length === 0,
+            },
+          ],
+        });
+        setSelectedAgent("");
+      }
+    }
+  };
+
+  const handleRemoveAgent = (index) => {
+    const updatedAgents = [...formData.agents];
+    updatedAgents.splice(index, 1);
+    setFormData({
+      ...formData,
+      agents: updatedAgents,
+    });
+  };
+
+  const handleTogglePrimaryAgent = (index) => {
+    const updatedAgents = formData.agents.map((agent, i) => ({
+      ...agent,
+      is_primary: i === index,
+    }));
+    setFormData({
+      ...formData,
+      agents: updatedAgents,
+    });
+  };
+
   const handleAddFeature = () => {
     if (feature.trim()) {
       setFormData({
@@ -203,6 +279,10 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
       price: parseFloat(formData.price),
       beds: formData.beds ? parseInt(formData.beds) : null,
       baths: formData.baths ? parseInt(formData.baths) : null,
+      area_measurement: formData.area_measurement
+        ? parseFloat(formData.area_measurement)
+        : null,
+      floor_size: formData.floor_size ? parseFloat(formData.floor_size) : null,
       sqft: formData.sqft ? parseInt(formData.sqft) : null,
       year_built: formData.year_built ? parseInt(formData.year_built) : null,
       latitude: formData.latitude ? parseFloat(formData.latitude) : null,
@@ -210,44 +290,60 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
     };
 
     // Add all regular fields to FormData
+    //Object.keys(fieldsToProcess).forEach((key) => {
+    // Skip 'images' and 'features' as they need special handling
+    //if (
+    //key !== "images" &&
+    //key !== "features" &&
+    //fieldsToProcess[key] !== null
+    //) {
+    // propertyFormData.append(key, fieldsToProcess[key]);
+    //}
+    //});
+
     Object.keys(fieldsToProcess).forEach((key) => {
-      // Skip 'images' and 'features' as they need special handling
       if (
         key !== "images" &&
         key !== "features" &&
-        fieldsToProcess[key] !== null
+        key !== "agents" &&
+        fieldsToProcess[key] !== null &&
+        fieldsToProcess[key] !== ""
       ) {
         propertyFormData.append(key, fieldsToProcess[key]);
       }
     });
 
-    // Add features as a JSON string
-    //if (formData.features && formData.features.length > 0) {
-      //const featuresToSend = formData.features.map((feature) => ({ feature }));
-      //propertyFormData.append("features", JSON.stringify(featuresToSend));
-   // }
-
     // Add features as properly formatted JSON
-    const featuresToSend = formData.features.map((feature) => ({ feature }));
-    if (featuresToSend.length > 0) {
+    if (formData.features && formData.features.length > 0) {
+      const featuresToSend = formData.features.map((feature) => ({ feature }));
       propertyFormData.append("features", JSON.stringify(featuresToSend));
+    } else {
+      // Even if empty, send an empty array to ensure the backend gets the field
+      propertyFormData.append("features", JSON.stringify([]));
     }
+
+    const agentsToSend = formData.agents.map((agent) => ({
+      agent_id: agent.agent_id,
+      is_primary: agent.is_primary,
+    }));
+    propertyFormData.append("agents", JSON.stringify(agentsToSend));
 
     // Add new image files
     imageFiles.forEach((file) => {
       propertyFormData.append("images", file);
     });
 
-    // Add captions for both existing and new images
-
-    const captionsData = imagePreviewUrls.map((preview) => ({
-      id: preview.id,
-      caption: preview.caption,
+    // Prepare and add image captions
+    const imageCaptions = imagePreviewUrls.map((preview) => ({
+      id: preview.id || null,
+      caption: preview.caption || "",
+      file: preview.file ? preview.file.name : null, // Include file name for new images
     }));
-    propertyFormData.append("image_captions", JSON.stringify(captionsData));
 
-    // For image deletion, track existing images that were removed
-    if (selectedProperty && selectedProperty.images) {
+    propertyFormData.append("image_captions", JSON.stringify(imageCaptions));
+
+    // For edit mode - track existing images that were removed
+    if (currentForm === "edit" && selectedProperty && selectedProperty.images) {
       const existingImageIds = selectedProperty.images.map((img) => img.id);
       const remainingImageIds = imagePreviewUrls
         .filter((preview) => preview.id)
@@ -264,6 +360,7 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
         );
       }
     }
+
     try {
       if (currentForm === "edit" && selectedProperty) {
         await dispatch(
@@ -279,6 +376,11 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
           severity: "success",
         });
       } else {
+        // Log the FormData contents for debugging (optional)
+        for (let pair of propertyFormData.entries()) {
+          console.log(pair[0] + ": " + pair[1]);
+        }
+
         await dispatch(createProperty(propertyFormData)).unwrap();
 
         setSnackbar({
@@ -291,6 +393,7 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
       setCurrentForm(null); // Close modal
       dispatch(fetchProperties()); // Refresh list
     } catch (error) {
+      console.error("Submission error:", error);
       setSnackbar({
         open: true,
         message: error.message || "Submission failed!",
@@ -379,9 +482,26 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
                     >
                       <option value="house">House</option>
                       <option value="apartment">Apartment</option>
+                      <option value="land">Flat</option>
                       <option value="land">Land</option>
                       <option value="commercial">Commercial</option>
                       <option value="villa">Villa</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Category
+                    </label>
+                    <select
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      required
+                    >
+                      <option value="rental">Rental</option>
+                      <option value="sale">Sale</option>
                     </select>
                   </div>
 
@@ -469,6 +589,40 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Area Measurement
+                    </label>
+                    <input
+                      type="number"
+                      name="area_measurement"
+                      value={formData.area_measurement}
+                      onChange={handleInputChange}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      min="0"
+                      step="0.01"
+                      placeholder="Enter area size"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Area Unit
+                    </label>
+                    <select
+                      name="area_unit"
+                      value={formData.area_unit}
+                      onChange={handleInputChange}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {areaUnits.map((unit) => (
+                        <option key={unit.value} value={unit.value}>
+                          {unit.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Year Built
                     </label>
                     <input
@@ -483,21 +637,21 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Lot Size
+                      Floor Size
                     </label>
                     <input
                       type="text"
-                      name="lot_size"
-                      value={formData.lot_size}
+                      name="floor_size"
+                      value={formData.floor_size}
                       onChange={handleInputChange}
                       className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="e.g., 0.25 acres"
+                      placeholder="e.g., 34x78"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Garage
+                      Garage(s)
                     </label>
                     <input
                       type="text"
@@ -508,6 +662,112 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
                       placeholder="e.g., 2-car attached"
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Lounge(s)
+                    </label>
+                    <input
+                      type="text"
+                      name="lounges"
+                      value={formData.lounges}
+                      onChange={handleInputChange}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="e.g., 2"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Dining Room(s)
+                    </label>
+                    <input
+                      type="text"
+                      name="dining_rooms"
+                      value={formData.dining_rooms}
+                      onChange={handleInputChange}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="e.g., 2"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Property Agents Section */}
+              <div className="border-b pb-4">
+                <h3 className="font-medium text-lg mb-3 flex items-center">
+                  <Users className="mr-2" size={20} />
+                  Property Agents/Negotiators
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex space-x-2">
+                    <select
+                      value={selectedAgent}
+                      onChange={(e) => setSelectedAgent(e.target.value)}
+                      className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select an agent...</option>
+                      {/* Changed availableAgents to agents from Redux */}
+                      {agents.map((agent) => (
+                        <option key={agent.id} value={agent.id.toString()}>
+                          {agent.full_name} - {agent.position}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleAddAgent}
+                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                    >
+                      <Plus size={20} />
+                    </button>
+                  </div>
+
+                  {formData.agents.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-sm font-medium text-gray-700 mb-2">
+                        Selected Agents:
+                      </p>
+                      <div className="space-y-2">
+                        {formData.agents.map((agent, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-medium">
+                                {agent.name}
+                              </span>
+                              {agent.is_primary && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  <Star size={12} className="mr-1" />
+                                  Primary
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <button
+                                type="button"
+                                onClick={() => handleTogglePrimaryAgent(index)}
+                                className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                              >
+                                {agent.is_primary
+                                  ? "Remove Primary"
+                                  : "Set Primary"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveAgent(index)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -567,7 +827,7 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
                       type="text"
                       value={feature}
                       onChange={(e) => setFeature(e.target.value)}
-                      placeholder="Add a feature (e.g., Pool, Fireplace)"
+                      placeholder="Add a feature (e.g., Pool, Fireplace, Garden)"
                       className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                     <button
