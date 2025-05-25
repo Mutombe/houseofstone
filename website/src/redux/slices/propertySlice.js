@@ -126,4 +126,5 @@ const propertySlice = createSlice({
 });
 
 export const { selectProperty } = propertySlice.actions;
+export const selectAllProperties = (state) => state.properties.items;
 export default propertySlice.reducer;
