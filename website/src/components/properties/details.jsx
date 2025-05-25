@@ -1,43 +1,66 @@
 // src/pages/PropertyDetail.jsx
-import { motion } from 'framer-motion';
-import { MapPin, Bed, Bath, Square, Heart, Share2, Calendar, Mail } from 'lucide-react';
+import { motion } from "framer-motion";
+import {
+  MapPin,
+  Bed,
+  Bath,
+  Square,
+  Heart,
+  Share2,
+  Calendar,
+  Mail,
+} from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
-import { Link, useParams } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Helmet } from 'react-helmet';
-import PropertyShareModal from './shareModal';
-import PropertyMap from './propertyMap';
+import { Link, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Helmet } from "react-helmet";
+import PropertyShareModal from "./shareModal";
+import PropertyMap from "./propertyMap";
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [similarProperties, setSimilarProperties] = useState([]);
-  const { items: properties, status, error } = useSelector((state) => state.properties);
+  const {
+    items: properties,
+    status,
+    error,
+  } = useSelector((state) => state.properties);
   const navigate = useNavigate();
-  const property = properties.find(p => p.id === parseInt(id));
-  
+  const property = properties.find((p) => p.id === parseInt(id));
+
   useEffect(() => {
     if (property && properties.length > 0) {
       // Find similar properties based on location, price range, property type
-      const similar = properties.filter(p => 
-        p.id !== parseInt(id) && 
-        (p.location === property.location || 
-         Math.abs(p.price - property.price) / property.price < 0.2 || // Within 20% price range
-         p.type === property.type)
-      ).slice(0, 3); // Limit to 3 similar properties
-      
+      const similar = properties
+        .filter(
+          (p) =>
+            p.id !== parseInt(id) &&
+            (p.location === property.location ||
+              Math.abs(p.price - property.price) / property.price < 0.2 || // Within 20% price range
+              p.type === property.type)
+        )
+        .slice(0, 3); // Limit to 3 similar properties
+
       setSimilarProperties(similar);
     }
   }, [property, properties, id]);
-  
-  if (!property) return <div className="min-h-screen flex justify-center items-center">Loading property...</div>;
+
+  if (!property)
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        Loading property...
+      </div>
+    );
 
   // Get primary agent or fallback to default contact
   const getPrimaryAgent = (property) => {
     if (property.property_agents && property.property_agents.length > 0) {
-      const primaryAgent = property.property_agents.find(agent => agent.is_primary);
+      const primaryAgent = property.property_agents.find(
+        (agent) => agent.is_primary
+      );
       return primaryAgent || property.property_agents[0]; // Fallback to first agent if no primary
     }
     return null;
@@ -46,10 +69,12 @@ const PropertyDetail = () => {
   // Function to create WhatsApp link
   const getWhatsAppLink = (property) => {
     const primaryAgent = getPrimaryAgent(property);
-    const phoneNumber = primaryAgent?.agent?.phone || '263772329569'; // Fallback number
-    const agentName = primaryAgent?.agent?.full_name || 'HSP Team';
-    
-    return `https://wa.me/${phoneNumber}?text=Hello%20${encodeURIComponent(agentName)},%20I%27m%20interested%20in%20your%20property%20"${encodeURIComponent(
+    const phoneNumber = primaryAgent?.agent?.phone || "263772329569"; // Fallback number
+    const agentName = primaryAgent?.agent?.full_name || "HSP Team";
+
+    return `https://wa.me/${phoneNumber}?text=Hello%20${encodeURIComponent(
+      agentName
+    )},%20I%27m%20interested%20in%20your%20property%20"${encodeURIComponent(
       property.title
     )}"%20in%20${encodeURIComponent(property.location)}`;
   };
@@ -57,7 +82,7 @@ const PropertyDetail = () => {
   // Function to get email address
   const getEmailAddress = (property) => {
     const primaryAgent = getPrimaryAgent(property);
-    return primaryAgent?.agent?.email || 'info@hsp.co.zw'; // Fallback email
+    return primaryAgent?.agent?.email || "info@hsp.co.zw"; // Fallback email
   };
 
   // Function to create email link
@@ -65,30 +90,38 @@ const PropertyDetail = () => {
     const email = getEmailAddress(property);
     const subject = `Inquiry about ${property.title}`;
     const body = `Hello,\n\nI'm interested in your property "${property.title}" located in ${property.location}.\n\nPlease provide me with more information.\n\nThank you.`;
-    
-    return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    return `mailto:${email}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
   };
 
   return (
     <div className="min-h-screen bg-stone-50">
       <Helmet>
         <title>{property.title} | Real Estate</title>
-        <meta name="description" content={property.description?.substring(0, 160)} />
+        <meta
+          name="description"
+          content={property.description?.substring(0, 160)}
+        />
         <meta property="og:title" content={property.title} />
-        <meta property="og:description" content={property.description?.substring(0, 160)} />
+        <meta
+          property="og:description"
+          content={property.description?.substring(0, 160)}
+        />
         {property.images && property.images.length > 0 && (
           <meta property="og:image" content={property.images[0].image} />
         )}
         <meta property="og:type" content="website" />
         <meta property="og:url" content={window.location.href} />
         <meta name="twitter:card" content="summary_large_image" />
-        
+
         {/* Add Leaflet CSS */}
-        <link 
-          rel="stylesheet" 
-          href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" 
-          integrity="sha512-Zcn6bjR/8RZbLEpLIeOwNtzREBAJnUKESxces60Mpoj+2okopSAcSUIUOseddDm0cxnGQzxIR7vJgsLZbdYx7w==" 
-          crossOrigin="anonymous" 
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
+          integrity="sha512-Zcn6bjR/8RZbLEpLIeOwNtzREBAJnUKESxces60Mpoj+2okopSAcSUIUOseddDm0cxnGQzxIR7vJgsLZbdYx7w=="
+          crossOrigin="anonymous"
         />
       </Helmet>
 
@@ -114,7 +147,9 @@ const PropertyDetail = () => {
                 <p className="text-3xl font-bold text-stone-900">
                   ${parseFloat(property.price).toLocaleString()}
                 </p>
-                <p className="text-sm text-stone-500 uppercase">{property.status}</p>
+                <p className="text-sm text-stone-500 uppercase">
+                  {property.status}
+                </p>
               </div>
             </div>
           </motion.div>
@@ -175,18 +210,24 @@ const PropertyDetail = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="bg-white rounded-xl shadow-lg p-8 mb-8"
             >
-              <h2 className="text-2xl font-bold text-stone-900 mb-4">Location</h2>
+              <h2 className="text-2xl font-bold text-stone-900 mb-4">
+                Location
+              </h2>
               <div className="h-96 rounded-xl overflow-hidden">
                 {property ? (
-                  <PropertyMap 
-                    position={[property.latitude, property.longitude]} 
+                  <PropertyMap
+                    position={[property.latitude, property.longitude]}
                     title={property.title}
                     address={property.location}
                   />
                 ) : (
                   <div className="w-full h-full bg-stone-200 flex flex-col items-center justify-center">
-                    <p className="text-stone-500">Map coordinates not available</p>
-                    <p className="text-stone-400 text-sm mt-2">{property.location}</p>
+                    <p className="text-stone-500">
+                      Map coordinates not available
+                    </p>
+                    <p className="text-stone-400 text-sm mt-2">
+                      {property.location}
+                    </p>
                   </div>
                 )}
               </div>
@@ -199,7 +240,9 @@ const PropertyDetail = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="bg-white rounded-xl shadow-lg p-8 mb-8"
             >
-              <h2 className="text-2xl font-bold text-stone-900 mb-4">Description</h2>
+              <h2 className="text-2xl font-bold text-stone-900 mb-4">
+                Description
+              </h2>
               <p className="text-stone-600">{property.description}</p>
             </motion.div>
 
@@ -210,17 +253,20 @@ const PropertyDetail = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="bg-white rounded-xl shadow-lg p-8 mb-8"
             >
-              <h2 className="text-2xl font-bold text-stone-900 mb-4">Features</h2>
+              <h2 className="text-2xl font-bold text-stone-900 mb-4">
+                Features
+              </h2>
               <div className="grid grid-cols-2 gap-4">
-                {property.features && property.features.map((feature, i) => (
-                  <div key={i} className="flex items-center text-stone-600">
-                    <div className="w-2 h-2 bg-stone-500 rounded-full mr-2" />
-                    {feature.feature}
-                  </div>
-                ))}
+                {property.features &&
+                  property.features.map((feature, i) => (
+                    <div key={i} className="flex items-center text-stone-600">
+                      <div className="w-2 h-2 bg-stone-500 rounded-full mr-2" />
+                      {feature.feature}
+                    </div>
+                  ))}
               </div>
             </motion.div>
-            
+
             {/* Similar Properties */}
             {similarProperties.length > 0 && (
               <motion.div
@@ -229,20 +275,22 @@ const PropertyDetail = () => {
                 transition={{ duration: 0.5, delay: 0.5 }}
                 className="bg-white rounded-xl shadow-lg p-8"
               >
-                <h2 className="text-2xl font-bold text-stone-900 mb-6">Similar Properties</h2>
+                <h2 className="text-2xl font-bold text-stone-900 mb-6">
+                  Similar Properties
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {similarProperties.map((prop) => (
-                    <div 
-                      key={prop.id} 
+                    <div
+                      key={prop.id}
                       className="bg-stone-50 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
                       onClick={() => navigate(`/properties/${prop.id}`)}
                       role="button"
                     >
                       <div className="h-48 bg-stone-200 relative">
                         {prop.images && prop.images.length > 0 ? (
-                          <img 
-                            src={prop.images[0].image} 
-                            alt={prop.title} 
+                          <img
+                            src={prop.images[0].image}
+                            alt={prop.title}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -255,9 +303,15 @@ const PropertyDetail = () => {
                         </div>
                       </div>
                       <div className="p-4">
-                        <h3 className="text-lg font-semibold text-stone-900 truncate">{prop.title}</h3>
-                        <p className="text-stone-600 text-sm mb-2">{prop.location}</p>
-                        <p className="text-stone-900 font-bold">${parseFloat(prop.price).toLocaleString()}</p>
+                        <h3 className="text-lg font-semibold text-stone-900 truncate">
+                          {prop.title}
+                        </h3>
+                        <p className="text-stone-600 text-sm mb-2">
+                          {prop.location}
+                        </p>
+                        <p className="text-stone-900 font-bold">
+                          ${parseFloat(prop.price).toLocaleString()}
+                        </p>
                         <div className="flex items-center mt-3 text-sm text-stone-500">
                           {prop.beds && (
                             <div className="flex items-center mr-4">
@@ -299,7 +353,7 @@ const PropertyDetail = () => {
                   <Heart className="w-5 h-5 mr-2" />
                   Save
                 </button>
-                <button 
+                <button
                   onClick={() => setIsShareModalOpen(true)}
                   className="flex items-center text-stone-600 hover:text-stone-900"
                 >
@@ -311,13 +365,21 @@ const PropertyDetail = () => {
               {/* Agent Information */}
               {getPrimaryAgent(property) && (
                 <div className="mb-8 p-4 bg-stone-50 rounded-lg">
-                  <h3 className="text-lg font-semibold text-stone-900 mb-2">Primary Agent</h3>
-                  <p className="text-stone-700 font-medium">{getPrimaryAgent(property).agent.full_name}</p>
+                  <h3 className="text-lg font-semibold text-stone-900 mb-2">
+                    Primary Agent
+                  </h3>
+                  <p className="text-stone-700 font-medium">
+                    {getPrimaryAgent(property).agent.full_name}
+                  </p>
                   {getPrimaryAgent(property).agent.email && (
-                    <p className="text-stone-600 text-sm">{getPrimaryAgent(property).agent.email}</p>
+                    <p className="text-stone-600 text-sm">
+                      {getPrimaryAgent(property).agent.email}
+                    </p>
                   )}
                   {getPrimaryAgent(property).agent.phone && (
-                    <p className="text-stone-600 text-sm">{getPrimaryAgent(property).agent.phone}</p>
+                    <p className="text-stone-600 text-sm">
+                      {getPrimaryAgent(property).agent.phone}
+                    </p>
                   )}
                 </div>
               )}
@@ -325,33 +387,49 @@ const PropertyDetail = () => {
               <div className="grid grid-cols-2 gap-4 mb-8">
                 <div>
                   <p className="text-stone-500 text-sm mb-1">Bedrooms</p>
-                  <p className="font-semibold">{property.beds || 'N/A'}</p>
+                  <p className="font-semibold">{property.beds || "N/A"}</p>
                 </div>
                 <div>
                   <p className="text-stone-500 text-sm mb-1">Bathrooms</p>
-                  <p className="font-semibold">{property.baths || 'N/A'}</p>
+                  <p className="font-semibold">{property.baths || "N/A"}</p>
                 </div>
                 <div>
-                  <p className="text-stone-500 text-sm mb-1">Square Feet</p>
-                  <p className="font-semibold">{property.sqft || 'N/A'}</p>
+                  <p className="text-stone-500 text-sm mb-1">Land Size</p>
+                  <p className="font-semibold">{property.sqft || "N/A"}</p>
                 </div>
                 <div>
                   <p className="text-stone-500 text-sm mb-1">Year Built</p>
-                  <p className="font-semibold">{property.year_built || 'N/A'}</p>
+                  <p className="font-semibold">
+                    {property.year_built || "N/A"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-stone-500 text-sm mb-1">Floor Size</p>
-                  <p className="font-semibold">{property.floor_size || 'N/A'}</p>
+                  <p className="font-semibold">
+                    {property.floor_size || "N/A"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-stone-500 text-sm mb-1">Garage</p>
-                  <p className="font-semibold">{property.garage || 'N/A'}</p>
+                  <p className="font-semibold">{property.garage || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-stone-500 text-sm mb-1">Dining Rooms</p>
+                  <p className="font-semibold">
+                    {property.dining_rooms || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-stone-500 text-sm mb-1">Lounges</p>
+                  <p className="font-semibold">
+                    {property.lounges || "N/A"}
+                  </p>
                 </div>
               </div>
 
               {/* Contact Buttons */}
               <div className="space-y-3">
-                <a 
+                <a
                   href={getWhatsAppLink(property)}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -361,7 +439,7 @@ const PropertyDetail = () => {
                   Contact via WhatsApp
                 </a>
 
-                <a 
+                <a
                   href={getEmailLink(property)}
                   className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
                 >
@@ -373,9 +451,9 @@ const PropertyDetail = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Share Modal */}
-      <PropertyShareModal 
+      <PropertyShareModal
         property={property}
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
