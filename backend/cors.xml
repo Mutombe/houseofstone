@@ -1,0 +1,7 @@
+<CORSConfiguration>
+  <CORSRule>
+    <AllowedOrigin>*</AllowedOrigin> <!-- Allows all domains -->
+    <AllowedMethod>GET</AllowedMethod> <!-- Allows only GET requests -->
+    <MaxAgeSeconds>3600</MaxAgeSeconds> <!-- Cache preflight requests for 1 hour -->
+  </CORSRule>
+</CORSConfiguration>
