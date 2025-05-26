@@ -97,7 +97,7 @@ const PropertyDetail = () => {
   const getWhatsAppLink = (property) => {
     const primaryAgent = getPrimaryAgent(property);
     const phoneNumber = primaryAgent?.agent?.phone || "263772329569";
-    const agentName = primaryAgent?.agent?.full_name || "HSP Team";
+    const agentName = primaryAgent?.agent?.first_name || "HSP Team";
 
     return `https://wa.me/${phoneNumber}?text=Hello%20${encodeURIComponent(
       agentName
@@ -360,7 +360,7 @@ const PropertyDetail = () => {
                   </h3>
                   <div className="space-y-2">
                     <p className="text-stone-700 font-medium">
-                      {getPrimaryAgent(property).agent.full_name}
+                      {getPrimaryAgent(property).agent.first_name}
                     </p>
                     {getPrimaryAgent(property).agent.email && (
                       <div className="flex items-center text-stone-600 text-sm">
