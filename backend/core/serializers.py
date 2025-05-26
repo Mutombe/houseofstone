@@ -256,7 +256,7 @@ class PropertySerializer(serializers.ModelSerializer):
         instance.property_agents.all().delete()
         for agent_data in agents_data:
             PropertyAgent.objects.create(
-                property=property,
+                property=instance,
                 agent_id=agent_data['agent_id'],
                 is_primary=agent_data.get('is_primary', False)
             )
@@ -276,6 +276,14 @@ class PropertySerializer(serializers.ModelSerializer):
     def validate_area_measurement(self, value):
         if value is not None and value < 0:
             raise serializers.ValidationError("Area measurement must be a positive number.")
+        return value
+    
+    def validate_agents(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Agents must be a list")
+        for agent in value:
+            if not isinstance(agent, dict) or 'agent_id' not in agent:
+                raise serializers.ValidationError("Invalid agent format")
         return value
     
 

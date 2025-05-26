@@ -24,10 +24,20 @@ import {
   X,
   Calendar,
   Clock,
+  CheckCircle,
+  User,
+  UserPlus,
+  Camera,
 } from "lucide-react";
 import { fetchUsers } from "../../redux/slices/userSlice";
 import { fetchAdminStats } from "../../redux/slices/adminSlice";
-import { fetchAgents } from "../../redux/slices/agentSlice";
+import {
+  fetchAgents,
+  deleteAgent,
+  selectSelectedAgent,
+  createAgent,
+  updateAgent,
+} from "../../redux/slices/agentSlice";
 import {
   fetchProperties,
   createProperty,
@@ -288,18 +298,6 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
       latitude: formData.latitude ? parseFloat(formData.latitude) : null,
       longitude: formData.longitude ? parseFloat(formData.longitude) : null,
     };
-
-    // Add all regular fields to FormData
-    //Object.keys(fieldsToProcess).forEach((key) => {
-    // Skip 'images' and 'features' as they need special handling
-    //if (
-    //key !== "images" &&
-    //key !== "features" &&
-    //fieldsToProcess[key] !== null
-    //) {
-    // propertyFormData.append(key, fieldsToProcess[key]);
-    //}
-    //});
 
     Object.keys(fieldsToProcess).forEach((key) => {
       if (
@@ -996,6 +994,289 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
   );
 };
 
+const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
+  const dispatch = useDispatch();
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    position: "",
+    bio: "",
+    is_active: true,
+    profile_picture: null,
+  });
+
+  const [profilePreview, setProfilePreview] = useState("");
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "info",
+  });
+  const loading = useSelector((state) => state.agent.loading);
+
+  useEffect(() => {
+    if (currentForm === "editAgent" && selectedAgent) {
+      setFormData({
+        full_name: selectedAgent.full_name,
+        email: selectedAgent.email,
+        phone: selectedAgent.phone,
+        position: selectedAgent.position,
+        bio: selectedAgent.bio,
+        is_active: selectedAgent.is_active,
+        profile_picture: selectedAgent.profile_picture,
+      });
+      if (selectedAgent.profile_picture) {
+        setProfilePreview(selectedAgent.profile_picture);
+      }
+    }
+  }, [currentForm, selectedAgent]);
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({ ...formData, profile_picture: file });
+      setProfilePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const agentFormData = new FormData();
+    Object.keys(formData).forEach((key) => {
+      if (key !== "profile_picture" || formData[key]) {
+        agentFormData.append(key, formData[key]);
+      }
+    });
+
+    try {
+      if (currentForm === "edit" && selectedAgent) {
+        await dispatch(
+          updateAgent({
+            id: selectedAgent.id,
+            data: agentFormData,
+          })
+        ).unwrap();
+        setSnackbar({
+          open: true,
+          message: "Agent updated successfully!",
+          severity: "success",
+        });
+      } else {
+        await dispatch(createAgent(agentFormData)).unwrap();
+        setSnackbar({
+          open: true,
+          message: "Agent created successfully!",
+          severity: "success",
+        });
+      }
+
+      dispatch(fetchAgents());
+      setCurrentForm(null);
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message || "Operation failed!",
+        severity: "error",
+      });
+    }
+  };
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold" style={{ color: COLORS.dark }}>
+                {currentForm === "edit" ? "Edit Agent" : "Add New Agent"}
+              </h2>
+              <button
+                onClick={() => setCurrentForm(null)}
+                className="p-2 rounded-full hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Profile Picture */}
+              <div className="flex flex-col items-center">
+                <div className="relative group">
+                  <div className="w-32 h-32 rounded-full bg-gray-200 overflow-hidden">
+                    {profilePreview ? (
+                      <img
+                        src={profilePreview}
+                        alt="Profile preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <User className="w-16 h-16 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  <label
+                    className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-sm cursor-pointer hover:bg-gray-100"
+                    htmlFor="profile-upload"
+                  >
+                    <Camera className="w-5 h-5" />
+                    <input
+                      id="profile-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Form Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name*
+                  </label>
+                  <input
+                    type="text"
+                    name="full_name"
+                    value={formData.full_name}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email*
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Position*
+                  </label>
+                  <input
+                    type="text"
+                    name="position"
+                    value={formData.position}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Bio
+                  </label>
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    rows="4"
+                  ></textarea>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="is_active"
+                    id="is_active"
+                    checked={formData.is_active}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  />
+                  <label
+                    htmlFor="is_active"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
+                    Active Status
+                  </label>
+                </div>
+              </div>
+
+              {/* Form Actions */}
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setCurrentForm(null)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    backgroundColor: COLORS.primary,
+                    color: COLORS.white,
+                  }}
+                  className="px-4 py-2 rounded-md hover:opacity-90"
+                >
+                  {loading ? (
+                    <Loader className="animate-spin h-5 w-5" />
+                  ) : currentForm === "edit" ? (
+                    "Update Agent"
+                  ) : (
+                    "Create Agent"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+      >
+        <Alert
+          severity={snackbar.severity}
+          className="items-center"
+          iconMapping={{
+            error: <AlertCircle className="w-5 h-5" />,
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
+  );
+};
+
 const PropertyDashboard = () => {
   const dispatch = useDispatch();
   const properties = useSelector((state) => state.properties?.items);
@@ -1006,10 +1287,14 @@ const PropertyDashboard = () => {
   const users = useSelector((state) => state.user.list);
   const usersStatus = useSelector((state) => state.user.status);
   const usersError = useSelector((state) => state.user.error);
+  const agents = useSelector((state) => state.agent.agents);
 
   const [activeTab, setActiveTab] = useState("properties");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentForm, setCurrentForm] = useState(null);
+  const [currentAgentForm, setCurrentAgentForm] = useState(null);
+  const [selectedAgent, setSelectedAgent] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCriteria, setFilterCriteria] = useState({
     propertyType: "",
@@ -1019,6 +1304,24 @@ const PropertyDashboard = () => {
     sortDirection: "desc",
   });
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const [agentsSearchTerm, setAgentsSearchTerm] = useState("");
+
+  // Add handler functions
+  const handleAddAgent = () => {
+    setSelectedAgent(null);
+    setCurrentForm("addAgent");
+  };
+
+  const handleEditAgent = (agent) => {
+    selectSelectedAgent(agent);
+    setCurrentForm("editAgent");
+  };
+
+  const handleDeleteAgent = (id) => {
+    if (window.confirm("Are you sure you want to delete this agent?")) {
+      dispatch(deleteAgent(id));
+    }
+  };
 
   // Initial form state for new/edit property
   const initialFormState = {
@@ -1047,6 +1350,7 @@ const PropertyDashboard = () => {
   useEffect(() => {
     dispatch(fetchProperties());
     dispatch(fetchAdminStats());
+    dispatch(fetchAgents());
   }, [dispatch]);
 
   useEffect(() => {
@@ -1054,7 +1358,7 @@ const PropertyDashboard = () => {
       dispatch(fetchUsers());
     }
   }, [activeTab, usersStatus, dispatch]);
-  // Reset form when closing
+
   useEffect(() => {
     if (!currentForm) {
       setFormData(initialFormState);
@@ -1424,7 +1728,11 @@ const PropertyDashboard = () => {
         className={`fixed inset-y-0 left-0 transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:relative lg:translate-x-0 z-10 transition duration-200 ease-in-out lg:flex`}
-        style={{ backgroundColor: COLORS.dark, width: "250px", paddingTop: "95px" }}
+        style={{
+          backgroundColor: COLORS.dark,
+          width: "250px",
+          paddingTop: "95px",
+        }}
       >
         <div className="flex flex-col h-full">
           <div className="px-4 py-6 text-center">
@@ -1455,6 +1763,19 @@ const PropertyDashboard = () => {
             >
               <Users size={18} />
               <span>Users</span>
+            </button>
+
+            {/* Add this button to the sidebar navigation */}
+            <button
+              onClick={() => setActiveTab("agents")}
+              className={`flex items-center space-x-3 w-full px-4 py-3 rounded-lg transition-colors ${
+                activeTab === "agents"
+                  ? "bg-gray-700 text-white"
+                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
+              }`}
+            >
+              <Users size={18} />
+              <span>Agents</span>
             </button>
 
             <button
@@ -1890,6 +2211,128 @@ const PropertyDashboard = () => {
             </div>
           )}
 
+          {/* Add this case to the main content switch */}
+          {activeTab === "agents" && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
+                <div className="relative">
+                  <Search
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search agents..."
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full md:w-80 focus:outline-none focus:ring-2 focus:ring-primary"
+                    value={agentsSearchTerm}
+                    onChange={(e) => setAgentsSearchTerm(e.target.value)}
+                  />
+                </div>
+                <button
+                  onClick={handleAddAgent}
+                  style={{
+                    backgroundColor: COLORS.primary,
+                    color: COLORS.white,
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-md hover:opacity-90"
+                >
+                  <Plus size={18} />
+                  <span>Add Agent</span>
+                </button>
+              </div>
+
+              {/* Agents Table */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Phone
+                      </th>
+                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Position
+                      </th>
+                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {agents
+                      .filter(
+                        (agent) =>
+                          agent.full_name
+                            ?.toLowerCase()
+                            .includes(agentsSearchTerm.toLowerCase()) ||
+                          agent.email
+                            ?.toLowerCase()
+                            .includes(agentsSearchTerm.toLowerCase()) ||
+                          agent.phone
+                            ?.toLowerCase()
+                            .includes(agentsSearchTerm.toLowerCase()) ||
+                          agent.position
+                            ?.toLowerCase()
+                            .includes(agentsSearchTerm.toLowerCase())
+                      )
+                      .map((agent) => (
+                        <tr key={agent.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                {agent.full_name?.charAt(0) || "A"}
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {agent.full_name}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {agent.email}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {agent.cell_number}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {agent.position}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEditAgent(agent)}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteAgent(agent.id)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* Notifications Tab */}
           {activeTab === "notifications" && (
             <div className="bg-white rounded-lg shadow">
@@ -2171,6 +2614,21 @@ const PropertyDashboard = () => {
       </div>
 
       {renderPropertyForm()}
+      {(currentForm === "addAgent" || currentForm === "editAgent") && (
+        <AgentForm
+          currentForm={currentForm === "editAgent" ? "edit" : "add"}
+          setCurrentForm={setCurrentForm}
+          selectedAgent={selectedAgent}
+        />
+      )}
+
+      {(currentForm === "addAgent" || currentForm === "editAgent") && (
+        <AgentForm
+          currentForm={currentForm === "editAgent" ? "edit" : "add"}
+          setCurrentForm={setCurrentForm}
+          selectedAgent={selectedAgent} // This should come from local state
+        />
+      )}
     </div>
   );
 };

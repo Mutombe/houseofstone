@@ -793,8 +793,6 @@ const Properties = () => {
       >
         <SlidersHorizontal className="w-6 h-6" />
       </motion.button>
-
-      {/* Quick Stats Footer */}
     </div>
   );
 };

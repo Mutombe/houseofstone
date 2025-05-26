@@ -1,9 +1,5 @@
-// agentSlice.js - Redux slice for agent management
-
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../utils/api";
-
-// Async thunks for agent operations
 
 // Fetch all agents with optional filters
 export const fetchAgents = createAsyncThunk(
