@@ -654,10 +654,6 @@ const Navbar = () => {
                           sx={{
                             color: "#92400e",
                             borderColor: "#92400e",
-                            "&:hover": {
-                              borderColor: "#92400e",
-                              backgroundColor: "#92400e",
-                            },
                           }}
                           className="justify-start"
                           startIcon={<LogIn className="w-5 h-5" />}
