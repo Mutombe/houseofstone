@@ -997,16 +997,19 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
 const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
-    full_name: "",
+    first_name: "",
+    middle_name: "",
+    surname: "",
+    cell_number: "",
     email: "",
-    phone: "",
     position: "",
-    bio: "",
+    permissions: "view_only",
+    agency_name: "House of Stone Properties",
+    branch: "Borrowdale",
+    address: "21 Harare Drive Borrowdale, Harare",
     is_active: true,
-    profile_picture: null,
   });
 
-  const [profilePreview, setProfilePreview] = useState("");
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -1017,17 +1020,18 @@ const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
   useEffect(() => {
     if (currentForm === "editAgent" && selectedAgent) {
       setFormData({
-        full_name: selectedAgent.full_name,
+        first_name: selectedAgent.first_name,
+        middle_name: selectedAgent.middle_name || "",
+        surname: selectedAgent.surname,
+        cell_number: selectedAgent.cell_number,
         email: selectedAgent.email,
-        phone: selectedAgent.phone,
         position: selectedAgent.position,
-        bio: selectedAgent.bio,
+        permissions: selectedAgent.permissions,
+        agency_name: selectedAgent.agency_name,
+        branch: selectedAgent.branch,
+        address: selectedAgent.address,
         is_active: selectedAgent.is_active,
-        profile_picture: selectedAgent.profile_picture,
       });
-      if (selectedAgent.profile_picture) {
-        setProfilePreview(selectedAgent.profile_picture);
-      }
     }
   }, [currentForm, selectedAgent]);
 
@@ -1039,22 +1043,12 @@ const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
     });
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData({ ...formData, profile_picture: file });
-      setProfilePreview(URL.createObjectURL(file));
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const agentFormData = new FormData();
     Object.keys(formData).forEach((key) => {
-      if (key !== "profile_picture" || formData[key]) {
-        agentFormData.append(key, formData[key]);
-      }
+      agentFormData.append(key, formData[key]);
     });
 
     try {
@@ -1108,54 +1102,52 @@ const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Profile Picture */}
-              <div className="flex flex-col items-center">
-                <div className="relative group">
-                  <div className="w-32 h-32 rounded-full bg-gray-200 overflow-hidden">
-                    {profilePreview ? (
-                      <img
-                        src={profilePreview}
-                        alt="Profile preview"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <User className="w-16 h-16 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                  <label
-                    className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-sm cursor-pointer hover:bg-gray-100"
-                    htmlFor="profile-upload"
-                  >
-                    <Camera className="w-5 h-5" />
-                    <input
-                      id="profile-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-              </div>
-
-              {/* Form Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* First Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name*
+                    First Name*
                   </label>
                   <input
                     type="text"
-                    name="full_name"
-                    value={formData.full_name}
+                    name="first_name"
+                    value={formData.first_name}
                     onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                     required
                   />
                 </div>
 
+                {/* Middle Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Middle Name
+                  </label>
+                  <input
+                    type="text"
+                    name="middle_name"
+                    value={formData.middle_name}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                {/* Surname */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Surname*
+                  </label>
+                  <input
+                    type="text"
+                    name="surname"
+                    value={formData.surname}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
+                  />
+                </div>
+
+                {/* Email */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Email*
@@ -1170,46 +1162,101 @@ const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
                   />
                 </div>
 
+                {/* Cell Number */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
+                    Cell Number*
                   </label>
                   <input
                     type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Position*
-                  </label>
-                  <input
-                    type="text"
-                    name="position"
-                    value={formData.position}
+                    name="cell_number"
+                    value={formData.cell_number}
                     onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                     required
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                {/* Position */}
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Bio
+                    Position*
                   </label>
-                  <textarea
-                    name="bio"
-                    value={formData.bio}
+                  <select
+                    name="position"
+                    value={formData.position}
                     onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    rows="4"
+                    required
+                  >
+                    <option value="">Select Position</option>
+                    <option value="agency_admin">Agency Admin</option>
+                    <option value="agent">Agent</option>
+                  </select>
+                </div>
+
+                {/* Permissions */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Permissions*
+                  </label>
+                  <select
+                    name="permissions"
+                    value={formData.permissions}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
+                  >
+                    <option value="upload">Upload</option>
+                    <option value="edit">Edit</option>
+                    <option value="delete">Delete</option>
+                    <option value="view_only">View Only</option>
+                  </select>
+                </div>
+
+                {/* Agency Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Agency Name
+                  </label>
+                  <input
+                    type="text"
+                    name="agency_name"
+                    value={formData.agency_name}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                {/* Branch */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Branch
+                  </label>
+                  <input
+                    type="text"
+                    name="branch"
+                    value={formData.branch}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                {/* Address */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Address
+                  </label>
+                  <textarea
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    rows="2"
                   ></textarea>
                 </div>
 
+                {/* Active Status */}
                 <div className="flex items-center">
                   <input
                     type="checkbox"

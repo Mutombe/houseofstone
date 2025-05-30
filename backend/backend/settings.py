@@ -126,6 +126,23 @@ CELERY_TIMEZONE = 'UTC'
 # For sharing links
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://houseofstone.onrender.com')
 
+ADMIN_BASE_URL = 'africarecsintl.org'
+ADMINS = [('ARI Admin', 'simbamtombe@gmail.com')]
+APP_NAME = 'Africa RECs International'
+
+# settings.py
+# Email Configuration (Development)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'mail.hsp.co.zw'  # Hostinger's SMTP server
+EMAIL_PORT = 587  # 465 for SSL
+EMAIL_USE_TLS = True  # Use False if using port 465
+EMAIL_USE_SSL = False  # Use True if using port 465
+EMAIL_HOST_USER = 'sales@hsp.co.zw'
+EMAIL_HOST_PASSWORD = 'saleshsp2025!'  # Password you set in Hostinger email account
+DEFAULT_FROM_EMAIL = 'Zim-Rec <sales@hsp.co.zw>'
+SERVER_EMAIL = 'sales@hsp.co.zw'  # For error notifications
+SITE_NAME = "Africa Recs"
+
 AUTHENTICATION_BACKENDS = [
    'django.contrib.auth.backends.ModelBackend',
 ]
