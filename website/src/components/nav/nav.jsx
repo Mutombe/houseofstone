@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Icons
 import {
   User,
   LogIn,
@@ -24,6 +22,7 @@ import {
   Lock,
   ChartNoAxesColumn,
   BarChart2,
+  MapPin,
 } from "lucide-react";
 
 // Material UI
@@ -45,17 +44,18 @@ import { logout, login, register } from "../../redux/slices/authSlice";
 export function AuthHeader({ view }) {
   return (
     <div className="text-center">
-      <div className="mx-auto w-16 h-16 mb-4">
+      {/* Blue background container for logo */}
+      <div className="mx-auto w-24 h-20 mb-6 bg-slate-800 rounded-2xl flex items-center justify-center shadow-lg">
         <img
           src="/logo.png"
           alt="HSP Logo"
-          className="rounded-2xl w-full h-full"
+          className="w-16 h-12 object-contain filter brightness-110"
         />
       </div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">
+      <h2 className="text-3xl font-bold bg-slate-800 bg-clip-text text-transparent mb-3">
         {view === "login" ? "Welcome Back!" : "Join HSP"}
       </h2>
-      <p className="text-gray-600">
+      <p className="text-gray-600 text-lg">
         {view === "login"
           ? "Sign in to continue to your account"
           : "Create your free HSP account"}
@@ -171,187 +171,228 @@ export const AuthModals = ({ openType, onClose }) => {
       <Dialog
         open={!!openType}
         onClose={onClose}
-        maxWidth="xs"
+        maxWidth="sm"
         fullWidth
         aria-labelledby="auth-dialog-title"
+        PaperProps={{
+          className: "rounded-3xl overflow-hidden shadow-2xl",
+        }}
       >
         <motion.div
-          initial={{ scale: 0.95 }}
-          animate={{ scale: 1 }}
-          className="p-6 space-y-6"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="bg-gradient-to-br from-white via-blue-50 to-blue-100"
         >
-          <div className="text-center">
-            <div className="mx-auto w-20 h-16 mb-4">
-              <img
-                src="/logo.png"
-                alt="HSP Logo"
-                className="rounded-2xl w-full h-full"
-              />
+          {/* Header with blue background */}
+          <div className="bg-slate-800 px-8 py-6 text-white">
+            <div className="text-center">
+              {/* Prominent logo on blue background */}
+              <div className="mx-auto w-20 h-16 mb-4 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg border border-white/30">
+                <img
+                  src="/logo.png"
+                  alt="HSP Logo"
+                  className="w-14 h-10 object-contain filter brightness-110"
+                />
+              </div>
+              <h2 id="auth-dialog-title" className="text-2xl font-bold mb-2">
+                {view === "login" ? "Welcome Back!" : "Join HSP"}
+              </h2>
+              <p className="text-blue-100 text-sm">
+                {view === "login"
+                  ? "Sign in to continue to your account"
+                  : "Create your free HSP account"}
+              </p>
             </div>
-            <h2
-              id="auth-dialog-title"
-              className="text-2xl font-bold text-gray-900 mb-2"
-            >
-              {view === "login" ? "Welcome Back!" : "Join HSP"}
-            </h2>
-            <p className="text-gray-600">
-              {view === "login"
-                ? "Sign in to continue to your account"
-                : "Create your free HSP account"}
-            </p>
           </div>
 
-          {error && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="bg-red-50 p-3 rounded-lg text-red-700 text-sm"
-            >
-              {view === "register"
-                ? getRegistrationError()
-                : typeof error === "object"
-                ? error.detail || JSON.stringify(error)
-                : error}
-            </motion.div>
-          )}
+          <div className="px-8 py-6 space-y-6">
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-50 border border-red-200 p-4 rounded-xl text-red-700 text-sm"
+              >
+                <div className="flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>
+                    {view === "register"
+                      ? getRegistrationError()
+                      : typeof error === "object"
+                      ? error.detail || JSON.stringify(error)
+                      : error}
+                  </span>
+                </div>
+              </motion.div>
+            )}
 
-          <div className="space-y-4">
-            {view === "register" && (
+            <div className="space-y-5">
+              {view === "register" && (
+                <TextField
+                  fullWidth
+                  label="Email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  onKeyDown={handleKeyDown}
+                  InputProps={{
+                    startAdornment: (
+                      <AtSign className="text-yellow-600 mr-3" size={20} />
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "12px",
+                      backgroundColor: "white",
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#eab308",
+                        borderWidth: "2px",
+                      },
+                    },
+                    "& .MuiFormLabel-root.Mui-focused": {
+                      color: "#eab308",
+                    },
+                  }}
+                  aria-label="Email"
+                  required
+                />
+              )}
+
               <TextField
                 fullWidth
-                label="Email"
-                type="email"
-                value={formData.email}
+                label="Username"
+                value={formData.username}
                 onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
+                  setFormData({ ...formData, username: e.target.value })
                 }
                 onKeyDown={handleKeyDown}
                 InputProps={{
                   startAdornment: (
-                    <AtSign className="text-gray-400 mr-2" size={18} />
+                    <User className="text-yellow-500 mr-3" size={20} />
                   ),
                 }}
                 sx={{
                   "& .MuiOutlinedInput-root": {
+                    borderRadius: "12px",
+                    backgroundColor: "white",
                     "&.Mui-focused fieldset": {
-                      borderColor: "#92400e",
+                      borderColor: "#eab308",
+                      borderWidth: "2px",
                     },
                   },
                   "& .MuiFormLabel-root.Mui-focused": {
-                    color: "#92400e",
+                    color: "#eab308",
                   },
                 }}
-                aria-label="Email"
+                aria-label="Username"
                 required
               />
-            )}
 
-            {view === "register" && <Divider className="my-4" />}
-
-            <TextField
-              fullWidth
-              label="Username"
-              value={formData.username}
-              onChange={(e) =>
-                setFormData({ ...formData, username: e.target.value })
-              }
-              onKeyDown={handleKeyDown}
-              InputProps={{
-                startAdornment: (
-                  <User className="text-gray-400 mr-2" size={18} />
-                ),
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#92400e",
+              <TextField
+                fullWidth
+                label="Password"
+                type="password"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                onKeyDown={handleKeyDown}
+                InputProps={{
+                  startAdornment: (
+                    <Lock className="text-yellow-500 mr-3" size={20} />
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "12px",
+                    backgroundColor: "white",
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#eab308",
+                      borderWidth: "2px",
+                    },
                   },
-                },
-                "& .MuiFormLabel-root.Mui-focused": {
-                  color: "#92400e",
-                },
-              }}
-              aria-label="Username"
-              required
-            />
-
-            <Divider className="my-4" />
-
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              onKeyDown={handleKeyDown}
-              InputProps={{
-                startAdornment: (
-                  <Lock className="text-gray-400 mr-2" size={18} />
-                ),
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#92400e",
+                  "& .MuiFormLabel-root.Mui-focused": {
+                    color: "#eab308",
                   },
+                }}
+                aria-label="Password"
+                required
+              />
+            </div>
+
+            <Button
+              fullWidth
+              variant="contained"
+              size="large"
+              onClick={handleSubmit}
+              disabled={status === "loading"}
+              sx={{
+                borderRadius: "12px",
+                py: 1.5,
+                background: "#1e293b",
+                fontSize: "16px",
+                fontWeight: 600,
+                textTransform: "none",
+                boxShadow: "0 8px 25px rgba(37, 99, 235, 0.3)",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg,rgb(37, 43, 58) 0%,rgb(32, 35, 45) 100%)",
+                  boxShadow: "0 12px 30px rgba(26, 39, 66, 0.4)",
                 },
-                "& .MuiFormLabel-root.Mui-focused": {
-                  color: "#92400e",
+                "&:disabled": {
+                  background: "#e5e7eb",
+                  color: "#9ca3af",
                 },
               }}
-              aria-label="Password"
-              required
-            />
+            >
+              {status === "loading" ? (
+                <span className="flex items-center">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Processing...
+                </span>
+              ) : view === "login" ? (
+                "Sign In"
+              ) : (
+                "Create Account"
+              )}
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-gradient-to-br from-white via-blue-50 to-blue-100 text-gray-500">
+                  or
+                </span>
+              </div>
+            </div>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={() => setView(view === "login" ? "register" : "login")}
+              sx={{
+                borderRadius: "12px",
+                py: 1.5,
+                color: "#1e293b",
+                borderColor: "#1e293b",
+                fontSize: "16px",
+                fontWeight: 500,
+                textTransform: "none",
+                "&:hover": {
+                  borderColor: "#1d4ed8",
+                  backgroundColor: "#eff6ff",
+                },
+              }}
+            >
+              {view === "login"
+                ? "Create New Account"
+                : "Already have an account? Sign In"}
+            </Button>
           </div>
-
-          <Button
-            fullWidth
-            variant="contained"
-            size="large"
-            onClick={handleSubmit}
-            disabled={status === "loading"}
-            sx={{
-              color: "#fffbeb",
-              borderColor: "#92400e",
-              backgroundColor: "#92400e",
-              "&:hover": {
-                borderColor: "#92400e",
-                backgroundColor: "#78350f",
-              },
-            }}
-            className="bg-amber-700 hover:bg-amber-700 rounded-xl py-3 text-base font-semibold shadow-lg"
-          >
-            {status === "loading" ? (
-              <span className="animate-pulse">Processing...</span>
-            ) : view === "login" ? (
-              "Sign In"
-            ) : (
-              "Create Account"
-            )}
-          </Button>
-
-          <Divider className="my-6">or</Divider>
-
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={() => setView(view === "login" ? "register" : "login")}
-            sx={{
-              color: "#92400e",
-              borderColor: "#92400e",
-              "&:hover": {
-                borderColor: "#92400e",
-                backgroundColor: "#fffbeb",
-              },
-            }}
-            className="rounded-xl py-2.5 text-gray-700 border-amber-700 text-amber-700"
-          >
-            {view === "login"
-              ? "Create New Account"
-              : "Already have an account? Sign In"}
-          </Button>
         </motion.div>
       </Dialog>
 
@@ -380,9 +421,19 @@ export const AuthModals = ({ openType, onClose }) => {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [authModal, setAuthModal] = useState(null);
+  const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const isAdmin = user?.is_superuser;
   const dispatch = useDispatch();
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const navLinks = [
     { path: "/", label: "Home", icon: Home },
@@ -399,118 +450,135 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Top Info Bar */}
-      <div className="w-full bg-stone-800 text-white py-2">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex items-center space-x-4 text-sm">
-            <a
-              href="tel:+263772329569"
-              className="flex items-center hover:text-stone-300"
-              aria-label="Call Us"
-            >
-              <Phone className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">+263 772 329 569</span>
-            </a>
-            <a
-              href="mailto:info@hsp.co.zw"
-              className="flex items-center hover:text-stone-300"
-              aria-label="Email Us"
-            >
-              <Mail className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">info@hsp.co.zw</span>
-            </a>
-          </div>
-          <div className="text-xs hidden md:block">
-            <span className="flex items-center">
-              <svg
-                className="w-3 h-3 mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+      {/* Top Info Bar with blue gradient background */}
+      <div className="w-full bg-slate-800 text-white py-3 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+            <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-6 text-sm">
+              <a
+                href="tel:+263772329569"
+                className="flex items-center hover:text-blue-200 transition-colors duration-200"
+                aria-label="Call Us"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              Suite 2, First Floor Ballantyne Park Shopping Centre, Harare
-            </span>
+                <Phone className="w-4 h-4 mr-2" />
+                <span>+263 772 329 569</span>
+              </a>
+              <a
+                href="mailto:info@hsp.co.zw"
+                className="flex items-center hover:text-blue-200 transition-colors duration-200"
+                aria-label="Email Us"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                <span>info@hsp.co.zw</span>
+              </a>
+            </div>
+            <div className="text-xs hidden lg:flex items-center">
+              <MapPin className="w-3 h-3 mr-1" />
+              <span>
+                Suite 2, First Floor Ballantyne Park Shopping Centre, Harare
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Navigation */}
-      <nav className="sticky top-0 w-full bg-white shadow-md z-50">
+      <nav
+        className={`sticky top-0 w-full z-50 transition-all duration-300 ${
+          scrolled
+            ? "bg-white/95 backdrop-blur-md shadow-lg"
+            : "bg-white shadow-md"
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between items-center h-20">
+            {/* Logo Section - More Prominent */}
             <div className="flex items-center">
-              <NavLink to="/" className="flex items-center">
-                <img
-                  src="/logo.png"
-                  alt="House of Stone Properties"
-                  className="h-10 w-auto"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "";
-                  }}
-                />
+              <NavLink to="/" className="flex items-center group">
+                {/* Blue background container for logo */}
+                <div className="bg-slate-800 p-3 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 mr-3">
+                  <img
+                    src="/logo.png"
+                    alt="House of Stone Properties"
+                    className="h-8 w-auto filter brightness-110"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "";
+                    }}
+                  />
+                </div>
+                {/* Company name with gradient text */}
               </NavLink>
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-6">
+            <div className="hidden lg:flex items-center space-x-8">
               {navLinks.map((link) => (
                 <NavLink
                   key={link.path}
                   to={link.path}
                   className={({ isActive }) =>
-                    `text-sm font-medium transition-colors ${
+                    `relative text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? "text-stone-900 border-b-2 border-amber-800 pb-1"
-                        : "text-stone-600 hover:text-amber-800"
-                    } flex items-center space-x-1`
+                        ? "text-slate-800"
+                        : "text-gray-700 hover:text-yellow-500"
+                    } flex items-center space-x-2 py-2 px-3 rounded-lg hover:bg-yellow-50 group`
                   }
                 >
-                  <link.icon className="w-4 h-4 mr-1" />
-                  <span>{link.label}</span>
+                  {({ isActive }) => (
+                    <>
+                      <link.icon
+                        className={`w-4 h-4 transition-colors ${
+                          isActive
+                            ? "text-slate-800"
+                            : "text-gray-500 group-hover:text-yellow-500"
+                        }`}
+                      />
+                      <span>{link.label}</span>
+                      {isActive && (
+                        <motion.div
+                          className="absolute -bottom-1 left-0 right-0 h-0.5 bg-slate-800 rounded-full"
+                          layoutId="activeTab"
+                        />
+                      )}
+                    </>
+                  )}
                 </NavLink>
               ))}
 
               {/* Auth Buttons */}
-              <div className="ml-4 flex items-center">
+              <div className="ml-6 flex items-center space-x-4">
                 {isAuthenticated ? (
                   <div className="flex items-center space-x-4">
                     {isAdmin && (
                       <Link
                         to="/admin"
-                        className="transition flex items-center"
+                        className="flex items-center text-sm font-medium text-gray-700 hover:text-slate-800 transition-colors"
                       >
-                        <BarChart2 className="mr-1 h-4 w-4" />
+                        <BarChart2 className="mr-2 h-4 w-4" />
                         Admin
                       </Link>
                     )}
-                    <span className="text-sm font-medium flex items-center">
-                      <User className="w-4 h-4 mr-1" />
-                      {user?.username || "User"}
-                    </span>
+                    <div className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg">
+                      <User className="w-4 h-4 text-slate-800" />
+                      <span className="text-sm font-medium text-slate-900">
+                        {user?.username || "User"}
+                      </span>
+                    </div>
 
                     <Button
                       variant="outlined"
                       size="small"
                       onClick={handleLogout}
-                      className="text-amber-800 border-amber-800 hover:bg-amber-50"
                       sx={{
-                        color: "#92400e",
-                        borderColor: "#92400e",
+                        color: "#dc2626",
+                        borderColor: "#dc2626",
+                        borderRadius: "8px",
+                        textTransform: "none",
+                        "&:hover": {
+                          borderColor: "#b91c1c",
+                          backgroundColor: "#1e293b",
+                        },
                       }}
                       startIcon={<LogOut className="w-4 h-4" />}
                     >
@@ -524,14 +592,15 @@ const Navbar = () => {
                       size="small"
                       onClick={() => setAuthModal("login")}
                       sx={{
-                        color: "#92400e",
-                        borderColor: "#92400e",
+                        color: "#1e293b",
+                        borderColor: "#1e293b",
+                        borderRadius: "8px",
+                        textTransform: "none",
                         "&:hover": {
-                          borderColor: "#92400e",
-                          backgroundColor: "#92400e",
+                          borderColor: "#1d4ed8",
+                          backgroundColor: "#eff6ff",
                         },
                       }}
-                      className="text-amber-800 border-amber-800 hover:bg-amber-50 hover:text-white"
                       startIcon={<LogIn className="w-4 h-4" />}
                     >
                       Login
@@ -541,15 +610,17 @@ const Navbar = () => {
                       size="small"
                       onClick={() => setAuthModal("register")}
                       sx={{
-                        color: "#fffbeb",
-                        borderColor: "#92400e",
-                        backgroundColor: "#92400e",
+                        background:
+                          "#1e293b",
+                        borderRadius: "8px",
+                        textTransform: "none",
+                        boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
                         "&:hover": {
-                          borderColor: "#92400e",
-                          backgroundColor: "#92400e",
+                          background:
+                            "linear-gradient(135deg,rgb(21, 30, 57) 0%,rgb(26, 33, 56) 100%)",
+                          boxShadow: "0 6px 16px rgba(37, 99, 235, 0.4)",
                         },
                       }}
-                      className=" hover:bg-amber-900 hover:text-white"
                       startIcon={<User className="w-4 h-4" />}
                     >
                       Register
@@ -560,20 +631,38 @@ const Navbar = () => {
             </div>
 
             {/* Mobile Menu Button */}
-            <div className="md:hidden flex items-center">
-              <button
+            <div className="lg:hidden flex items-center">
+              <motion.button
                 onClick={() => setIsOpen(!isOpen)}
-                className="inline-flex items-center text-stone-600 hover:text-amber-800"
+                className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                 aria-label="Toggle menu"
                 aria-expanded={isOpen}
+                whileTap={{ scale: 0.95 }}
               >
-                <span className="mr-2 text-sm font-medium">Menu</span>
-                {isOpen ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Menu className="h-5 w-5" />
-                )}
-              </button>
+                <AnimatePresence mode="wait">
+                  {isOpen ? (
+                    <motion.div
+                      key="close"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <X className="h-6 w-6" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="menu"
+                      initial={{ rotate: 90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Menu className="h-6 w-6" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.button>
             </div>
           </div>
         </div>
@@ -582,68 +671,92 @@ const Navbar = () => {
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              className="md:hidden"
+              className="lg:hidden"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <div className="px-2 pt-2 pb-3 space-y-1 bg-white shadow-lg">
-                {navLinks.map((link) => (
-                  <NavLink
-                    key={link.path}
-                    to={link.path}
-                    onClick={() => setIsOpen(false)}
-                    className={({ isActive }) =>
-                      `flex items-center block px-3 py-2 rounded-md text-base font-medium ${
-                        isActive
-                          ? "bg-amber-800 text-white"
-                          : "text-stone-600 hover:bg-stone-100 hover:text-amber-800"
-                      } space-x-2`
-                    }
-                  >
-                    <link.icon className="w-5 h-5 mr-2" />
-                    <span>{link.label}</span>
-                  </NavLink>
-                ))}
+              <div className="bg-gradient-to-br from-white via-blue-50 to-blue-100 border-t border-blue-200 shadow-lg">
+                <div className="px-4 pt-4 pb-6 space-y-2">
+                  {navLinks.map((link, index) => (
+                    <motion.div
+                      key={link.path}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.2, delay: index * 0.05 }}
+                    >
+                      <NavLink
+                        to={link.path}
+                        onClick={() => setIsOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 ${
+                            isActive
+                              ? "bg-slate-500 text-white shadow-lg"
+                              : "text-gray-700 hover:bg-white hover:text-yellow-600 hover:shadow-md"
+                          }`
+                        }
+                      >
+                        <link.icon className="w-5 h-5 mr-3" />
+                        <span>{link.label}</span>
+                      </NavLink>
+                    </motion.div>
+                  ))}
 
-                {/* Mobile Auth Buttons */}
-                <div className="pt-2">
-                  <Divider />
-                  <div className="pt-2 pb-1">
+                  {/* Mobile Auth Section */}
+                  <motion.div
+                    className="pt-4 mt-4 border-t border-blue-200"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.4 }}
+                  >
                     {isAuthenticated ? (
-                      <>
-                        <div className="flex items-center justify-between px-3 py-2">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between px-4 py-3 bg-white rounded-xl shadow-sm">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center">
+                              <User className="w-4 h-4 text-white" />
+                            </div>
+                            <span className="font-medium text-gray-900">
+                              {user?.username || "User"}
+                            </span>
+                          </div>
                           {isAdmin && (
                             <Link
                               to="/admin"
-                              className="transition flex items-center"
+                              className="flex items-center text-slate-600 hover:text-slate-700"
+                              onClick={() => setIsOpen(false)}
                             >
                               <BarChart2 className="mr-1 h-4 w-4" />
-                              Admin
+                              <span className="text-sm">Admin</span>
                             </Link>
                           )}
-                          <span className="text-sm font-medium flex items-center">
-                            <User className="w-4 h-4 mr-1" />
-                            {user?.username || "User"}
-                          </span>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={handleLogout}
-                            className=""
-                            sx={{
-                              color: "#92400e",
-                              borderColor: "#92400e",
-                            }}
-                            startIcon={<LogOut className="w-4 h-4" />}
-                          >
-                            Logout
-                          </Button>
                         </div>
-                      </>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          onClick={() => {
+                            handleLogout();
+                            setIsOpen(false);
+                          }}
+                          sx={{
+                            color: "#dc2626",
+                            borderColor: "#1e293b",
+                            borderRadius: "12px",
+                            py: 1.5,
+                            textTransform: "none",
+                            "&:hover": {
+                              borderColor: "#b91c1c",
+                              backgroundColor: "#fef2f2",
+                            },
+                          }}
+                          startIcon={<LogOut className="w-5 h-5" />}
+                        >
+                          Logout
+                        </Button>
+                      </div>
                     ) : (
-                      <div className="flex flex-col space-y-2 px-2">
+                      <div className="flex flex-col space-y-3">
                         <Button
                           fullWidth
                           variant="outlined"
@@ -652,10 +765,16 @@ const Navbar = () => {
                             setIsOpen(false);
                           }}
                           sx={{
-                            color: "#92400e",
-                            borderColor: "#92400e",
+                            color: "#1e293b",
+                            borderColor: "#1e293b",
+                            borderRadius: "12px",
+                            py: 1.5,
+                            textTransform: "none",
+                            "&:hover": {
+                              borderColor: "#1d4ed8",
+                              backgroundColor: "#eff6ff",
+                            },
                           }}
-                          className="justify-start"
                           startIcon={<LogIn className="w-5 h-5" />}
                         >
                           Login
@@ -668,29 +787,30 @@ const Navbar = () => {
                             setIsOpen(false);
                           }}
                           sx={{
-                            color: "#92400e", // amber-800
-                            borderColor: "#92400e", // amber-800
-                            backgroundColor: "#fffbeb", // amber-50
-                            "&:hover": {
-                              borderColor: "#78350f", // amber-900
-                              backgroundColor: "#fffbeb", // amber-50
-                            },
+                            background:
+                              "#1e293b",
+                            borderRadius: "12px",
+                            py: 1.5,
                             textTransform: "none",
+                            boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
+                            "&:hover": {
+                              background:
+                                "linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)",
+                              boxShadow: "0 6px 16px rgba(37, 99, 235, 0.4)",
+                            },
                           }}
-                          className="bg-amber-800 hover:bg-amber-900 justify-start"
                           startIcon={<User className="w-5 h-5" />}
                         >
                           Register
                         </Button>
                       </div>
                     )}
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-
         <AuthModals openType={authModal} onClose={() => setAuthModal(null)} />
       </nav>
     </>
