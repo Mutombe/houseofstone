@@ -1,0 +1,25 @@
+<!-- templates/emails/agent_welcome.html -->
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>👋 Welcome to the {{ site_name }} Team!</h2>
+
+<p>Hello {{ agent.full_name }},</p>
+
+<p>Welcome to {{ site_name }}! Your agent account has been successfully created.</p>
+
+<div class="property-card">
+    <h3>Your Agent Details:</h3>
+    <p><strong>Name:</strong> {{ agent.full_name }}</p>
+    <p><strong>Position:</strong> {{ agent.get_position_display }}</p>
+    <p><strong>Email:</strong> {{ agent.email }}</p>
+    <p><strong>Phone:</strong> {{ agent.cell_number }}</p>
+    <p><strong>Agency:</strong> {{ agent.agency_name }}</p>
+    <p><strong>Branch:</strong> {{ agent.branch }}</p>
+    <p><strong>Permissions:</strong> {{ agent.get_permissions_display }}</p>
+</div>
+
+<a href="{{ admin_url }}" class="button">Access Admin Panel</a>
+
+<p>Please contact your administrator if you need any assistance with your account setup.</p>
+{% endblock %}

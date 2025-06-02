@@ -1,0 +1,28 @@
+<!-- templates/emails/property_inquiry_agent.html -->
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>📧 New Property Inquiry</h2>
+
+<p>You have received a new inquiry for one of your properties:</p>
+
+<div class="property-card">
+    <h3>{{ property.title }}</h3>
+    <p><strong>Location:</strong> {{ property.location }}</p>
+    <p><strong>Price:</strong> ${{ property.price|floatformat:2 }}</p>
+</div>
+
+<div class="property-card">
+    <h3>Inquiry Details:</h3>
+    <p><strong>From:</strong> {{ user.get_full_name|default:user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Message:</strong></p>
+    <p>{{ inquiry.message }}</p>
+    <p><strong>Received:</strong> {{ inquiry.created_at|date:"F j, Y \a\t g:i A" }}</p>
+</div>
+
+<a href="mailto:{{ user.email }}" class="button">Reply to Inquiry</a>
+<a href="{{ admin_url }}" class="button">View in Admin</a>
+
+<p>Please respond to this inquiry as soon as possible to maintain good customer service.</p>
+{% endblock %}

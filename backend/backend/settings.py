@@ -47,6 +47,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "core.middleware.InteractionTrackingMiddleware",
+    "core.middleware.AdminActionLoggingMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -56,7 +57,6 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-  
     'https://houseofstone.onrender.com',  
     'http://localhost:5173',
     'http://127.0.0.1:5173'
@@ -110,14 +110,6 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
-
-CELERY_BEAT_SCHEDULE = {
-    'check-property-alerts': {
-        'task': 'your_app.tasks.check_property_alerts',
-        'schedule': crontab(hour=8, minute=0),  # Daily at 8 AM
-    },
-}
-
 # For Celery
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
@@ -126,9 +118,9 @@ CELERY_TIMEZONE = 'UTC'
 # For sharing links
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://houseofstone.onrender.com')
 
-ADMIN_BASE_URL = 'africarecsintl.org'
-ADMINS = [('ARI Admin', 'simbamtombe@gmail.com')]
-APP_NAME = 'Africa RECs International'
+ADMIN_BASE_URL = 'hsp.co.zw'
+ADMINS = [('HSP Admin', 'simbamtombe@gmail.com')]
+APP_NAME = 'House of Stone Properties'
 
 # settings.py
 # Email Configuration (Development)
@@ -139,9 +131,54 @@ EMAIL_USE_TLS = True  # Use False if using port 465
 EMAIL_USE_SSL = False  # Use True if using port 465
 EMAIL_HOST_USER = 'sales@hsp.co.zw'
 EMAIL_HOST_PASSWORD = 'saleshsp2025!'  # Password you set in Hostinger email account
-DEFAULT_FROM_EMAIL = 'Zim-Rec <sales@hsp.co.zw>'
+DEFAULT_FROM_EMAIL = 'HSP <sales@hsp.co.zw>'
 SERVER_EMAIL = 'sales@hsp.co.zw'  # For error notifications
-SITE_NAME = "Africa Recs"
+SITE_NAME = "House of Stone Properties"
+
+# Celery settings for async email sending (optional but recommended)
+CELERY_BEAT_SCHEDULE = {
+    'check-property-alerts': {
+        'task': 'core.tasks.check_property_alerts',
+        'schedule': crontab(hour=8, minute=0),  # Daily at 8 AM
+    },
+    'weekly-summary': {
+        'task': 'core.tasks.send_weekly_summary',
+        'schedule': crontab(hour=9, minute=0, day_of_week=1),  # Monday at 9 AM
+    },
+    'cleanup-expired-shares': {
+        'task': 'core.tasks.cleanup_old_shares',
+        'schedule': crontab(minute=0, hour=2),  # Daily at 2 AM
+    },
+}
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'email_notifications.log'),
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'core.signals': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'core.tasks': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
 
 AUTHENTICATION_BACKENDS = [
    'django.contrib.auth.backends.ModelBackend',
@@ -152,7 +189,7 @@ ROOT_URLCONF = "backend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "core/templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

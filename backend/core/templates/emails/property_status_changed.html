@@ -1,0 +1,19 @@
+<!-- templates/emails/property_status_changed.html -->
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>📊 Property Status Updated</h2>
+
+<p>A property status has been changed:</p>
+
+<div class="property-card">
+    <h3>{{ property.title }}</h3>
+    <p><strong>Location:</strong> {{ property.location }}</p>
+    <p><strong>Price:</strong> ${{ property.price|floatformat:2 }}</p>
+    <p><strong>Previous Status:</strong> <span class="status-badge">{{ old_status }}</span></p>
+    <p><strong>New Status:</strong> <span class="status-badge status-{{ property.status }}">{{ new_status }}</span></p>
+    <p><strong>Updated:</strong> {{ timestamp|date:"F j, Y \a\t g:i A" }}</p>
+</div>
+
+<a href="{{ property_url }}" class="button">View Property</a>
+{% endblock %}

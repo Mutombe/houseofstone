@@ -1,0 +1,32 @@
+<!-- templates/emails/inquiry_confirmation.html -->
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>✅ Inquiry Confirmation</h2>
+
+<p>Hello {{ user.get_full_name|default:user.username }},</p>
+
+<p>Thank you for your inquiry! We have received your message about the following property:</p>
+
+<div class="property-card">
+    <h3>{{ property.title }}</h3>
+    <p><strong>Location:</strong> {{ property.location }}</p>
+    <p><strong>Price:</strong> ${{ property.price|floatformat:2 }}</p>
+</div>
+
+<div class="property-card">
+    <h3>Inquiry Details:</h3>
+    <p><strong>Message:</strong></p>
+    <p>{{ inquiry.message }}</p>
+    <p><strong>Received:</strong> {{ inquiry.created_at|date:"F j, Y \a\t g:i A" }}</p>
+</div>
+
+<p>We will get back to you as soon as possible.</p>
+
+<p>Best regards,<br>The {{ settings.SITE_NAME }} Team</p>
+{% endblock %}
+
+{% block footer %}
+<p>&copy; {{ year }} {{ settings.SITE_NAME }}. All rights reserved.</p>
+<p>This is an automated notification. Please do not reply to this email.</p>
+{% endblock %}

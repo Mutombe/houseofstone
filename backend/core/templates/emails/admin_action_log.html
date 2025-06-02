@@ -1,0 +1,24 @@
+
+<!-- templates/emails/admin_action_log.html -->
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>⚠️ Admin Action Performed</h2>
+
+<p>An administrative action has been performed on the system:</p>
+
+<div class="property-card">
+    <h3>Action Details:</h3>
+    <p><strong>Action Type:</strong> {{ action.get_action_type_display }}</p>
+    <p><strong>Performed by:</strong> {{ admin.get_full_name|default:admin.username }}</p>
+    <p><strong>Target User:</strong> {{ target_user.get_full_name|default:target_user.username }}</p>
+    <p><strong>Timestamp:</strong> {{ timestamp|date:"F j, Y \a\t g:i A" }}</p>
+    {% if action.description %}
+    <p><strong>Description:</strong> {{ action.description }}</p>
+    {% endif %}
+</div>
+
+<a href="{{ admin_url }}" class="button">View Admin Panel</a>
+
+<p>This notification is sent to keep all administrators informed of important system changes.</p>
+{% endblock %}

@@ -1,0 +1,25 @@
+<!-- templates/emails/property_created.html -->
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>🏠 New Property Listed</h2>
+
+<p>A new property has been added to the system:</p>
+
+<div class="property-card">
+    <h3>{{ property.title }}</h3>
+    <p><strong>Location:</strong> {{ property.location }}</p>
+    <p><strong>Price:</strong> ${{ property.price|floatformat:2 }}</p>
+    <p><strong>Type:</strong> {{ property.get_property_type_display }}</p>
+    <p><strong>Category:</strong> {{ property.get_category_display }}</p>
+    {% if property.beds %}
+    <p><strong>Bedrooms:</strong> {{ property.beds }} | <strong>Bathrooms:</strong> {{ property.baths }}</p>
+    {% endif %}
+    <span class="status-badge status-{{ property.status }}">{{ property.get_status_display }}</span>
+</div>
+
+<a href="{{ property_url }}" class="button">View Property</a>
+
+<p>Property ID: #{{ property.id }}</p>
+<p>Listed on: {{ property.created_at|date:"F j, Y \a\t g:i A" }}</p>
+{% endblock %}

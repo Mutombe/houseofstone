@@ -1,0 +1,27 @@
+<!-- templates/emails/property_alert.html -->
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>🔔 New Properties Match Your Alert</h2>
+
+<p>Hello {{ user.get_full_name|default:user.username }},</p>
+
+<p>We found {{ properties.count }} new properties that match your saved search criteria:</p>
+
+{% for property in properties %}
+<div class="property-card">
+    <h3>{{ property.title }}</h3>
+    <p><strong>Location:</strong> {{ property.location }}</p>
+    <p><strong>Price:</strong> ${{ property.price|floatformat:2 }}</p>
+    <p><strong>Type:</strong> {{ property.get_property_type_display }}</p>
+    {% if property.beds %}
+    <p><strong>Bedrooms:</strong> {{ property.beds }} | <strong>Bathrooms:</strong> {{ property.baths }}</p>
+    {% endif %}
+    <a href="{{ site_url }}/properties/{{ property.id }}" class="button">View Details</a>
+</div>
+{% endfor %}
+
+<a href="{{ site_url }}/properties" class="button">Browse All Properties</a>
+
+<p>To stop receiving these alerts, please update your notification preferences in your account settings.</p>
+{% endblock %}

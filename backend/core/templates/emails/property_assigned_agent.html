@@ -1,0 +1,21 @@
+<!-- templates/emails/property_assigned_agent.html -->
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>🎯 Property Assigned to You</h2>
+
+<p>Hello {{ agent_name }},</p>
+
+<p>A property has been assigned to you for management:</p>
+
+<div class="property-card">
+    <h3>{{ property.title }}</h3>
+    <p><strong>Location:</strong> {{ property.location }}</p>
+    <p><strong>Price:</strong> ${{ property.price|floatformat:2 }}</p>
+    <p><strong>Description:</strong> {{ property.description|truncatewords:20 }}</p>
+</div>
+
+<a href="{{ property_url }}" class="button">Manage Property</a>
+
+<p>Please review the property details and ensure all information is accurate.</p>
+{% endblock %}

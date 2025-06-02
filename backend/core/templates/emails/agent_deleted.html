@@ -1,0 +1,19 @@
+<!-- templates/emails/agent_deleted.html -->
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>🗑️ Agent Account Deleted</h2>
+
+<p>An agent account has been removed from the system:</p>
+
+<div class="property-card">
+    <h3>Deleted Agent Details:</h3>
+    <p><strong>Name:</strong> {{ agent_name }}</p>
+    <p><strong>Email:</strong> {{ agent_email }}</p>
+    <p><strong>Deleted on:</strong> {{ timestamp|date:"F j, Y \a\t g:i A" }}</p>
+</div>
+
+<p>Please ensure that any properties assigned to this agent are reassigned to another active agent.</p>
+
+<a href="{{ admin_url }}" class="button">Manage Agents</a>
+{% endblock %}

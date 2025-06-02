@@ -1,0 +1,39 @@
+<!-- templates/emails/weekly_summary.html -->
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>📊 Weekly Summary Report</h2>
+
+<p>Here's your weekly activity summary for {{ site_name }}:</p>
+
+<div class="property-card">
+    <h3>This Week's Statistics:</h3>
+    <p><strong>New Properties Listed:</strong> {{ stats.new_properties|default:0 }}</p>
+    <p><strong>Properties Sold/Rented:</strong> {{ stats.sold_properties|default:0 }}</p>
+    <p><strong>New User Registrations:</strong> {{ stats.new_users|default:0 }}</p>
+    <p><strong>Property Inquiries:</strong> {{ stats.inquiries|default:0 }}</p>
+    <p><strong>Properties Shared:</strong> {{ stats.shared_properties|default:0 }}</p>
+</div>
+
+{% if top_properties %}
+<div class="property-card">
+    <h3>🏆 Top Performing Properties:</h3>
+    {% for property in top_properties %}
+    <p><strong>{{ forloop.counter }}.</strong> {{ property.title }} - {{ property.views|default:0 }} views</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if recent_inquiries %}
+<div class="property-card">
+    <h3>📧 Recent Inquiries:</h3>
+    {% for inquiry in recent_inquiries %}
+    <p><strong>{{ inquiry.property.title }}</strong> - {{ inquiry.user.get_full_name|default:inquiry.user.username }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+<a href="{{ admin_url }}" class="button">View Full Dashboard</a>
+
+<p>Week ending: {{ week_end|date:"F j, Y" }}</p>
+{% endblock %}

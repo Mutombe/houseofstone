@@ -1,0 +1,18 @@
+<!-- templates/emails/property_shared.html -->
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>🔗 Property Shared</h2>
+
+<p>A property has been shared using your platform:</p>
+
+<div class="property-card">
+    <h3>{{ property.title }}</h3>
+    <p><strong>Location:</strong> {{ property.location }}</p>
+    <p><strong>Price:</strong> ${{ property.price|floatformat:2 }}</p>
+    <p><strong>Shared by:</strong> {{ shared_by.get_full_name|default:shared_by.username }}</p>
+    <p><strong>Share URL:</strong> <a href="{{ share_url }}">{{ share_url }}</a></p>
+</div>
+
+<p>This helps increase the visibility of your properties!</p>
+{% endblock %}
