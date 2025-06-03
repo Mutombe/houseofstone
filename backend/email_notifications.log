@@ -1,0 +1,10 @@
+Email sent successfully: New Property Created: dfdfdfgdfg to ['simbamtombe@gmail.com', 'smutombe98@gmail.com']
+Email sent successfully: Property Assigned to You: dfdfdfgdfg to ['smutombe98@gmail.com']
+Failed to send email: Property Assigned: dfdfdfgdfg - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: dfdfdfgdfg - Error: emails/property_agent_assigned_admin.html
+Failed to send email: Property Unassigned: dfdfdfgdfg - Error: emails/property_agent_unassigned.html
+Failed to send email: Agent Unassigned from Property: dfdfdfgdfg - Error: emails/property_agent_unassigned_admin.html
+Email sent successfully: New Property Created: Waterfalls Apartment to ['simbamtombe@gmail.com', 'smutombe98@gmail.com']
+Email sent successfully: Property Assigned to You: Waterfalls Apartment to ['smutombe98@gmail.com']
+Failed to send email: Property Assigned: Waterfalls Apartment - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: Waterfalls Apartment - Error: emails/property_agent_assigned_admin.html

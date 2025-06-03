@@ -3,7 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from './components/nav/nav';
-import Home from './components/home/home';
+import EnhancedHomepage from './components/home/home';
 import About from './components/about/about';
 import Contact from './components/contact/contact';
 import Footer from './components/footer/footer';
@@ -34,7 +34,7 @@ function App() {
         <Navbar />
         <AnimatePresence mode="wait">
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<EnhancedHomepage />} />
             <Route path="/properties" element={<Properties />} />
             <Route path="/properties/:id" element={<PropertyDetail />} />
             <Route path="/about" element={<About />} />
