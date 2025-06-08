@@ -5,7 +5,7 @@ const getBaseUrl = () => {
   if (process.env.NODE_ENV === 'production') {
     return "https://houseofstone-backend.onrender.com/";
   }
-  return "http://127.0.0.1:8000/";
+  return "https://houseofstone-backend.onrender.com/";
 };
 
 // Centralized token refresh function

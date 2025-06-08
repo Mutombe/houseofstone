@@ -47,7 +47,7 @@ export function AuthHeader({ view }) {
       {/* Blue background container for logo */}
       <div className="mx-auto w-24 h-20 mb-6 bg-slate-800 rounded-2xl flex items-center justify-center shadow-lg">
         <img
-          src="/logo.png"
+          src="/logo5.png"
           alt="HSP Logo"
           className="w-16 h-12 object-contain filter brightness-110"
         />
@@ -190,7 +190,7 @@ export const AuthModals = ({ openType, onClose }) => {
               {/* Prominent logo on blue background */}
               <div className="mx-auto w-20 h-16 mb-4 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg border border-white/30">
                 <img
-                  src="/logo.png"
+                  src="/logo5.png"
                   alt="HSP Logo"
                   className="w-14 h-10 object-contain filter brightness-110"
                 />
@@ -453,15 +453,16 @@ const Navbar = () => {
       {/* Top Info Bar with blue gradient background */}
       <div className="w-full bg-slate-800 text-white py-3 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
-            <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-6 text-sm">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4 text-sm">
               <a
                 href="tel:+263772329569"
                 className="flex items-center hover:text-blue-200 transition-colors duration-200"
                 aria-label="Call Us"
               >
                 <Phone className="w-4 h-4 mr-2" />
-                <span>+263 772 329 569</span>
+                <span className="hidden sm:inline">+263 772 329 569</span>
+                <span className="sm:hidden">Call</span>
               </a>
               <a
                 href="mailto:info@hsp.co.zw"
@@ -469,19 +470,19 @@ const Navbar = () => {
                 aria-label="Email Us"
               >
                 <Mail className="w-4 h-4 mr-2" />
-                <span>info@hsp.co.zw</span>
+                <span className="hidden sm:inline">info@hsp.co.zw</span>
+                <span className="sm:hidden">Email</span>
               </a>
             </div>
             <div className="text-xs hidden lg:flex items-center">
               <MapPin className="w-3 h-3 mr-1" />
               <span>
-                Suite 2, First Floor Ballantyne Park Shopping Centre, Harare
+                21 Harare Drive Borrowdale, Harare
               </span>
             </div>
           </div>
         </div>
       </div>
-
       {/* Main Navigation */}
       <nav
         className={`sticky top-0 w-full z-50 transition-all duration-300 ${
@@ -498,9 +499,9 @@ const Navbar = () => {
                 {/* Blue background container for logo */}
                 <div className="bg-slate-800 p-3 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 mr-3">
                   <img
-                    src="/logo.png"
+                    src="/logo5.png"
                     alt="House of Stone Properties"
-                    className="h-8 w-auto filter brightness-110"
+                    className="h-12 w-auto filter"
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = "";
@@ -610,8 +611,7 @@ const Navbar = () => {
                       size="small"
                       onClick={() => setAuthModal("register")}
                       sx={{
-                        background:
-                          "#1e293b",
+                        background: "#1e293b",
                         borderRadius: "8px",
                         textTransform: "none",
                         boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
@@ -787,8 +787,7 @@ const Navbar = () => {
                             setIsOpen(false);
                           }}
                           sx={{
-                            background:
-                              "#1e293b",
+                            background: "#1e293b",
                             borderRadius: "12px",
                             py: 1.5,
                             textTransform: "none",
