@@ -27,8 +27,8 @@ import { useNavigate } from 'react-router-dom';
 // Brand colors consistent with navbar
 const COLORS = {
   primary: "#1e293b", // slate-800
-  secondary: "#eab308", // yellow-500/gold
-  accent: "#f59e0b", // yellow-600 for darker gold
+  secondary: "#f59e0b", // yellow-500/gold
+  accent: "#b07e28",// yellow-600 for darker gold
   light: "#ffffff", // white
   dark: "#0f172a", // slate-900 for deeper contrast
   gray: {
@@ -187,8 +187,8 @@ const GlowButton = ({
       relative px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform
       ${
         variant === "primary"
-          ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-900 shadow-lg hover:shadow-yellow-500/25"
-          : "bg-slate-800 text-white border-2 border-yellow-400 hover:bg-yellow-400 hover:text-slate-900"
+          ? "bg-gradient-to-r from-yellow-600 to-yellow-700 text-slate-900 shadow-lg hover:shadow-yellow-500/25"
+          : "bg-slate-800 text-white border-2 border-yellow-600 hover:bg-yellow-400 hover:text-slate-900"
       }
       hover:scale-105 active:scale-95 overflow-hidden
       ${className}
@@ -276,7 +276,7 @@ const EnhancedHomepage = () => {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="inline-flex items-center px-4 py-2 bg-yellow-400/20 rounded-full mb-6 backdrop-blur-sm border border-yellow-400/30"
               >
-                <Sparkles className="w-5 h-5 text-yellow-400 mr-2" />
+                <Sparkles className="w-5 h-5 text-yellow-600 mr-2" />
                 <span className="text-yellow-100 font-medium">
                   Premium Real Estate
                 </span>
@@ -290,7 +290,7 @@ const EnhancedHomepage = () => {
               >
                 <span className="text-white">Find Your</span>
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 to-yellow-700">
                   Dream Home
                 </span>
                 <br />
@@ -384,7 +384,7 @@ const EnhancedHomepage = () => {
                 
                     <motion.button
                       onClick={()=>navigate('/properties')}
-                      className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-900 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                      className="w-full bg-gradient-to-r from-yellow-600 to-yellow-700 text-slate-900 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -422,7 +422,7 @@ const EnhancedHomepage = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Our <span className="text-yellow-400">Achievements</span>
+              Our <span className="text-yellow-600">Achievements</span>
             </h2>
             <div className="w-24 h-1 bg-yellow-400 mx-auto" />
           </motion.div>
@@ -443,19 +443,19 @@ const EnhancedHomepage = () => {
                 className="text-center group"
               >
                 <div className="relative mb-4">
-                  <div className="w-20 h-20 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300 mb-4">
+                  <div className="w-20 h-20 bg-gradient-to-r from-yellow-600 to-yellow-700 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300 mb-4">
                     <stat.icon className="w-10 h-10 text-slate-900" />
                   </div>
                 </div>
                 <motion.h3
-                  className="text-4xl md:text-5xl font-bold text-yellow-400 mb-2"
+                  className="text-4xl md:text-5xl font-bold text-yellow-600 mb-2"
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
                 >
-                  <CountUp end={stat.end} suffix={stat.suffix || "+"} />
+                  <CountUp end={stat.end} suffix={stat.suffix || "+"} textColor="white" />
                 </motion.h3>
-                <p className="text-gray-300 font-medium">{stat.label}</p>
+                <p className="text-gray-300 font-medium text-yellow-600">{stat.label}</p>
               </motion.div>
             ))}
           </div>
@@ -473,7 +473,7 @@ const EnhancedHomepage = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
-              Featured <span className="text-yellow-500">Properties</span>
+              Featured <span className="text-yellow-600">Properties</span>
             </h2>
             <div className="w-24 h-1 bg-yellow-400 mx-auto mb-6" />
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -584,7 +584,7 @@ const EnhancedHomepage = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
-              Our <span className="text-yellow-500">Services</span>
+              Our <span className="text-yellow-600">Services</span>
             </h2>
             <div className="w-24 h-1 bg-yellow-400 mx-auto mb-6" />
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -661,7 +661,7 @@ const EnhancedHomepage = () => {
                 viewport={{ once: true }}
                 className="group bg-white rounded-2xl shadow-lg p-8 hover:shadow-2xl transition-all duration-500 border-2 border-transparent hover:border-yellow-400/20"
               >
-                <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-16 h-16 bg-gradient-to-r from-yellow-600 to-yellow-700 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <service.icon className="w-8 h-8 text-slate-900" />
                 </div>
 
@@ -677,7 +677,7 @@ const EnhancedHomepage = () => {
                       key={idx}
                       className="flex items-center text-sm text-gray-600"
                     >
-                      <CheckCircle className="w-4 h-4 text-yellow-500 mr-2 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-yellow-600 mr-2 flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
@@ -700,7 +700,7 @@ const EnhancedHomepage = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Client <span className="text-yellow-400">Testimonials</span>
+              Client <span className="text-yellow-600">Testimonials</span>
             </h2>
             <div className="w-24 h-1 bg-yellow-400 mx-auto mb-6" />
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
@@ -722,7 +722,7 @@ const EnhancedHomepage = () => {
                   {[...Array(testimonial.rating)].map((_, idx) => (
                     <Star
                       key={idx}
-                      className="w-5 h-5 text-yellow-400 fill-current"
+                      className="w-5 h-5 text-yellow-600 fill-current"
                     />
                   ))}
                 </div>
@@ -733,7 +733,7 @@ const EnhancedHomepage = () => {
 
                 <div className="flex items-center">
                   <img
-                    src={testimonial.image}
+                    src='/icon.png'
                     alt={testimonial.name}
                     className="w-12 h-12 rounded-full mr-4"
                   />
@@ -752,5 +752,7 @@ const EnhancedHomepage = () => {
     </div>
   );
 };
+
+
 
 export default EnhancedHomepage;

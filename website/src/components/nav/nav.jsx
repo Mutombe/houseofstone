@@ -487,8 +487,8 @@ const Navbar = () => {
       <nav
         className={`sticky top-0 w-full z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-white/95 backdrop-blur-md shadow-lg"
-            : "bg-white shadow-md"
+            ? "bg-gradient-to-br from-white via-blue-50 to-blue-100 shadow-lg"
+            : "bg-transparent shadow-none"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -497,7 +497,7 @@ const Navbar = () => {
             <div className="flex items-center">
               <NavLink to="/" className="flex items-center group">
                 {/* Blue background container for logo */}
-                <div className="bg-slate-800 p-3 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 mr-3">
+                <div className="bg-slate p-3 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 mr-3">
                   <img
                     src="/logo5.png"
                     alt="House of Stone Properties"
