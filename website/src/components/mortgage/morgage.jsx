@@ -402,7 +402,7 @@ const MortgageCalculator = () => {
                   onChange={(e) => handleInputChange('homePrice', e.target.value)}
                   type="number"
                   placeholder="500,000"
-                  prefix="$"
+                  prefix=""
                   error={errors.homePrice}
                 />
 
@@ -413,7 +413,7 @@ const MortgageCalculator = () => {
                   onChange={(e) => handleInputChange('downPayment', e.target.value)}
                   type="number"
                   placeholder="100,000"
-                  prefix="$"
+                  prefix=""
                   error={errors.downPayment}
                 />
 
