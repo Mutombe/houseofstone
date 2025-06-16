@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from './components/nav/nav';
 import EnhancedHomepage from './components/home/home';
+import MortgageCalculator from './components/mortgage/morgage';
 import About from './components/about/about';
 import Contact from './components/contact/contact';
 import Footer from './components/footer/footer';
@@ -44,6 +45,8 @@ function App() {
             <Route path="/consulting" element={<Consulting />} />
             <Route path="/sales" element={<PropertySales />} />
             <Route path="/admin" element={<PropertyDashboard />} />
+            <Route path="/mortgage" element={<MortgageCalculator />} />
+            
           </Routes>
         </AnimatePresence>
         <Footer />

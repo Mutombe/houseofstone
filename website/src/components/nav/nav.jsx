@@ -438,6 +438,7 @@ const Navbar = () => {
   const navLinks = [
     { path: "/", label: "Home", icon: Home },
     { path: "/properties", label: "Properties", icon: Building2 },
+    { path: "/mortgage", label: "Mortgage", icon: Handshake },
     { path: "/about", label: "About", icon: Users },
     { path: "/consulting", label: "Consulting", icon: Handshake },
     { path: "/market", label: "Market Analysis", icon: TrendingUpDown },

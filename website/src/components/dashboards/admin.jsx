@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import StatisticsDashboard from "./stats";
 import {
   Building2,
   AlertCircle,
@@ -22,6 +23,8 @@ import {
   BellRing,
   Menu,
   X,
+  PieChart,
+  UserCheck,
   Calendar,
   Clock,
   CheckCircle,
@@ -68,6 +71,9 @@ const COLORS = {
     900: "#1A1610",
   },
 };
+
+// Property Type Pie Chart Component
+
 
 const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
   const initialFormState = {
@@ -2068,7 +2074,7 @@ const PropertyDashboard = () => {
                 ))}
               </div>
 
-              {renderStatCharts()}
+              <StatisticsDashboard />
             </div>
           )}
 
