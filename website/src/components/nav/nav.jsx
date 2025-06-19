@@ -9,6 +9,11 @@ import {
   Building2,
   Users,
   Handshake,
+  Briefcase,
+  BookOpen,
+  ChevronDown,
+  BarChart,
+  Banknote,
   TrendingUpDown,
   PhoneCall,
   Mail,
@@ -23,6 +28,7 @@ import {
   ChartNoAxesColumn,
   BarChart2,
   MapPin,
+  MapIcon,
 } from "lucide-react";
 
 // Material UI
@@ -47,7 +53,7 @@ export function AuthHeader({ view }) {
       {/* Blue background container for logo */}
       <div className="mx-auto w-24 h-20 mb-6 bg-slate-800 rounded-2xl flex items-center justify-center shadow-lg">
         <img
-          src="/logo5.png"
+          src="/logo2.webp"
           alt="HSP Logo"
           className="w-16 h-12 object-contain filter brightness-110"
         />
@@ -190,7 +196,7 @@ export const AuthModals = ({ openType, onClose }) => {
               {/* Prominent logo on blue background */}
               <div className="mx-auto w-20 h-16 mb-4 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg border border-white/30">
                 <img
-                  src="/logo5.png"
+                  src="/logo2.webp"
                   alt="HSP Logo"
                   className="w-14 h-10 object-contain filter brightness-110"
                 />
@@ -423,6 +429,7 @@ const Navbar = () => {
   const [authModal, setAuthModal] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
+   const [resourcesOpen, setResourcesOpen] = useState(false);
   const isAdmin = user?.is_superuser;
   const dispatch = useDispatch();
 
@@ -438,11 +445,17 @@ const Navbar = () => {
   const navLinks = [
     { path: "/", label: "Home", icon: Home },
     { path: "/properties", label: "Properties", icon: Building2 },
-    { path: "/mortgage", label: "Mortgage", icon: Handshake },
     { path: "/about", label: "About", icon: Users },
-    { path: "/consulting", label: "Consulting", icon: Handshake },
-    { path: "/market", label: "Market Analysis", icon: TrendingUpDown },
+    { path: "/agents", label: "Agents", icon: Handshake },
+    { path: "/guide", label: "Guide", icon: Handshake },
     { path: "/contact", label: "Contact", icon: PhoneCall },
+  ];
+
+    const resourcesLinks = [
+    { path: "/consulting", label: "Consulting", icon: Briefcase },
+    { path: "/market", label: "Market Analysis", icon: BarChart },
+    { path: "/neighborhoods", label: "Neighborhood Guide", icon: MapIcon },
+    { path: "/mortgage", label: "Mortgage", icon: Banknote },
   ];
 
   const handleLogout = () => {
@@ -498,9 +511,9 @@ const Navbar = () => {
             <div className="flex items-center">
               <NavLink to="/" className="flex items-center group">
                 {/* Blue background container for logo */}
-                <div className="bg-slate p-3 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 mr-3">
+                <div className="p-3 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 mr-3">
                   <img
-                    src="/logo5.png"
+                    src="/logo2.webp"
                     alt="House of Stone Properties"
                     className="h-12 w-auto filter"
                     onError={(e) => {
@@ -547,6 +560,50 @@ const Navbar = () => {
                   )}
                 </NavLink>
               ))}
+
+                            <div 
+                className="relative"
+                onMouseEnter={() => setResourcesOpen(true)}
+                onMouseLeave={() => setResourcesOpen(false)}
+              >
+                <button
+                  className={`flex items-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    resourcesOpen 
+                      ? "text-slate-800 bg-yellow-50" 
+                      : "text-gray-700 hover:text-yellow-500 hover:bg-yellow-50"
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>Resources</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${resourcesOpen ? 'transform rotate-180' : ''}`} />
+                </button>
+                
+                <AnimatePresence>
+                  {resourcesOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg z-50 border border-gray-100"
+                    >
+                      <div className="py-1">
+                        {resourcesLinks.map((link) => (
+                          <NavLink
+                            key={link.path}
+                            to={link.path}
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            onClick={() => setResourcesOpen(false)}
+                          >
+                            <link.icon className="w-4 h-4 mr-3 text-gray-500" />
+                            {link.label}
+                          </NavLink>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* Auth Buttons */}
               <div className="ml-6 flex items-center space-x-4">

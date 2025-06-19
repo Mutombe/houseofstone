@@ -8,3 +8,27 @@ Email sent successfully: New Property Created: Waterfalls Apartment to ['simbamt
 Email sent successfully: Property Assigned to You: Waterfalls Apartment to ['smutombe98@gmail.com']
 Failed to send email: Property Assigned: Waterfalls Apartment - Error: emails/property_agent_assigned.html
 Failed to send email: Agent Assigned to Property: Waterfalls Apartment - Error: emails/property_agent_assigned_admin.html
+Email sent successfully: Welcome to House of Stone Properties! to ['simbamtombe@gmail.com']
+Failed to send email: New User Registration: hsp-manager - Error: emails/new_user_admin.html
+Email sent successfully: New Property Created: Avondale West House to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: Avondale West House to ['simbamtombe@gmail.com']
+Email sent successfully: Welcome to House of Stone Properties Team! to ['info@hsp.co.zw']
+Failed to send email: New Agent Created: Arthur Tumbwe - Error: emails/agent_created_admin.html
+Email sent successfully: Welcome to House of Stone Properties Team! to ['info@hsp.co.zw']
+Failed to send email: New Agent Created: Arthur Tumbwe - Error: emails/agent_created_admin.html
+Email sent successfully: Agent Deleted: Arthur Tumbwe to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: Borrodale 4 Bedroom to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: Borrodale 4 Bedroom to ['simbamtombe@gmail.com']
+Failed to send email: Property Assigned: Borrodale 4 Bedroom - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: Borrodale 4 Bedroom - Error: emails/property_agent_assigned_admin.html
+Email sent successfully: Welcome to House of Stone Properties Team! to ['simbarashemutombe1@gmail.com']
+Failed to send email: New Agent Created: Simbarashe Mutombe - Error: emails/agent_created_admin.html
+Failed to send email: Your Agent Profile Has Been Updated - Error: emails/agent_profile_updated.html
+Failed to send email: Agent Profile Updated: Simbarashe Mutombe - Error: emails/agent_updated_admin.html
+Email sent successfully: Property Shared: Borrodale 4 Bedroom to ['simbamtombe@gmail.com']
+Failed to send email: Your Property Was Shared: Borrodale 4 Bedroom - Error: emails/property_shared_agent.html
+Email sent successfully: New Property Created: Mt Pleasant 6 Bed Home to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: Mt Pleasant 6 Bed Home to ['simbamtombe@gmail.com']
+Failed to send email: Property Assigned: Mt Pleasant 6 Bed Home - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: Mt Pleasant 6 Bed Home - Error: emails/property_agent_assigned_admin.html
+Email sent successfully: Agent Deleted: Simbarashe Mutombe to ['simbamtombe@gmail.com']

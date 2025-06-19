@@ -2,6 +2,15 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import StatisticsDashboard from "./stats";
 import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import {
   Building2,
   AlertCircle,
   Home,
@@ -74,8 +83,7 @@ const COLORS = {
 
 // Property Type Pie Chart Component
 
-
-const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
+export const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
   const initialFormState = {
     title: "",
     description: "",
@@ -1000,6 +1008,162 @@ const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
   );
 };
 
+const PropertyAnalyticsModal = ({ property, onClose }) => {
+  if (!property) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold" style={{ color: COLORS.dark }}>
+              Analytics for {property.title}
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full hover:bg-gray-100"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Basic Info */}
+            <div className="border rounded-lg p-4">
+              <h3 className="text-lg font-semibold mb-4">
+                Property Information
+              </h3>
+              <div className="space-y-2">
+                <p>
+                  <span className="font-medium">Price:</span> $
+                  {property.price?.toLocaleString()}
+                </p>
+                <p>
+                  <span className="font-medium">Location:</span>{" "}
+                  {property.location}
+                </p>
+                <p>
+                  <span className="font-medium">Type:</span>{" "}
+                  {property.property_type}
+                </p>
+                <p>
+                  <span className="font-medium">Status:</span> {property.status}
+                </p>
+              </div>
+            </div>
+
+            {/* Views Stats */}
+            <div className="border rounded-lg p-4">
+              <h3 className="text-lg font-semibold mb-4">Views Statistics</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Total Views:</span>
+                  <span className="font-medium">
+                    {property.total_views || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Last 7 Days:</span>
+                  <span className="font-medium">
+                    {property.views_last_7_days || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Last 30 Days:</span>
+                  <span className="font-medium">
+                    {property.views_last_30_days || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Leads Stats */}
+            <div className="border rounded-lg p-4">
+              <h3 className="text-lg font-semibold mb-4">Leads Statistics</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Total Leads:</span>
+                  <span className="font-medium">
+                    {property.total_leads || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Last 7 Days:</span>
+                  <span className="font-medium">
+                    {property.leads_last_7_days || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Conversion Rate:</span>
+                  <span className="font-medium">
+                    {property.total_views
+                      ? `${Math.round(
+                          (property.total_leads / property.total_views) * 100
+                        )}%`
+                      : "0%"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Engagement Stats */}
+            <div className="border rounded-lg p-4">
+              <h3 className="text-lg font-semibold mb-4">Engagement</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Avg. Time on Page:</span>
+                  <span className="font-medium">
+                    {property.avg_time_on_page || "0s"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Contact Clicks:</span>
+                  <span className="font-medium">
+                    {property.contact_clicks || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Favorite Saves:</span>
+                  <span className="font-medium">
+                    {property.favorite_saves || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Charts Section */}
+            <div className="md:col-span-2 border rounded-lg p-4">
+              <h3 className="text-lg font-semibold mb-4">Views Over Time</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={[
+                      { name: "Jan", views: 10 },
+                      { name: "Feb", views: 20 },
+                      { name: "Mar", views: 15 },
+                      { name: "Apr", views: 25 },
+                      { name: "May", views: 30 },
+                      { name: "Jun", views: 20 },
+                      { name: "Jul", views: 35 },
+                    ]}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="views" fill={COLORS.primary} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
@@ -1334,6 +1498,7 @@ const PropertyDashboard = () => {
   const dispatch = useDispatch();
   const properties = useSelector((state) => state.properties?.items);
   const loadingStatus = useSelector((state) => state.properties.status);
+  const [analyticsProperty, setAnalyticsProperty] = useState(null);
   const error = useSelector((state) => state.properties.error);
   const user = useSelector((state) => state.auth.user);
   const adminStats = useSelector((state) => state.admin.stats);
@@ -1374,6 +1539,10 @@ const PropertyDashboard = () => {
     if (window.confirm("Are you sure you want to delete this agent?")) {
       dispatch(deleteAgent(id));
     }
+  };
+
+  const showPropertyAnalytics = (property) => {
+    setAnalyticsProperty(property);
   };
 
   // Initial form state for new/edit property
@@ -2611,6 +2780,13 @@ const PropertyDashboard = () => {
                               )}
                             </button>
                             <button
+                              onClick={() => showPropertyAnalytics(property)}
+                              className="text-purple-600 hover:text-purple-900 tooltip"
+                              title="Analytics"
+                            >
+                              <BarChart2 size={16} />
+                            </button>
+                            <button
                               onClick={() => handleEditProperty(property)}
                               className="text-blue-600 hover:text-blue-900 tooltip"
                               title="Edit"
@@ -2680,6 +2856,12 @@ const PropertyDashboard = () => {
           currentForm={currentForm === "editAgent" ? "edit" : "add"}
           setCurrentForm={setCurrentForm}
           selectedAgent={selectedAgent} // This should come from local state
+        />
+      )}
+      {analyticsProperty && (
+        <PropertyAnalyticsModal
+          property={analyticsProperty}
+          onClose={() => setAnalyticsProperty(null)}
         />
       )}
     </div>

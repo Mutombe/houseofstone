@@ -27,7 +27,7 @@ import { useNavigate } from "react-router-dom";
 // Brand colors consistent with navbar
 const COLORS = {
   primary: "#1e293b", // slate-800
-  secondary: "#f59e0b", // yellow-500/gold
+  secondary: "#D4AF37", // yellow-500/gold
   accent: "#b07e28", // yellow-600 for darker gold
   light: "#ffffff", // white
   dark: "#0f172a", // slate-900 for deeper contrast
@@ -187,7 +187,7 @@ const GlowButton = ({
       relative px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform
       ${
         variant === "primary"
-          ? "bg-gradient-to-r from-yellow-600 to-yellow-700 text-slate-900 shadow-lg hover:shadow-yellow-500/25"
+          ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-900 shadow-lg hover:shadow-yellow-500/25"
           : "bg-slate-800 text-white border-2 border-yellow-600 hover:bg-yellow-400 hover:text-slate-900"
       }
       hover:scale-105 active:scale-95 overflow-hidden

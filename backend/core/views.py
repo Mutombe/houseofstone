@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
-from .serializers import AdminActionLogSerializer, BlogPostSerializer, PropertyAlertSerializer, UserSerializer, ProfileSerializer
+from .serializers import AdminActionLogSerializer, BlogPostSerializer, PropertyAlertSerializer, UserSerializer, ProfileSerializer, PropertySerializer, PropertyWithStatsSerializer, LeadSourceSerializer, PropertyLeadSerializer
 from .models import BlogPost, Profile, PropertyAlert, PropertyShare
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -28,6 +28,7 @@ from django.core.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
+from .models import PropertyLead, LeadSource, PropertyStat
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import filters
@@ -107,7 +108,79 @@ class PropertyViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(agent=self.request.user)
+
+        def get_serializer_class(self):
+            if self.action in ['retrieve', 'list']:
+                return PropertyWithStatsSerializer
+            return PropertySerializer
+
+    @action(detail=True, methods=['get'])
+    def stats(self, request, pk=None):
+        property = self.get_object()
         
+        # Summary stats
+        total_views = property.stats.aggregate(total=Sum('views'))['total'] or 0
+        total_leads = property.leads.count()
+        
+        # Last 7 days stats
+        date_7_days_ago = datetime.now().date() - timedelta(days=7)
+        recent_stats = property.stats.filter(date__gte=date_7_days_ago)
+        
+        # Lead sources breakdown
+        lead_sources = property.leads.values('source__name').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        return Response({
+            'total_views': total_views,
+            'total_leads': total_leads,
+            'recent_stats': PropertyStatSerializer(recent_stats, many=True).data,
+            'lead_sources': lead_sources
+        })
+
+class LeadSourceViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = LeadSource.objects.all()
+    serializer_class = LeadSourceSerializer
+    permission_classes = [IsAuthenticated]
+
+class PropertyLeadViewSet(viewsets.ModelViewSet):
+    serializer_class = PropertyLeadSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['property', 'status', 'source']
+
+    def get_queryset(self):
+        user = self.request.user
+        return PropertyLead.objects.filter(
+            Q(agent=user) | Q(property__agent=user))
+    
+    def perform_create(self, serializer):
+        serializer.save(agent=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def summary(self, request):
+        user = request.user
+        leads = PropertyLead.objects.filter(
+            Q(agent=user) | Q(property__agent=user))
+        
+        total_leads = leads.count()
+        leads_by_status = leads.values('status').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        leads_by_source = leads.values('source__name').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        recent_leads = leads.order_by('-created_at')[:5]
+        
+        return Response({
+            'total_leads': total_leads,
+            'leads_by_status': leads_by_status,
+            'leads_by_source': leads_by_source,
+            'recent_leads': PropertyLeadSerializer(recent_leads, many=True).data
+        })        
+
 class NeighborhoodViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Neighborhood.objects.all()
     serializer_class = NeighborhoodSerializer

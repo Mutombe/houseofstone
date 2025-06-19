@@ -155,6 +155,76 @@ class PropertyAgent(models.Model):
     def __str__(self):
         return f"{self.property.title} - {self.agent.full_name}"
 
+class LeadSource(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    
+    def __str__(self):
+        return self.name
+
+class PropertyLead(models.Model):
+    property = models.ForeignKey(
+        Property, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='leads'
+    )
+    agent = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='property_leads'
+    )
+    source = models.ForeignKey(
+        LeadSource,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='leads'
+    )
+    contact_name = models.CharField(max_length=200)
+    contact_email = models.EmailField()
+    contact_phone = models.CharField(max_length=20)
+    notes = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('new', 'New'),
+            ('contacted', 'Contacted'),
+            ('qualified', 'Qualified'),
+            ('lost', 'Lost'),
+            ('converted', 'Converted')
+        ],
+        default='new'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Lead for {self.property.title if self.property else 'Deleted Property'}"
+
+class PropertyStat(models.Model):
+    property = models.ForeignKey(
+        Property,
+        on_delete=models.CASCADE,
+        related_name='stats'
+    )
+    date = models.DateField()
+    views = models.PositiveIntegerField(default=0)
+    inquiries = models.PositiveIntegerField(default=0)
+    favorites = models.PositiveIntegerField(default=0)
+    shares = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ('property', 'date')
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"Stats for {self.property.title} on {self.date}"
+
 class SavedSearch(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     filters = models.JSONField()  # Stores search criteria

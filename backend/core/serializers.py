@@ -285,7 +285,47 @@ class PropertySerializer(serializers.ModelSerializer):
             if not isinstance(agent, dict) or 'agent_id' not in agent:
                 raise serializers.ValidationError("Invalid agent format")
         return value
-    
+
+from .models import PropertyLead, LeadSource, PropertyStat
+
+class LeadSourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LeadSource
+        fields = '__all__'
+
+class PropertyLeadSerializer(serializers.ModelSerializer):
+    source = LeadSourceSerializer(read_only=True)
+    source_id = serializers.PrimaryKeyRelatedField(
+        queryset=LeadSource.objects.all(),
+        source='source',
+        write_only=True
+    )
+    property_title = serializers.CharField(source='property.title', read_only=True)
+    agent_name = serializers.CharField(source='agent.get_full_name', read_only=True)
+
+    class Meta:
+        model = PropertyLead
+        fields = '__all__'
+        read_only_fields = ('created_at', 'updated_at', 'agent')
+
+class PropertyStatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PropertyStat
+        fields = '__all__'
+
+class PropertyWithStatsSerializer(PropertySerializer):
+    leads_count = serializers.SerializerMethodField()
+    stats = serializers.SerializerMethodField()
+
+    def get_leads_count(self, obj):
+        return obj.leads.count()
+
+    def get_stats(self, obj):
+        request = self.context.get('request')
+        if request and 'stats' in request.query_params:
+            stats = obj.stats.all().order_by('-date')[:30]  # Last 30 days
+            return PropertyStatSerializer(stats, many=True).data
+        return None
 
 class NeighborhoodSerializer(serializers.ModelSerializer):
     class Meta:

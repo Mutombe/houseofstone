@@ -10,7 +10,7 @@ const HeroSection = () => {
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-30 filter brightness-50"
         style={{ 
-          backgroundImage: "url('/mar.webp')", 
+          backgroundImage: "url('/grp-hsp.jpeg')", 
           backgroundPosition: 'center',
           backgroundSize: 'cover'
         }}
@@ -139,7 +139,7 @@ const ServicesSection = () => {
 
 const About = () => {
   return (
-    <div className="min-h-screen pt-16 bg-stone-50">
+    <div className="min-h-screen pt-6 bg-stone-50">
       {/* Hero Section */}
       <HeroSection />
 

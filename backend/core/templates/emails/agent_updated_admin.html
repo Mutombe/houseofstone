@@ -1,15 +1,12 @@
-<!-- templates/emails/agent_welcome.html -->
+<!-- templates/emails/agent_updated_admin.html -->
 {% extends "emails/base_email.html" %}
 
 {% block content %}
-<h2>👋 Welcome to the {{ site_name }} Team!</h2>
-
-<p>Hello {{ agent.full_name }},</p>
-
-<p>Welcome to {{ site_name }}! Your agent account has been successfully created.</p>
-
+<h2>📝 Agent Account Updated</h2>
+<p>Hello {{ admin.full_name }},</p>
+<p>An agent account has been updated:</p>
 <div class="property-card">
-    <h3>Your Agent Details:</h3>
+    <h3>Updated Agent Details:</h3>
     <p><strong>Name:</strong> {{ agent.full_name }}</p>
     <p><strong>Position:</strong> {{ agent.get_position_display }}</p>
     <p><strong>Email:</strong> {{ agent.email }}</p>
@@ -18,8 +15,9 @@
     <p><strong>Branch:</strong> {{ agent.branch }}</p>
     <p><strong>Permissions:</strong> {{ agent.get_permissions_display }}</p>
 </div>
+<a href="{{ admin_url }}" class="button">Manage Agents</a>
+{% endblock %}
 
-<a href="{{ admin_url }}" class="button" style="color: aliceblue;">Access Admin Panel</a>
-
-<p>Please contact your administrator if you need any assistance with your account setup.</p>
+{% block footer %}
+<p>&copy; {{ year }} {{ settings.SITE_NAME }}. All rights reserved.</p>
 {% endblock %}

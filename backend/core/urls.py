@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import RegisterView,UserViewSet, CustomTokenObtainPairView, ProfileView, PropertyViewSet, NeighborhoodViewSet, SavedSearchViewSet, FavoritePropertyViewSet, InquiryViewSet, MortgageCalculatorView, BlogPostViewSet, PropertyShareView, PropertyShareRedirect, AdminDashboardView, UserDashboardView, PropertyStatsView, AdminUserManagementViewSet, AdminActionLogViewSet, AgentViewSet
+from .views import RegisterView,UserViewSet,PropertyLeadViewSet, LeadSourceViewSet , CustomTokenObtainPairView, ProfileView, PropertyViewSet, NeighborhoodViewSet, SavedSearchViewSet, FavoritePropertyViewSet, InquiryViewSet, MortgageCalculatorView, BlogPostViewSet, PropertyShareView, PropertyShareRedirect, AdminDashboardView, UserDashboardView, PropertyStatsView, AdminUserManagementViewSet, AdminActionLogViewSet, AgentViewSet
 
 router = DefaultRouter()
 router.register(r'properties', PropertyViewSet, basename='property')
@@ -14,6 +14,8 @@ router.register(r'users', UserViewSet, basename='user')
 router.register(r'blog', BlogPostViewSet, basename='blog-post')
 router.register(r'inquiries', InquiryViewSet, basename='inquiry')
 router.register(r'agents', AgentViewSet, basename='agent')
+router.register(r'property-leads', PropertyLeadViewSet, basename='property-lead')
+router.register(r'lead-sources', LeadSourceViewSet, basename='lead-source')
 
 
 urlpatterns = [
@@ -26,6 +28,8 @@ urlpatterns = [
     path('mortgage/', MortgageCalculatorView.as_view(), name='mortgage-calculator'),
     path('properties/<int:pk>/share/', PropertyShareView.as_view()),
     path('shared-properties/<uuid:token>/', PropertyShareRedirect.as_view()),
+    path('properties/<int:pk>/stats/', PropertyViewSet.as_view({'get': 'stats'}), name='property-stats'),
+    path('agent-properties/', PropertyViewSet.as_view({'get': 'list'}), name='agent-properties'),
     path('property-stats/<int:pk>/', PropertyStatsView.as_view()),
     path('dashboard/admin/', AdminDashboardView.as_view()),
     path('admin/actions/', AdminActionLogViewSet.as_view({'get': 'list'})),
