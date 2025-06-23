@@ -444,10 +444,10 @@ const Navbar = () => {
 
   const navLinks = [
     { path: "/", label: "Home", icon: Home },
-    { path: "/properties", label: "Properties", icon: Building2 },
     { path: "/about", label: "About", icon: Users },
     { path: "/agents", label: "Agents", icon: Handshake },
-    { path: "/guide", label: "Guide", icon: Handshake },
+    { path: "/sale", label: "Sale", icon: Building2 },
+    { path: "/rent", label: "Rent", icon: Building2 },
     { path: "/contact", label: "Contact", icon: PhoneCall },
   ];
 

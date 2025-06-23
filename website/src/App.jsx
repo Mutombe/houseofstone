@@ -20,6 +20,7 @@ import PropertySales from "./components/properties/sales";
 import PropertyDashboard from "./components/dashboards/admin";
 import AgentsPage from "./components/agents/agents";
 import Properties from "./components/properties/properties";
+import RentalProperties from "./components/properties/forrent";
 import PropertyDetail from "./components/properties/details";
 import CitySuburbs from "./components/neighborhood/suburbs";
 import SuburbDetail from "./components/neighborhood/detail";
@@ -47,7 +48,8 @@ function App() {
         <AnimatePresence mode="wait">
           <Routes>
             <Route path="/" element={<EnhancedHomepage />} />
-            <Route path="/properties" element={<Properties />} />
+            <Route path="/sale" element={<Properties />} />
+            <Route path="/rent" element={<RentalProperties />} />
             <Route path="/properties/:id" element={<PropertyDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />

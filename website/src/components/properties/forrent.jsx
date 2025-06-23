@@ -82,7 +82,7 @@ const PropertySkeleton = ({ viewMode }) => {
   );
 };
 
-const Properties = () => {
+const RentalProperties = () => {
   const dispatch = useDispatch();
   const { status, error } = useSelector((state) => state.properties);
   const properties = useSelector(selectAllProperties);
@@ -100,7 +100,7 @@ const Properties = () => {
     priceRange: "all",
     bedrooms: "all",
     bathrooms: "all",
-    listingType: "sale", // for sale/rent
+    listingType: "rental", // for sale/rent
     amenities: [],
     sqftRange: "all",
     location: "",
@@ -116,7 +116,7 @@ const Properties = () => {
     if (!Array.isArray(properties)) return [];
 
     let filtered = properties.filter((property) => {
-      if (property.category !== "sale") return false;
+      if (property.category !== "rental") return false;
       // Search term filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
@@ -798,4 +798,4 @@ const Properties = () => {
   );
 };
 
-export default Properties;
+export default RentalProperties;
