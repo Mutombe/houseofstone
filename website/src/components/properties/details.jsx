@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Star,
   Building,
+  Download,
   Car,
   Home,
   Users,
@@ -37,8 +38,11 @@ const PropertyDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
-  const [viewCount, setViewCount] = useState(Math.floor(Math.random() * 500) + 100);
-  
+  const [viewCount, setViewCount] = useState(
+    Math.floor(Math.random() * 500) + 100
+  );
+  const [isGeneratingBrochure, setIsGeneratingBrochure] = useState(false);
+
   const {
     items: properties,
     status,
@@ -67,7 +71,7 @@ const PropertyDetail = () => {
   // Simulate view count increment
   useEffect(() => {
     const timer = setTimeout(() => {
-      setViewCount(prev => prev + 1);
+      setViewCount((prev) => prev + 1);
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
@@ -123,9 +127,342 @@ const PropertyDetail = () => {
     )}&body=${encodeURIComponent(body)}`;
   };
 
+  const generatePDFBrochure = async () => {
+    setIsGeneratingBrochure(true);
+
+    try {
+      // Create a new window for the PDF content
+      const printWindow = window.open("", "_blank");
+
+      // Generate HTML content for the brochure
+      const brochureHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${property.title} - Property Brochure</title>
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            body {
+              font-family: 'Arial', sans-serif;
+              line-height: 1.6;
+              color: #333;
+              background: white;
+            }
+            
+            .brochure-container {
+              max-width: 210mm;
+              margin: 0 auto;
+              padding: 20px;
+              background: white;
+            }
+            
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              padding-bottom: 20px;
+              border-bottom: 3px solid #2563eb;
+            }
+            
+            .header h1 {
+              font-size: 32px;
+              color: #1e40af;
+              margin-bottom: 10px;
+              font-weight: bold;
+            }
+            
+            .header .location {
+              font-size: 18px;
+              color: #6b7280;
+              margin-bottom: 15px;
+            }
+            
+            .header .price {
+              font-size: 28px;
+              color: #059669;
+              font-weight: bold;
+            }
+            
+            .property-images {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 15px;
+              margin-bottom: 30px;
+            }
+            
+            .property-images img {
+              width: 100%;
+              height: 200px;
+              object-fit: cover;
+              border-radius: 8px;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            
+            .main-image {
+              grid-column: 1 / -1;
+              height: 300px !important;
+            }
+            
+            .property-details {
+              margin-bottom: 30px;
+            }
+            
+            .section-title {
+              font-size: 24px;
+              color: #1e40af;
+              margin-bottom: 15px;
+              font-weight: bold;
+              border-bottom: 2px solid #e5e7eb;
+              padding-bottom: 5px;
+            }
+            
+            .details-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 15px;
+              margin-bottom: 20px;
+            }
+            
+            .detail-item {
+              background: #f9fafb;
+              padding: 15px;
+              border-radius: 8px;
+              text-align: center;
+              border: 1px solid #e5e7eb;
+            }
+            
+            .detail-item .label {
+              font-size: 12px;
+              color: #6b7280;
+              text-transform: uppercase;
+              font-weight: bold;
+              margin-bottom: 5px;
+            }
+            
+            .detail-item .value {
+              font-size: 18px;
+              color: #1f2937;
+              font-weight: bold;
+            }
+            
+            .description {
+              font-size: 14px;
+              line-height: 1.8;
+              color: #4b5563;
+              margin-bottom: 20px;
+              text-align: justify;
+            }
+            
+            .features-grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 10px;
+              margin-bottom: 30px;
+            }
+            
+            .feature-item {
+              background: #f0fdf4;
+              padding: 10px 15px;
+              border-radius: 6px;
+              border-left: 4px solid #22c55e;
+              font-size: 14px;
+              color: #166534;
+            }
+            
+            .agent-info {
+              background: #f8fafc;
+              padding: 20px;
+              border-radius: 10px;
+              border: 2px solid #e2e8f0;
+              margin-bottom: 20px;
+            }
+            
+            .agent-info h3 {
+              color: #1e40af;
+              margin-bottom: 10px;
+              font-size: 18px;
+            }
+            
+            .agent-info p {
+              margin-bottom: 5px;
+              color: #475569;
+            }
+            
+            .footer {
+              text-align: center;
+              padding-top: 20px;
+              border-top: 2px solid #e5e7eb;
+              color: #6b7280;
+              font-size: 12px;
+            }
+            
+            .status-badge {
+              display: inline-block;
+              background: #22c55e;
+              color: white;
+              padding: 5px 15px;
+              border-radius: 20px;
+              font-size: 14px;
+              font-weight: bold;
+              margin-bottom: 10px;
+            }
+            
+            @media print {
+              body {
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+              }
+              
+              .brochure-container {
+                max-width: none;
+                margin: 0;
+                padding: 10px;
+              }
+              
+              .property-images {
+                break-inside: avoid;
+              }
+              
+              .section-title {
+                break-after: avoid;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="brochure-container">
+            <div class="header">
+              <h1>${property.title}</h1>
+              <div class="location">📍 ${property.location}</div>
+              <div class="status-badge">${property.status}</div>
+              <div class="price">$${parseFloat(
+                property.price
+              ).toLocaleString()}</div>
+            </div>
+            
+            <div class="property-images">
+              ${property.images
+                .map(
+                  (img, index) => `
+                <img src="${img.image}" alt="${
+                    img.caption || `Property Image ${index + 1}`
+                  }" 
+                     class="${index === 0 ? "main-image" : ""}" 
+                     onerror="this.style.display='none'"/>
+              `
+                )
+                .join("")}
+            </div>
+            
+            <div class="property-details">
+              <h2 class="section-title">Property Details</h2>
+              <div class="details-grid">
+                <div class="detail-item">
+                  <div class="label">Bedrooms</div>
+                  <div class="value">${property.beds || "N/A"}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="label">Bathrooms</div>
+                  <div class="value">${property.baths || "N/A"}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="label">Land Size</div>
+                  <div class="value">${property.sqft || "N/A"}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="label">Garage</div>
+                  <div class="value">${property.garage || "N/A"}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="label">Floor Size</div>
+                  <div class="value">${property.floor_size || "N/A"}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="label">Year Built</div>
+                  <div class="value">${property.year_built || "N/A"}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="description-section">
+              <h2 class="section-title">About This Property</h2>
+              <div class="description">
+                ${property.description}
+              </div>
+            </div>
+            
+            ${
+              property.features && property.features.length > 0
+                ? `
+            <div class="features-section">
+              <h2 class="section-title">Key Features</h2>
+              <div class="features-grid">
+                ${property.features
+                  .map(
+                    (feature) => `
+                  <div class="feature-item">✓ ${feature.feature}</div>
+                `
+                  )
+                  .join("")}
+              </div>
+            </div>
+            `
+                : ""
+            }
+            
+            ${
+              getPrimaryAgent(property)
+                ? `
+            <div class="agent-info">
+              <h3>Primary Agent</h3>
+              <p><strong>Name:</strong> ${
+                getPrimaryAgent(property).agent.first_name
+              }</p>
+              <p><strong>Email:</strong> ${
+                getPrimaryAgent(property).agent.email
+              }</p>
+              <p><strong>Phone:</strong> ${
+                getPrimaryAgent(property).agent.phone
+              }</p>
+            </div>
+            `
+                : ""
+            }
+            
+            <div class="footer">
+              <p>Property Brochure - Generated on ${new Date().toLocaleDateString()}</p>
+              <p>For more information, please contact our real estate team</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(brochureHTML);
+      printWindow.document.close();
+
+      // Wait for images to load before printing
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+          setIsGeneratingBrochure(false);
+        }, 1000);
+      };
+    } catch (error) {
+      console.error("Error generating brochure:", error);
+      alert("Error generating brochure. Please try again.");
+      setIsGeneratingBrochure(false);
+    }
+  };
+
   const nextImage = () => {
     if (property.images && property.images.length > 0) {
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev === property.images.length - 1 ? 0 : prev + 1
       );
     }
@@ -133,7 +470,7 @@ const PropertyDetail = () => {
 
   const prevImage = () => {
     if (property.images && property.images.length > 0) {
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev === 0 ? property.images.length - 1 : prev - 1
       );
     }
@@ -145,8 +482,16 @@ const PropertyDetail = () => {
     { icon: Square, label: "Land Size", value: property.sqft || "N/A" },
     { icon: Car, label: "Garage", value: property.garage || "N/A" },
     { icon: Home, label: "Floor Size", value: property.floor_size || "N/A" },
-    { icon: Building, label: "Year Built", value: property.year_built || "N/A" },
-    { icon: Users, label: "Dining Rooms", value: property.dining_rooms || "N/A" },
+    {
+      icon: Building,
+      label: "Year Built",
+      value: property.year_built || "N/A",
+    },
+    {
+      icon: Users,
+      label: "Dining Rooms",
+      value: property.dining_rooms || "N/A",
+    },
     { icon: Home, label: "Lounges", value: property.lounges || "N/A" },
   ];
 
@@ -193,7 +538,7 @@ const PropertyDetail = () => {
                 className="w-full h-full object-cover cursor-pointer"
                 onClick={() => setIsImageModalOpen(true)}
               />
-              
+
               {/* Image Navigation */}
               {property.images.length > 1 && (
                 <>
@@ -226,7 +571,7 @@ const PropertyDetail = () => {
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
                       className={`w-2 h-2 rounded-full transition-colors ${
-                        index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                        index === currentImageIndex ? "bg-white" : "bg-white/50"
                       }`}
                     />
                   ))}
@@ -246,12 +591,14 @@ const PropertyDetail = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsFavorited(!isFavorited)}
               className={`p-2 rounded-full transition-colors ${
-                isFavorited 
-                  ? 'bg-red-500 text-white' 
-                  : 'bg-black/50 text-white hover:bg-black/70'
+                isFavorited
+                  ? "bg-red-500 text-white"
+                  : "bg-black/50 text-white hover:bg-black/70"
               }`}
             >
-              <Heart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
+              <Heart
+                className={`w-5 h-5 ${isFavorited ? "fill-current" : ""}`}
+              />
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -280,9 +627,11 @@ const PropertyDetail = () => {
                 </h1>
                 <div className="flex items-center text-stone-600 mb-2">
                   <MapPin className="w-5 h-5 mr-2 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">{property.location}</span>
+                  <span className="text-sm sm:text-base">
+                    {property.location}
+                  </span>
                 </div>
-                
+
                 {/* Property Stats */}
                 <div className="flex items-center space-x-4 text-sm text-stone-500">
                   <div className="flex items-center">
@@ -299,7 +648,7 @@ const PropertyDetail = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-2xl sm:text-3xl font-bold text-stone-900">
@@ -309,7 +658,7 @@ const PropertyDetail = () => {
                     {property.status}
                   </p>
                 </div>
-                
+
                 {/* Quick Stats for Mobile */}
                 <div className="grid grid-cols-3 gap-4 mt-4 sm:mt-0 sm:flex sm:space-x-6">
                   {property.beds && (
@@ -340,7 +689,6 @@ const PropertyDetail = () => {
       {/* Property Content - Mobile First Layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8 lg:grid lg:grid-cols-3 lg:gap-12 lg:space-y-0">
-          
           {/* MOBILE: Sidebar comes first, DESKTOP: Sidebar on right */}
           <div className="lg:order-2 lg:col-span-1">
             <motion.div
@@ -399,6 +747,29 @@ const PropertyDetail = () => {
                 ))}
               </div>
 
+              {/* Download Brochure Button */}
+              <div className="mb-6">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={generatePDFBrochure}
+                  disabled={isGeneratingBrochure}
+                  className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all flex items-center justify-center font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGeneratingBrochure ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-5 h-5 mr-2" />
+                      Download Brochure
+                    </>
+                  )}
+                </motion.button>
+              </div>
+
               {/* Contact Buttons */}
               <div className="space-y-3">
                 <motion.a
@@ -437,7 +808,6 @@ const PropertyDetail = () => {
 
           {/* MOBILE: Main content comes second, DESKTOP: Main content on left */}
           <div className="lg:order-1 lg:col-span-2 space-y-8">
-            
             {/* Description */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
