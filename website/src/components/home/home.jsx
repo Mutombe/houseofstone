@@ -294,7 +294,7 @@ const EnhancedHomepage = () => {
               >
                 <span className="text-white">Find Your</span>
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 to-yellow-700">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-500">
                   Dream Home
                 </span>
                 <br />
@@ -389,7 +389,7 @@ const EnhancedHomepage = () => {
 
                   <motion.button
                     onClick={handleViewProperties}
-                    className="w-full bg-gradient-to-r from-yellow-600 to-yellow-700 text-slate-900 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 min-h-[48px] touch-manipulation"
+                    className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-900 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 min-h-[48px] touch-manipulation"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -426,7 +426,7 @@ const EnhancedHomepage = () => {
             className="text-center mb-12 sm:mb-16"
           >
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-              Our <span className="text-yellow-600">Achievements</span>
+              Our <span className="text-yellow-500">Achievements</span>
             </h2>
             <div className="w-20 sm:w-24 h-1 bg-yellow-400 mx-auto" />
           </motion.div>
@@ -447,7 +447,7 @@ const EnhancedHomepage = () => {
                 className="text-center group"
               >
                 <div className="relative mb-3 sm:mb-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-yellow-600 to-yellow-700 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300 mb-3 sm:mb-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300 mb-3 sm:mb-4">
                     <stat.icon className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-slate-900" />
                   </div>
                 </div>
@@ -479,7 +479,7 @@ const EnhancedHomepage = () => {
             className="text-center mb-12 sm:mb-16"
           >
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-800 mb-4">
-              Featured <span className="text-yellow-600">Properties</span>
+              Featured <span className="text-yellow-500">Properties</span>
             </h2>
             <div className="w-20 sm:w-24 h-1 bg-yellow-400 mx-auto mb-4 sm:mb-6" />
             <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-4 sm:px-0">
@@ -590,7 +590,7 @@ const EnhancedHomepage = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
-              Our <span className="text-yellow-600">Services</span>
+              Our <span className="text-yellow-500">Services</span>
             </h2>
             <div className="w-24 h-1 bg-yellow-400 mx-auto mb-6" />
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -667,7 +667,7 @@ const EnhancedHomepage = () => {
                 viewport={{ once: true }}
                 className="group bg-white rounded-2xl shadow-lg p-8 hover:shadow-2xl transition-all duration-500 border-2 border-transparent hover:border-yellow-400/20"
               >
-                <div className="w-16 h-16 bg-gradient-to-r from-yellow-600 to-yellow-700 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <service.icon className="w-8 h-8 text-slate-900" />
                 </div>
 
@@ -706,7 +706,7 @@ const EnhancedHomepage = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Client <span className="text-yellow-600">Testimonials</span>
+              Client <span className="text-yellow-500">Testimonials</span>
             </h2>
             <div className="w-24 h-1 bg-yellow-400 mx-auto mb-6" />
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
