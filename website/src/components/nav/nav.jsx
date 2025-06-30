@@ -429,7 +429,7 @@ const Navbar = () => {
   const [authModal, setAuthModal] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
-   const [resourcesOpen, setResourcesOpen] = useState(false);
+  const [resourcesOpen, setResourcesOpen] = useState(false);
   const isAdmin = user?.is_superuser;
   const dispatch = useDispatch();
 
@@ -442,6 +442,19 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Close mobile menu when clicking outside and handle body scroll
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   const navLinks = [
     { path: "/", label: "Home", icon: Home },
     { path: "/about", label: "About", icon: Users },
@@ -451,7 +464,7 @@ const Navbar = () => {
     { path: "/contact", label: "Contact", icon: PhoneCall },
   ];
 
-    const resourcesLinks = [
+  const resourcesLinks = [
     { path: "/consulting", label: "Consulting", icon: Briefcase },
     { path: "/market", label: "Market Analysis", icon: BarChart },
     { path: "/neighborhoods", label: "Neighborhood Guide", icon: MapIcon },
@@ -460,6 +473,11 @@ const Navbar = () => {
 
   const handleLogout = () => {
     dispatch(logout());
+  };
+
+  const handleMobileNavClick = () => {
+    setIsOpen(false);
+    setResourcesOpen(false);
   };
 
   return (
@@ -497,6 +515,7 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
       {/* Main Navigation */}
       <nav
         className={`sticky top-0 w-full z-50 transition-all duration-300 ${
@@ -561,7 +580,8 @@ const Navbar = () => {
                 </NavLink>
               ))}
 
-                            <div 
+              {/* Desktop Resources Dropdown */}
+              <div 
                 className="relative"
                 onMouseEnter={() => setResourcesOpen(true)}
                 onMouseLeave={() => setResourcesOpen(false)}
@@ -585,14 +605,14 @@ const Navbar = () => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg z-50 border border-gray-100"
+                      className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl z-[60] border border-gray-100"
                     >
-                      <div className="py-1">
+                      <div className="py-2">
                         {resourcesLinks.map((link) => (
                           <NavLink
                             key={link.path}
                             to={link.path}
-                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                             onClick={() => setResourcesOpen(false)}
                           >
                             <link.icon className="w-4 h-4 mr-3 text-gray-500" />
@@ -690,184 +710,190 @@ const Navbar = () => {
 
             {/* Mobile Menu Button */}
             <div className="lg:hidden flex items-center">
-              <motion.button
-                onClick={() => setIsOpen(!isOpen)}
+              <button
+                onClick={() => {
+                  console.log('Mobile menu button clicked', !isOpen); // Debug log
+                  setIsOpen(!isOpen);
+                }}
                 className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                 aria-label="Toggle menu"
                 aria-expanded={isOpen}
-                whileTap={{ scale: 0.95 }}
               >
-                <AnimatePresence mode="wait">
-                  {isOpen ? (
-                    <motion.div
-                      key="close"
-                      initial={{ rotate: -90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: 90, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <X className="h-6 w-6" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="menu"
-                      initial={{ rotate: 90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: -90, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Menu className="h-6 w-6" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.button>
+                {isOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              className="lg:hidden"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <div className="bg-gradient-to-br from-white via-blue-50 to-blue-100 border-t border-blue-200 shadow-lg">
-                <div className="px-4 pt-4 pb-6 space-y-2">
-                  {navLinks.map((link, index) => (
-                    <motion.div
-                      key={link.path}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.2, delay: index * 0.05 }}
+        {/* Mobile Navigation - Full Screen */}
+        {isOpen && (
+          <div className="lg:hidden fixed inset-0 top-[116px] z-[100] bg-gradient-to-br from-white via-blue-50 to-blue-100 shadow-2xl">
+            <div className="h-full overflow-y-auto">
+              <div className="px-6 pt-6 pb-8 space-y-3">
+                {/* Main Navigation Links */}
+                {navLinks.map((link, index) => (
+                  <div key={link.path}>
+                    <NavLink
+                      to={link.path}
+                      onClick={handleMobileNavClick}
+                      className={({ isActive }) =>
+                        `flex items-center px-4 py-4 rounded-xl text-lg font-medium transition-all duration-200 ${
+                          isActive
+                            ? "bg-slate-500 text-white shadow-lg"
+                            : "text-gray-700 hover:bg-white hover:text-yellow-600 hover:shadow-md"
+                        }`
+                      }
                     >
-                      <NavLink
-                        to={link.path}
-                        onClick={() => setIsOpen(false)}
-                        className={({ isActive }) =>
-                          `flex items-center px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 ${
-                            isActive
-                              ? "bg-slate-500 text-white shadow-lg"
-                              : "text-gray-700 hover:bg-white hover:text-yellow-600 hover:shadow-md"
-                          }`
-                        }
-                      >
-                        <link.icon className="w-5 h-5 mr-3" />
-                        <span>{link.label}</span>
-                      </NavLink>
-                    </motion.div>
-                  ))}
+                      <link.icon className="w-6 h-6 mr-4" />
+                      <span>{link.label}</span>
+                    </NavLink>
+                  </div>
+                ))}
 
-                  {/* Mobile Auth Section */}
-                  <motion.div
-                    className="pt-4 mt-4 border-t border-blue-200"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.4 }}
+                {/* Mobile Resources Section */}
+                <div>
+                  <button
+                    onClick={() => setResourcesOpen(!resourcesOpen)}
+                    className={`w-full flex items-center justify-between px-4 py-4 rounded-xl text-lg font-medium transition-all duration-200 ${
+                      resourcesOpen 
+                        ? "bg-slate-500 text-white shadow-lg" 
+                        : "text-gray-700 hover:bg-white hover:text-yellow-600 hover:shadow-md"
+                    }`}
                   >
-                    {isAuthenticated ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between px-4 py-3 bg-white rounded-xl shadow-sm">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center">
-                              <User className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="font-medium text-gray-900">
-                              {user?.username || "User"}
-                            </span>
-                          </div>
-                          {isAdmin && (
-                            <Link
-                              to="/admin"
-                              className="flex items-center text-slate-600 hover:text-slate-700"
-                              onClick={() => setIsOpen(false)}
-                            >
-                              <BarChart2 className="mr-1 h-4 w-4" />
-                              <span className="text-sm">Admin</span>
-                            </Link>
-                          )}
+                    <div className="flex items-center">
+                      <BookOpen className="w-6 h-6 mr-4" />
+                      <span>Resources</span>
+                    </div>
+                    <ChevronDown className={`w-5 h-5 transition-transform ${resourcesOpen ? 'transform rotate-180' : ''}`} />
+                  </button>
+
+                  {resourcesOpen && (
+                    <div className="mt-2 ml-4 space-y-2">
+                      {resourcesLinks.map((link) => (
+                        <div key={link.path}>
+                          <NavLink
+                            to={link.path}
+                            onClick={handleMobileNavClick}
+                            className="flex items-center px-4 py-3 rounded-lg text-base text-gray-600 hover:bg-white hover:text-blue-600 transition-colors"
+                          >
+                            <link.icon className="w-5 h-5 mr-3 text-gray-500" />
+                            {link.label}
+                          </NavLink>
                         </div>
-                        <Button
-                          fullWidth
-                          variant="outlined"
-                          onClick={() => {
-                            handleLogout();
-                            setIsOpen(false);
-                          }}
-                          sx={{
-                            color: "#dc2626",
-                            borderColor: "#1e293b",
-                            borderRadius: "12px",
-                            py: 1.5,
-                            textTransform: "none",
-                            "&:hover": {
-                              borderColor: "#b91c1c",
-                              backgroundColor: "#fef2f2",
-                            },
-                          }}
-                          startIcon={<LogOut className="w-5 h-5" />}
-                        >
-                          Logout
-                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Mobile Auth Section */}
+                <div className="pt-6 mt-6 border-t border-blue-200">
+                  {isAuthenticated ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between px-4 py-4 bg-white rounded-xl shadow-sm">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
+                            <User className="w-5 h-5 text-white" />
+                          </div>
+                          <span className="font-medium text-gray-900 text-lg">
+                            {user?.username || "User"}
+                          </span>
+                        </div>
+                        {isAdmin && (
+                          <Link
+                            to="/admin"
+                            className="flex items-center text-slate-600 hover:text-slate-700"
+                            onClick={handleMobileNavClick}
+                          >
+                            <BarChart2 className="mr-2 h-5 w-5" />
+                            <span>Admin</span>
+                          </Link>
+                        )}
                       </div>
-                    ) : (
-                      <div className="flex flex-col space-y-3">
-                        <Button
-                          fullWidth
-                          variant="outlined"
-                          onClick={() => {
-                            setAuthModal("login");
-                            setIsOpen(false);
-                          }}
-                          sx={{
-                            color: "#1e293b",
-                            borderColor: "#1e293b",
-                            borderRadius: "12px",
-                            py: 1.5,
-                            textTransform: "none",
-                            "&:hover": {
-                              borderColor: "#1d4ed8",
-                              backgroundColor: "#eff6ff",
-                            },
-                          }}
-                          startIcon={<LogIn className="w-5 h-5" />}
-                        >
-                          Login
-                        </Button>
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          onClick={() => {
-                            setAuthModal("register");
-                            setIsOpen(false);
-                          }}
-                          sx={{
-                            background: "#1e293b",
-                            borderRadius: "12px",
-                            py: 1.5,
-                            textTransform: "none",
-                            boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
-                            "&:hover": {
-                              background:
-                                "linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)",
-                              boxShadow: "0 6px 16px rgba(37, 99, 235, 0.4)",
-                            },
-                          }}
-                          startIcon={<User className="w-5 h-5" />}
-                        >
-                          Register
-                        </Button>
-                      </div>
-                    )}
-                  </motion.div>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        onClick={() => {
+                          handleLogout();
+                          handleMobileNavClick();
+                        }}
+                        sx={{
+                          color: "#dc2626",
+                          borderColor: "#1e293b",
+                          borderRadius: "12px",
+                          py: 2,
+                          fontSize: "1rem",
+                          textTransform: "none",
+                          "&:hover": {
+                            borderColor: "#b91c1c",
+                            backgroundColor: "#fef2f2",
+                          },
+                        }}
+                        startIcon={<LogOut className="w-5 h-5" />}
+                      >
+                        Logout
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col space-y-4">
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        onClick={() => {
+                          setAuthModal("login");
+                          handleMobileNavClick();
+                        }}
+                        sx={{
+                          color: "#1e293b",
+                          borderColor: "#1e293b",
+                          borderRadius: "12px",
+                          py: 2,
+                          fontSize: "1rem",
+                          textTransform: "none",
+                          "&:hover": {
+                            borderColor: "#1d4ed8",
+                            backgroundColor: "#eff6ff",
+                          },
+                        }}
+                        startIcon={<LogIn className="w-5 h-5" />}
+                      >
+                        Login
+                      </Button>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        onClick={() => {
+                          setAuthModal("register");
+                          handleMobileNavClick();
+                        }}
+                        sx={{
+                          background: "#1e293b",
+                          borderRadius: "12px",
+                          py: 2,
+                          fontSize: "1rem",
+                          textTransform: "none",
+                          boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
+                          "&:hover": {
+                            background:
+                              "linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)",
+                            boxShadow: "0 6px 16px rgba(37, 99, 235, 0.4)",
+                          },
+                        }}
+                        startIcon={<User className="w-5 h-5" />}
+                      >
+                        Register
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+        )}
+        
         <AuthModals openType={authModal} onClose={() => setAuthModal(null)} />
       </nav>
     </>
