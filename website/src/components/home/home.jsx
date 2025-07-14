@@ -224,7 +224,7 @@ const EnhancedHomepage = () => {
   };
 
   const handleViewProperties = () => {
-    console.log("Navigate to /properties");
+    navigate("/sale")
   };
 
   const handleSearch = () => {
@@ -324,7 +324,9 @@ const EnhancedHomepage = () => {
                   <Search className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   Explore Properties
                 </GlowButton>
-                <GlowButton variant="secondary" className="flex-1 sm:flex-none">
+                <GlowButton variant="secondary" className="flex-1 sm:flex-none"
+                  onClick={() => navigate("/contact")}
+                >
                   <Phone className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   Contact Agent
                 </GlowButton>
@@ -571,7 +573,9 @@ const EnhancedHomepage = () => {
           </div>
 
           <div className="text-center mt-8 sm:mt-12">
-            <GlowButton>
+            <GlowButton
+              onClick={handleViewProperties}
+            >
               View All Properties
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
             </GlowButton>
