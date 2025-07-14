@@ -9,6 +9,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "./components/nav/nav";
 import EnhancedHomepage from "./components/home/home";
+import EnhancedContact from "./components/contact/contact";
 import MortgageCalculator from "./components/mortgage/morgage";
 import About from "./components/about/about";
 import Contact from "./components/contact/contact";
@@ -52,7 +53,7 @@ function App() {
             <Route path="/rent" element={<RentalProperties />} />
             <Route path="/properties/:id" element={<PropertyDetail />} />
             <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
+            <Route path="/contact" element={<EnhancedContact />} />
             <Route path="/management" element={<PropertyManagement />} />
             <Route path="/market" element={<MarketAnalysis />} />
             <Route path="/consulting" element={<Consulting />} />
