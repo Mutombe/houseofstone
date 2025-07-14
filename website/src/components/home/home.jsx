@@ -27,7 +27,7 @@ import { useNavigate } from "react-router-dom";
 // Brand colors consistent with navbar
 const COLORS = {
   primary: "#1e293b", // slate-800
-  secondary: "#D4AF37", // yellow-500/gold
+  secondary: "#DCC471", // yellow-500/gold
   accent: "#b07e28", // yellow-600 for darker gold
   light: "#ffffff", // white
   dark: "#0f172a", // slate-900 for deeper contrast
@@ -187,8 +187,8 @@ const GlowButton = ({
       relative px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform
       ${
         variant === "primary"
-          ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-900 shadow-lg hover:shadow-yellow-500/25"
-          : "bg-slate-800 text-white border-2 border-yellow-600 hover:bg-yellow-400 hover:text-slate-900"
+          ? "bg-[#DCC471] text-slate-900 shadow-lg hover:shadow-yellow-500/25"
+          : "bg-slate-800 text-white border-2 border-[#DCC471] hover:bg-yellow-400 hover:text-slate-900"
       }
       hover:scale-105 active:scale-95 overflow-hidden
       ${className}
@@ -280,7 +280,7 @@ const EnhancedHomepage = () => {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="inline-flex items-center px-3 sm:px-4 py-2 bg-yellow-400/20 rounded-full mb-4 sm:mb-6 backdrop-blur-sm border border-yellow-400/30"
               >
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 mr-2" />
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#DCC471] mr-2" />
                 <span className="text-yellow-100 font-medium text-sm sm:text-base">
                   Premium Real Estate
                 </span>
@@ -294,7 +294,7 @@ const EnhancedHomepage = () => {
               >
                 <span className="text-white">Find Your</span>
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-500">
+                <span className="text-transparent bg-clip-text bg-[#DCC471]">
                   Dream Home
                 </span>
                 <br />
@@ -389,7 +389,7 @@ const EnhancedHomepage = () => {
 
                   <motion.button
                     onClick={handleViewProperties}
-                    className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-900 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 min-h-[48px] touch-manipulation"
+                    className="w-full bg-[#DCC471] text-slate-900 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 min-h-[48px] touch-manipulation"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -408,8 +408,8 @@ const EnhancedHomepage = () => {
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          <div className="w-6 h-10 border-2 border-yellow-400 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-yellow-400 rounded-full mt-2" />
+          <div className="w-6 h-10 border-2 border-[#DCC471] rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-[#DCC471] rounded-full mt-2" />
           </div>
         </motion.div>
       </section>
@@ -426,7 +426,7 @@ const EnhancedHomepage = () => {
             className="text-center mb-12 sm:mb-16"
           >
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-              Our <span className="text-yellow-500">Achievements</span>
+              Our <span className="text-[#DCC471]">Achievements</span>
             </h2>
             <div className="w-20 sm:w-24 h-1 bg-yellow-400 mx-auto" />
           </motion.div>
@@ -447,19 +447,19 @@ const EnhancedHomepage = () => {
                 className="text-center group"
               >
                 <div className="relative mb-3 sm:mb-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300 mb-3 sm:mb-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#DCC471] rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300 mb-3 sm:mb-4">
                     <stat.icon className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-slate-900" />
                   </div>
                 </div>
                 <motion.h3
-                  className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-yellow-600 mb-1 sm:mb-2"
+                  className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-[#DCC471] mb-1 sm:mb-2"
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
                 >
                   <CountUp end={stat.end} suffix={stat.suffix || "+"} />
                 </motion.h3>
-                <p className="text-gray-300 font-medium text-sm sm:text-base text-yellow-600">
+                <p className="text-gray-300 font-medium text-sm sm:text-base text-[#DCC471]">
                   {stat.label}
                 </p>
               </motion.div>
@@ -479,7 +479,7 @@ const EnhancedHomepage = () => {
             className="text-center mb-12 sm:mb-16"
           >
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-800 mb-4">
-              Featured <span className="text-yellow-500">Properties</span>
+              Featured <span className="text-[#DCC471]">Properties</span>
             </h2>
             <div className="w-20 sm:w-24 h-1 bg-yellow-400 mx-auto mb-4 sm:mb-6" />
             <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-4 sm:px-0">
@@ -508,7 +508,7 @@ const EnhancedHomepage = () => {
 
                   {/* Property badges */}
                   <div className="absolute top-3 sm:top-4 left-3 sm:left-4 flex gap-2">
-                    <span className="px-2 sm:px-3 py-1 bg-yellow-400 text-slate-900 rounded-full text-xs sm:text-sm font-bold">
+                    <span className="px-2 sm:px-3 py-1 bg-[#DCC471] text-slate-900 rounded-full text-xs sm:text-sm font-bold">
                       {property.type.charAt(0).toUpperCase() +
                         property.type.slice(1)}
                     </span>
@@ -557,11 +557,11 @@ const EnhancedHomepage = () => {
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0">
-                    <button className="flex items-center justify-center sm:justify-start text-yellow-600 font-semibold hover:text-yellow-700 transition-colors py-2 sm:py-0 min-h-[44px] sm:min-h-0 touch-manipulation">
+                    <button className="flex items-center justify-center sm:justify-start text-[#DCC471] font-semibold hover:text-[#DCC471] transition-colors py-2 sm:py-0 min-h-[44px] sm:min-h-0 touch-manipulation">
                       <Eye className="w-4 h-4 mr-1" />
                       View Details
                     </button>
-                    <button className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-yellow-500 hover:text-slate-900 transition-colors text-sm font-medium min-h-[44px] touch-manipulation">
+                    <button className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-[#DCC471] hover:text-slate-900 transition-colors text-sm font-medium min-h-[44px] touch-manipulation">
                       Contact Agent
                     </button>
                   </div>
@@ -590,9 +590,9 @@ const EnhancedHomepage = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
-              Our <span className="text-yellow-500">Services</span>
+              Our <span className="text-[#DCC471]">Services</span>
             </h2>
-            <div className="w-24 h-1 bg-yellow-400 mx-auto mb-6" />
+            <div className="w-24 h-1 bg-[#DCC471] mx-auto mb-6" />
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Comprehensive real estate solutions tailored to your needs
             </p>
@@ -667,11 +667,11 @@ const EnhancedHomepage = () => {
                 viewport={{ once: true }}
                 className="group bg-white rounded-2xl shadow-lg p-8 hover:shadow-2xl transition-all duration-500 border-2 border-transparent hover:border-yellow-400/20"
               >
-                <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-16 h-16 bg-[#DCC471] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <service.icon className="w-8 h-8 text-slate-900" />
                 </div>
 
-                <h3 className="text-2xl font-bold text-slate-800 mb-4 group-hover:text-yellow-600 transition-colors">
+                <h3 className="text-2xl font-bold text-slate-800 mb-4 group-hover:text-[#DCC471] transition-colors">
                   {service.title}
                 </h3>
 
@@ -683,7 +683,7 @@ const EnhancedHomepage = () => {
                       key={idx}
                       className="flex items-center text-sm text-gray-600"
                     >
-                      <CheckCircle className="w-4 h-4 text-yellow-600 mr-2 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-[#DCC471] mr-2 flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
@@ -706,7 +706,7 @@ const EnhancedHomepage = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Client <span className="text-yellow-500">Testimonials</span>
+              Client <span className="text-[#DCC471]">Testimonials</span>
             </h2>
             <div className="w-24 h-1 bg-yellow-400 mx-auto mb-6" />
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
@@ -728,7 +728,7 @@ const EnhancedHomepage = () => {
                   {[...Array(testimonial.rating)].map((_, idx) => (
                     <Star
                       key={idx}
-                      className="w-5 h-5 text-yellow-600 fill-current"
+                      className="w-5 h-5 text-[#DCC471] fill-current"
                     />
                   ))}
                 </div>

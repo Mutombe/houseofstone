@@ -492,23 +492,23 @@ const Navbar = () => {
                 className="flex items-center hover:text-blue-200 transition-colors duration-200"
                 aria-label="Call Us"
               >
-                <Phone className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">+263 772 329 569</span>
-                <span className="sm:hidden">Call</span>
+                <Phone className="w-4 h-4 mr-2 text-[#DCC471]" />
+                <span className="hidden sm:inline text-[#DCC471]">+263 772 329 569</span>
+                <span className="sm:hidden text-[#DCC471]">Call</span>
               </a>
               <a
                 href="mailto:info@hsp.co.zw"
                 className="flex items-center hover:text-blue-200 transition-colors duration-200"
                 aria-label="Email Us"
               >
-                <Mail className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">info@hsp.co.zw</span>
-                <span className="sm:hidden">Email</span>
+                <Mail className="w-4 h-4 mr-2 text-[#DCC471]" />
+                <span className="hidden sm:inline text-[#DCC471]">info@hsp.co.zw</span>
+                <span className="sm:hidden text-[#DCC471]">Email</span>
               </a>
             </div>
             <div className="text-xs hidden lg:flex items-center">
-              <MapPin className="w-3 h-3 mr-1" />
-              <span>
+              <MapPin className="w-3 h-3 mr-1 text-[#DCC471]" />
+              <span className="text-[#DCC471]">
                 21 Harare Drive Borrowdale, Harare
               </span>
             </div>

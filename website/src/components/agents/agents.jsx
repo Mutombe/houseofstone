@@ -56,7 +56,7 @@ const agents = [
   {
     id: 2,
     name: "Nairgel Masiiwa",
-    title: "Commercial Property Specialist",
+    title: "Head of Sales",
     specialization: "Commercial Real Estate",
     experience: "12+ Years",
     image: "/nairgel.jpeg",
@@ -82,8 +82,8 @@ const agents = [
   {
     id: 3,
     name: "Tsitsi Mashingaidze",
-    title: "Residential Property Agent",
-    specialization: "Family Homes",
+    title: "Senior Sales Consultant",
+    specialization: "Sales",
     experience: "6+ Years",
     image: "tsitsi.jpeg",
     rating: 4.9,
@@ -109,7 +109,7 @@ const agents = [
     id: 4,
     name: "James Mudzikitiri",
     title: "Marketing & Media Executive",
-    specialization: "Investment Properties",
+    specialization: "Media & Marketing",
     experience: "10+ Years",
     image: "james.jpeg",
     rating: 4.7,
@@ -134,8 +134,8 @@ const agents = [
   {
     id: 5,
     name: "Tanaka Maforimbo",
-    title: "Head of Property Management Department",
-    specialization: "New Developments",
+    title: "Letting Agent",
+    specialization: "Rentals & Letting",
     experience: "5+ Years",
     image: "tanaka.jpeg",
     rating: 4.8,
@@ -212,8 +212,8 @@ const agents = [
   {
     id: 8,
     name: "Tatenda Dzumbunu",
-    title: "Sales Negotiator",
-    specialization: "Negotiation",
+    title: "Senior Sales Consultant",
+    specialization: "Sales",
     experience: "7+ Years",
     image: "Tatenda.jpeg",
     rating: 4.9,
@@ -290,7 +290,7 @@ const agents = [
   {
     id: 7,
     name: "Winnifilda Shadaya",
-    title: "Sales Negotiator",
+    title: "Head of Rentals Department",
     specialization: "Negotiation",
     experience: "7+ Years",
     image: "winnie.jpeg",
@@ -316,7 +316,7 @@ const agents = [
   {
     id: 7,
     name: "Chomu Sithole",
-    title: "Sales Negotiator",
+    title: "Senior Sales Consultant",
     specialization: "Negotiation",
     experience: "7+ Years",
     image: "chomu.jpeg",
@@ -368,7 +368,7 @@ const agents = [
           {
     id: 7,
     name: "Emily Matsika",
-    title: "Sales Negotiator",
+    title: "Senior Sales Consultant",
     specialization: "Sales",
     experience: "7+ Years",
     image: "emily.jpeg",
@@ -465,8 +465,8 @@ const AgentsPage = () => {
       <section className="relative py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-yellow-400/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-yellow-500/10 rounded-full blur-3xl" />
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#DCC471] rounded-full blur-3xl" />
+          <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-[#DCC471] rounded-full blur-3xl" />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -480,9 +480,9 @@ const AgentsPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center px-4 py-2 bg-yellow-400/20 rounded-full mb-6 backdrop-blur-sm border border-yellow-400/30"
+              className="inline-flex items-center px-4 py-2 bg-[#DCC471] rounded-full mb-6 backdrop-blur-sm border border-yellow-400/30"
             >
-              <Sparkles className="w-5 h-5 text-yellow-400 mr-2" />
+              <Sparkles className="w-5 h-5 text-white mr-2" />
               <span className="text-yellow-100 font-medium">Meet Our Team</span>
             </motion.div>
 
@@ -493,7 +493,7 @@ const AgentsPage = () => {
               className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 text-white"
             >
               Our Expert{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">
+              <span className="text-transparent bg-clip-text bg-[#DCC471]">
                 Agents
               </span>
             </motion.h1>
@@ -523,7 +523,7 @@ const AgentsPage = () => {
                 { number: "95%", label: "Client Satisfaction" },
               ].map((stat, i) => (
                 <div key={i} className="text-center">
-                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-yellow-400 mb-1">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#DCC471] mb-1">
                     {stat.number}
                   </div>
                   <div className="text-xs sm:text-sm text-gray-300">
@@ -546,7 +546,7 @@ const AgentsPage = () => {
               <input
                 type="text"
                 placeholder="Search agents, specializations, or areas..."
-                className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none transition-colors"
+                className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#DCC471] focus:outline-none transition-colors"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -648,34 +648,31 @@ const AgentsPage = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                    {/* Rating Badge */}
+                    {/* Liking button */}
                     <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-full px-3 py-1 flex items-center">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current mr-1" />
-                      <span className="text-sm font-semibold">
-                        {agent.rating}
-                      </span>
+                      <Star className="w-4 h-4 text-[#DCC471] fill-current mr-1" />
                     </div>
 
-                    {/* Experience Badge */}
-                    <div className="absolute top-4 right-4 bg-yellow-400 text-slate-900 rounded-full px-3 py-1">
+                    {/* Experience Badge 
+                    <div className="absolute top-4 right-4 bg-[#DCC471] text-slate-900 rounded-full px-3 py-1">
                       <span className="text-sm font-bold">
                         {agent.experience}
                       </span>
-                    </div>
+                    </div>*/}
 
                     {/* Quick Contact - Mobile Optimized */}
                     <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <button
                         onClick={() => handleCallAgent(agent.phone)}
-                        className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-full flex items-center justify-center hover:bg-green-600 transition-colors touch-manipulation"
+                        className="w-10 h-10 sm:w-12 sm:h-12 bg-[#DCC471] rounded-full flex items-center justify-center hover:bg-[#DCC471] transition-colors touch-manipulation"
                       >
                         <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </button>
                       <button
                         onClick={() => handleEmailAgent(agent.email)}
-                        className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors touch-manipulation"
+                        className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-800 rounded-full flex items-center justify-center hover:bg-slate-600 transition-colors touch-manipulation"
                       >
-                        <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                        <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-[#DCC471]" />
                       </button>
                     </div>
                   </div>
@@ -683,10 +680,10 @@ const AgentsPage = () => {
                   {/* Agent Info */}
                   <div className="p-6">
                     <div className="mb-4">
-                      <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-1 group-hover:text-yellow-600 transition-colors">
+                      <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-1 group-hover:text-[#DCC471] transition-colors">
                         {agent.name}
                       </h3>
-                      <p className="text-yellow-600 font-semibold mb-1">
+                      <p className="text-[#DCC471] font-semibold mb-1">
                         {agent.title}
                       </p>
                       <p className="text-gray-600 text-sm">
@@ -731,26 +728,6 @@ const AgentsPage = () => {
                       </div>
                     </div>
 
-                    {/* Achievements */}
-                    <div className="mb-4">
-                      <h4 className="text-sm font-semibold text-slate-700 mb-2">
-                        Recent Achievements
-                      </h4>
-                      <div className="space-y-1">
-                        {agent.achievements
-                          .slice(0, 2)
-                          .map((achievement, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-center text-xs text-gray-600"
-                            >
-                              <Award className="w-3 h-3 text-yellow-500 mr-2 flex-shrink-0" />
-                              {achievement}
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-
                     {/* Areas Served */}
                     <div className="mb-6">
                       <h4 className="text-sm font-semibold text-slate-700 mb-2">
@@ -777,7 +754,7 @@ const AgentsPage = () => {
                     <div className="space-y-3">
                       <motion.button
                         onClick={() => handleContactAgent(agent)}
-                        className="w-full bg-gradient-to-r from-yellow-600 to-yellow-700 text-slate-900 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 min-h-[48px] touch-manipulation"
+                        className="w-full text-[#DCC471] bg-slate-800 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 min-h-[48px] touch-manipulation"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
@@ -795,7 +772,7 @@ const AgentsPage = () => {
                         </button>
                         <button
                           onClick={() => handleEmailAgent(agent.email)}
-                          className="flex items-center justify-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium min-h-[44px] touch-manipulation"
+                          className="flex items-center justify-center px-4 py-2 bg-slate-800 text-[#DCC471] rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium min-h-[44px] touch-manipulation"
                         >
                           <Mail className="w-4 h-4 mr-1" />
                           Email
@@ -812,7 +789,7 @@ const AgentsPage = () => {
           {filteredAgents.length > 0 && (
             <div className="text-center mt-12">
               <motion.button
-                className="px-8 py-4 bg-slate-800 text-white rounded-xl font-semibold hover:bg-yellow-500 hover:text-slate-900 transition-all duration-300 transform hover:scale-105"
+                className="px-8 py-4 bg-slate-800 text-[#DCC471] rounded-xl font-semibold hover:bg-yellow-500 hover:text-slate-900 transition-all duration-300 transform hover:scale-105"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -834,9 +811,9 @@ const AgentsPage = () => {
             className="text-center mb-12"
           >
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-              Why Choose Our <span className="text-yellow-400">Agents</span>
+              Why Choose Our <span className="text-[#DCC471]">Agents</span>
             </h2>
-            <div className="w-24 h-1 bg-yellow-400 mx-auto mb-6" />
+            <div className="w-24 h-1 bg-[#DCC471] mx-auto mb-6" />
             <p className="text-lg text-gray-300 max-w-3xl mx-auto">
               Our agents are more than just salespeople – they're your trusted
               advisors and advocates
@@ -877,7 +854,7 @@ const AgentsPage = () => {
                 viewport={{ once: true }}
                 className="text-center group"
               >
-                <div className="w-16 h-16 bg-gradient-to-r from-yellow-600 to-yellow-700 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-16 h-16 bg-[#DCC471] rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
                   <feature.icon className="w-8 h-8 text-slate-900" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2 group-hover:text-yellow-400 transition-colors">
@@ -891,7 +868,7 @@ const AgentsPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-yellow-600 to-yellow-700">
+      <section className="py-16 bg-[#DCC471]">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}

@@ -16,25 +16,25 @@ const Footer = () => {
             <div className="flex space-x-4">
               <a
                 href="#"
-                className="text-stone-400 hover:text-white transition-colors"
+                className="text-[#DCC471] hover:text-white transition-colors"
               >
                 <Facebook className="w-5 h-5" />
               </a>
               <a
                 href="#"
-                className="text-stone-400 hover:text-white transition-colors"
+                className="text-[#DCC471] hover:text-white transition-colors"
               >
                 <Twitter className="w-5 h-5" />
               </a>
               <a
                 href="#"
-                className="text-stone-400 hover:text-white transition-colors"
+                className="text-[#DCC471] hover:text-white transition-colors"
               >
                 <Instagram className="w-5 h-5" />
               </a>
               <a
                 href="#"
-                className="text-stone-400 hover:text-white transition-colors"
+                className="text-[#DCC471] hover:text-white transition-colors"
               >
                 <Linkedin className="w-5 h-5" />
               </a>
@@ -101,11 +101,11 @@ const Footer = () => {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="w-full px-4 py-2 rounded-lg bg-stone-800 text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-500"
+                className="w-full px-4 py-2 rounded-lg bg-[#DCC471] text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-500"
               />
               <button
                 type="submit"
-                className="w-full bg-stone-700 px-4 py-2 rounded-lg hover:bg-stone-600 transition-colors"
+                className="w-full bg-[#DCC471] px-4 py-2 rounded-lg hover:bg-[#DCC471] text-stone-500 transition-colors"
               >
                 Subscribe
               </button>
