@@ -212,15 +212,16 @@ WSGI_APPLICATION = "backend.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'hsp_beforetool',
-        'USER': 'hsp_beforetool',
-        'PASSWORD': 'c33c3190ab8db08d16dda8afad7c4ea31cb4c31d',
-        'HOST': 'a1-jm.h.filess.io',
+        'NAME': 'hsp_happenedas',
+        'USER': 'hsp_happenedas',
+        'PASSWORD': '1ded449b4cd79a95dc08aa352f8da2b1bb705c60',
+        'HOST': '10f9ml.h.filess.io',
         'PORT': '5434',
         'OPTIONS': {
             'options': '-c search_path=django_schema,public',
             'connect_timeout': 5,
         },
+        'CONN_MAX_AGE': 300,  # Persistent connections
     }
 }
 

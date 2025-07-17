@@ -210,84 +210,6 @@ const agents = [
     },
   },
   {
-    id: 8,
-    name: "Tatenda Dzumbunu",
-    title: "Senior Sales Consultant",
-    specialization: "Sales",
-    experience: "7+ Years",
-    image: "Tatenda.jpeg",
-    rating: 4.9,
-    reviews: 103,
-    propertiesSold: 45,
-    languages: ["English", "Shona", "Ndebele"],
-    phone: "+263 77 678 9012",
-    email: "tatenda@hsp.co.zw",
-    bio: "Tatenda is a seasoned real estate expert with a passion for staying ahead of the curve in domestic and regional property markets. With a diverse background in residential, commercial, and industrial real estate, as well as property development, Tatenda has developed a unique understanding of the industry. He currently focuses on the Harare North market, where he leverages his expertise to deliver exceptional results.",
-    achievements: [
-      "Property Manager of the Year",
-      "Client Satisfaction Award",
-      "Operational Excellence",
-    ],
-    areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
-  },
-  {
-    id: 8,
-    name: "Leeroy Mangwiro",
-    title: "Letting",
-    specialization: "Letting",
-    experience: "7+ Years",
-    image: "leroy.jpeg",
-    rating: 4.9,
-    reviews: 103,
-    propertiesSold: 45,
-    languages: ["English", "Shona", "Ndebele"],
-    phone: "+263 77 678 9012",
-    email: "tatenda@hsp.co.zw",
-    bio: "Tatenda is a seasoned real estate expert with a passion for staying ahead of the curve in domestic and regional property markets. With a diverse background in residential, commercial, and industrial real estate, as well as property development, Tatenda has developed a unique understanding of the industry. He currently focuses on the Harare North market, where he leverages his expertise to deliver exceptional results.",
-    achievements: [
-      "Property Manager of the Year",
-      "Client Satisfaction Award",
-      "Operational Excellence",
-    ],
-    areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
-  },
-  {
-    id: 8,
-    name: "Tatenda Dzumbunu",
-    title: "Sales Negotiator",
-    specialization: "Negotiation",
-    experience: "7+ Years",
-    image: "Tatenda.jpeg",
-    rating: 4.9,
-    reviews: 103,
-    propertiesSold: 45,
-    languages: ["English", "Shona", "Ndebele"],
-    phone: "+263 77 678 9012",
-    email: "tatenda@hsp.co.zw",
-    bio: "Tatenda is a seasoned real estate expert with a passion for staying ahead of the curve in domestic and regional property markets. With a diverse background in residential, commercial, and industrial real estate, as well as property development, Tatenda has developed a unique understanding of the industry. He currently focuses on the Harare North market, where he leverages his expertise to deliver exceptional results.",
-    achievements: [
-      "Property Manager of the Year",
-      "Client Satisfaction Award",
-      "Operational Excellence",
-    ],
-    areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
-  },
-  {
     id: 7,
     name: "Winnifilda Shadaya",
     title: "Head of Rentals Department",
@@ -365,7 +287,7 @@ const agents = [
       twitter: "#",
     },
   },
-          {
+  {
     id: 7,
     name: "Emily Matsika",
     title: "Senior Sales Consultant",
@@ -382,16 +304,16 @@ const agents = [
     achievements: [
       "Property Manager of the Year",
       "Client Satisfaction Award",
-      "Operational Excellence"
+      "Operational Excellence",
     ],
     areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
     social: {
       linkedin: "#",
       facebook: "#",
-      twitter: "#"
-    }
+      twitter: "#",
+    },
   },
-          {
+  {
     id: 7,
     name: "Arthur Tumbwe",
     title: "Executive Personal Assistant",
@@ -408,14 +330,14 @@ const agents = [
     achievements: [
       "Property Manager of the Year",
       "Client Satisfaction Award",
-      "Operational Excellence"
+      "Operational Excellence",
     ],
     areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
     social: {
       linkedin: "#",
       facebook: "#",
-      twitter: "#"
-    }
+      twitter: "#",
+    },
   },
 ];
 
@@ -429,10 +351,177 @@ const specializations = [
   "Property Management",
 ];
 
+// Agent Details Modal Component
+const AgentDetailsModal = ({ agent, isOpen, onClose }) => {
+  if (!isOpen || !agent) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="text-2xl font-bold text-slate-800">Agent Details</h2>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <span className="text-2xl text-gray-500">×</span>
+          </button>
+        </div>
+
+        {/* Modal Content */}
+        <div className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Agent Photo - Optimized for face visibility */}
+            <div className="space-y-4">
+              <div className="relative">
+                <img
+                  src={agent.image}
+                  alt={agent.name}
+                  className="w-full h-80 object-cover object-top rounded-2xl shadow-lg"
+                  style={{ objectPosition: "center 20%" }}
+                />
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-full px-3 py-2 flex items-center">
+                  <Star className="w-4 h-4 text-[#DCC471] fill-current mr-1" />
+                </div>
+              </div>
+
+              {/* Social Media Links */}
+              <div className="flex justify-center gap-4">
+                <a
+                  href={agent.social.linkedin}
+                  className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                >
+                  <Linkedin className="w-6 h-6 text-white" />
+                </a>
+                <a
+                  href={agent.social.facebook}
+                  className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+                >
+                  <Facebook className="w-6 h-6 text-white" />
+                </a>
+                <a
+                  href={agent.social.twitter}
+                  className="w-12 h-12 bg-sky-500 rounded-full flex items-center justify-center hover:bg-sky-600 transition-colors"
+                >
+                  <Twitter className="w-6 h-6 text-white" />
+                </a>
+              </div>
+            </div>
+
+            {/* Agent Information */}
+            <div className="space-y-6">
+              {/* Basic Info */}
+              <div>
+                <h3 className="text-3xl font-bold text-slate-800 mb-2">
+                  {agent.name}
+                </h3>
+                <p className="text-[#DCC471] font-semibold text-lg mb-1">
+                  {agent.title}
+                </p>
+                <p className="text-gray-600 mb-2">{agent.specialization}</p>
+
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-xl">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-slate-800">
+                    {agent.propertiesSold}
+                  </div>
+                  <div className="text-xs text-gray-600">Properties Sold</div>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-[#DCC471]" />
+                  <span className="text-gray-700">{agent.phone}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Mail className="w-5 h-5 text-[#DCC471]" />
+                  <span className="text-gray-700">{agent.email}</span>
+                </div>
+              </div>
+
+              {/* Languages */}
+              <div>
+                <h4 className="text-sm font-semibold text-slate-700 mb-2">
+                  Languages
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {agent.languages.map((lang, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                    >
+                      {lang}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Contact Buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => handleCallAgent(agent.phone)}
+                  className="flex items-center justify-center px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+                >
+                  <Phone className="w-5 h-5 mr-2" />
+                  Call Now
+                </button>
+                <button
+                  onClick={() => handleEmailAgent(agent.email)}
+                  className="flex items-center justify-center px-4 py-3 bg-slate-800 text-[#DCC471] rounded-lg hover:bg-slate-700 transition-colors font-medium"
+                >
+                  <Mail className="w-5 h-5 mr-2" />
+                  Email
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Full Bio */}
+          <div className="mt-8 pt-6 border-t">
+            <h4 className="text-lg font-semibold text-slate-800 mb-3">
+              Biography
+            </h4>
+            <p className="text-gray-600 leading-relaxed">{agent.bio}</p>
+          </div>
+
+          {/* Achievements */}
+          <div className="mt-6">
+            <h4 className="text-lg font-semibold text-slate-800 mb-3">
+              Achievements
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {agent.achievements.map((achievement, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg"
+                >
+                  <Award className="w-5 h-5 text-[#DCC471]" />
+                  <span className="text-sm text-gray-700">{achievement}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Areas Served */}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AgentsPage = () => {
   const [selectedSpecialization, setSelectedSpecialization] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  const [selectedAgent, setSelectedAgent] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const filteredAgents = agents.filter((agent) => {
     const matchesSpecialization =
@@ -457,6 +546,16 @@ const AgentsPage = () => {
 
   const handleEmailAgent = (email) => {
     window.open(`mailto:${email}`, "_self");
+  };
+
+  const handleViewAgentDetails = (agent) => {
+    setSelectedAgent(agent);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedAgent(null);
   };
 
   return (
@@ -644,7 +743,8 @@ const AgentsPage = () => {
                     <img
                       src={agent.image}
                       alt={agent.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-700"
+                      style={{ objectPosition: "center 25%" }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
@@ -728,7 +828,7 @@ const AgentsPage = () => {
                       </div>
                     </div>
 
-                    {/* Areas Served */}
+                    {/* Areas Served 
                     <div className="mb-6">
                       <h4 className="text-sm font-semibold text-slate-700 mb-2">
                         Areas Served
@@ -748,18 +848,18 @@ const AgentsPage = () => {
                           </span>
                         )}
                       </div>
-                    </div>
+                    </div>*/}
 
+                    {/* Contact Buttons - Mobile Optimized */}
                     {/* Contact Buttons - Mobile Optimized */}
                     <div className="space-y-3">
                       <motion.button
-                        onClick={() => handleContactAgent(agent)}
-                        className="w-full text-[#DCC471] bg-slate-800 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 min-h-[48px] touch-manipulation"
+                        onClick={() => handleViewAgentDetails(agent)}
+                        className="w-full text-white bg-[#DCC471] py-3 rounded-xl font-semibold hover:bg-yellow-500 transition-all duration-300 min-h-[48px] touch-manipulation"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <MessageCircle className="w-5 h-5 mr-2 inline" />
-                        Contact Agent
+                        View Details
                       </motion.button>
 
                       <div className="grid grid-cols-2 gap-2">
@@ -904,6 +1004,12 @@ const AgentsPage = () => {
           </motion.div>
         </div>
       </section>
+
+      <AgentDetailsModal
+        agent={selectedAgent}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };

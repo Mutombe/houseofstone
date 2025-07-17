@@ -32,3 +32,7 @@ Email sent successfully: Property Assigned to You: Mt Pleasant 6 Bed Home to ['s
 Failed to send email: Property Assigned: Mt Pleasant 6 Bed Home - Error: emails/property_agent_assigned.html
 Failed to send email: Agent Assigned to Property: Mt Pleasant 6 Bed Home - Error: emails/property_agent_assigned_admin.html
 Email sent successfully: Agent Deleted: Simbarashe Mutombe to ['simbamtombe@gmail.com']
+Email sent successfully: Welcome to House of Stone Properties! to ['simbamtombe@gmail.com']
+Failed to send email: New User Registration: Mutombe - Error: emails/new_user_admin.html
+Email sent successfully: New Property Created: House For Sale in Shawasha Hills to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: House For Sale in Shawasha Hills to ['simbamtombe@gmail.com']
