@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   ArrowRight,
   Home as HomeIcon,
@@ -21,8 +21,12 @@ import {
   Shield,
   Clock,
 } from "lucide-react";
+import { useDispatch } from "react-redux";
 import { motion, useInView } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { fetchProperties } from "../../redux/slices/propertySlice";
+import { selectAllProperties } from "../../redux/selectors";
+import { useSelector } from 'react-redux';
 
 // Brand colors consistent with navbar
 const COLORS = {
@@ -44,55 +48,6 @@ const COLORS = {
     900: "#0f172a",
   },
 };
-
-// Sample data
-const featuredProperties = [
-  {
-    id: 1,
-    title: "Luxury Villa in Borrowdale",
-    location: "Borrowdale, Harare",
-    price: 450000,
-    type: "villa",
-    beds: 4,
-    baths: 3,
-    sqft: 3200,
-    images: [
-      "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&h=600&fit=crop",
-    ],
-    featured: true,
-    status: "For Sale",
-  },
-  {
-    id: 2,
-    title: "Modern Apartment in Highlands",
-    location: "Highlands, Harare",
-    price: 180000,
-    type: "apartment",
-    beds: 2,
-    baths: 2,
-    sqft: 1200,
-    images: [
-      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop",
-    ],
-    featured: true,
-    status: "For Rent",
-  },
-  {
-    id: 3,
-    title: "Executive Townhouse",
-    location: "Mount Pleasant, Harare",
-    price: 320000,
-    type: "house",
-    beds: 3,
-    baths: 2,
-    sqft: 2400,
-    images: [
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&h=600&fit=crop",
-    ],
-    featured: true,
-    status: "For Sale",
-  },
-];
 
 const testimonials = [
   {
@@ -211,10 +166,18 @@ const GlowButton = ({
 
 const EnhancedHomepage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useState({
     location: "",
     propertyType: "Any Type",
   });
+
+  // Featured properties fetched from Redux store
+  const properties = useSelector(selectAllProperties);
+
+  //Pick three vehicles from the database 
+  const featuredProperties = properties.slice(0, 3);
+  
 
   const handleSearchChange = (e) => {
     setSearchParams({
@@ -230,6 +193,10 @@ const EnhancedHomepage = () => {
   const handleSearch = () => {
     console.log("Searching with params:", searchParams);
   };
+
+    useEffect(() => {
+      dispatch(fetchProperties());
+    }, [dispatch]);
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
@@ -491,7 +458,7 @@ const EnhancedHomepage = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {featuredProperties.map((property, i) => (
+            {featuredProperties?.map((property, i) => (
               <motion.div
                 key={property.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -502,7 +469,7 @@ const EnhancedHomepage = () => {
               >
                 <div className="relative h-48 sm:h-56 lg:h-64 overflow-hidden">
                   <img
-                    src={property.images[0]}
+                    src={property.images[0].image}
                     alt={property.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
@@ -511,8 +478,8 @@ const EnhancedHomepage = () => {
                   {/* Property badges */}
                   <div className="absolute top-3 sm:top-4 left-3 sm:left-4 flex gap-2">
                     <span className="px-2 sm:px-3 py-1 bg-[#DCC471] text-slate-900 rounded-full text-xs sm:text-sm font-bold">
-                      {property.type.charAt(0).toUpperCase() +
-                        property.type.slice(1)}
+                      {property.category +
+                        property.category}
                     </span>
                     <span className="px-2 sm:px-3 py-1 bg-slate-800 text-white rounded-full text-xs sm:text-sm font-bold">
                       {property.status}
