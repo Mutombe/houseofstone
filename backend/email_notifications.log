@@ -76,3 +76,21 @@ Email sent successfully: New Property Created: House For Sale in Manresa to ['si
 Email sent successfully: Property Assigned to You: House For Sale in Manresa to ['simbamtombe@gmail.com']
 Failed to send email: Property Assigned: House For Sale in Manresa - Error: emails/property_agent_assigned.html
 Failed to send email: Agent Assigned to Property: House For Sale in Manresa - Error: emails/property_agent_assigned_admin.html
+Email sent successfully: Welcome to House of Stone Properties! to ['info@hsp.co.zw']
+Email sent successfully: New User Registration: info to ['simbamtombe@gmail.com']
+Failed to send email: Your Agent Profile Has Been Updated - Error: emails/agent_profile_updated.html
+Email sent successfully: Agent Profile Updated: Sarah Mugwenhi to ['simbamtombe@gmail.com']
+Failed to send email: Property Updated: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_updated.html
+Failed to send email: Property Updated: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_updated.html
+Failed to send email: Property Assigned: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_assigned_admin.html
+Failed to send email: Property Assigned: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_assigned_admin.html
+Failed to send email: Property Unassigned: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_unassigned.html
+Failed to send email: Agent Unassigned from Property: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_unassigned_admin.html
+Failed to send email: Property Unassigned: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_unassigned.html
+Failed to send email: Agent Unassigned from Property: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_unassigned_admin.html
+Failed to send email: Property Assigned: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_assigned_admin.html
+Failed to send email: Property Assigned: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_assigned_admin.html

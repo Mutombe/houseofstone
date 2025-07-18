@@ -43,15 +43,33 @@ class RegisterView(APIView):
         if serializer.is_valid():
             try:
                 with transaction.atomic():
+                    # Create user
                     user = serializer.save(is_active=True)
-                    # Let the signal handle profile creation
                     
+                    # Check for matching agent
+                    email = serializer.validated_data['email']
+                    try:
+                        agent = Agent.objects.get(email=email)
+                        agent.user = user
+                        agent.save()
+                        print(f"Linked existing agent {email} to new user")
+                    except Agent.DoesNotExist:
+                        # No agent found, proceed normally
+                        print(f"No existing agent found for {email}, user created without agent")
+                        pass
+                    
+                    # Generate tokens
                     refresh = RefreshToken.for_user(user)
+                    user_data = UserSerializer(user).data
+                    
+                    # Add is_agent flag to response
+                    user_data['is_agent'] = hasattr(user, 'agent_profile')
+                    
                     return Response({
                         "detail": "Registration successful",
                         "access": str(refresh.access_token),
                         "refresh": str(refresh),
-                        "user": UserSerializer(user).data
+                        "user": user_data
                     }, status=status.HTTP_201_CREATED)
             except Exception as e:
                 return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -597,29 +615,58 @@ class AgentViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         """
-        Create a new agent
+        Create a new agent and link to existing user if possible
         """
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
+        email = request.data.get('email')
+        
+        with transaction.atomic():
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
             agent = serializer.save()
+            
+            # Try to link to existing user
+            self.try_link_agent_to_user(agent, email)
+            
             return Response(
                 AgentSerializer(agent).data, 
                 status=status.HTTP_201_CREATED
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def update(self, request, *args, **kwargs):
         """
         Update an existing agent
         """
-        partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        email = request.data.get('email', instance.email)
         
-        if serializer.is_valid():
+        with transaction.atomic():
+            partial = kwargs.pop('partial', False)
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
             agent = serializer.save()
+            
+            # Try to link if not already linked
+            if not agent.user:
+                self.try_link_agent_to_user(agent, email)
+                
             return Response(AgentSerializer(agent).data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    def try_link_agent_to_user(self, agent, email):
+        """
+        Attempt to link agent to a user with matching email
+        """
+        try:
+            user = User.objects.get(email=email)
+            agent.user = user
+            agent.save()
+        except User.DoesNotExist:
+            pass
+        except User.MultipleObjectsReturned:
+            # Handle case where multiple users have same email
+            user = User.objects.filter(email=email).first()
+            if user:
+                agent.user = user
+                agent.save()
     
     def destroy(self, request, *args, **kwargs):
         """

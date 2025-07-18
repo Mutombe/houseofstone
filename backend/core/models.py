@@ -30,6 +30,13 @@ class Agent(models.Model):
         ('view_only', 'View Only'),
     ]
     
+    user = models.OneToOneField(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='agent_profile',
+        null=True,
+        blank=True
+    )
     first_name = models.CharField(max_length=100)
     middle_name = models.CharField(max_length=100, blank=True)
     surname = models.CharField(max_length=100)
@@ -109,7 +116,13 @@ class Property(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     is_published = models.BooleanField(default=True)
-    agent = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    agent = models.ForeignKey(
+        Agent, 
+        on_delete=models.SET_NULL, 
+        null=True,
+        blank=True,
+        related_name='primary_properties'
+    )
     virtual_tour_url = models.URLField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

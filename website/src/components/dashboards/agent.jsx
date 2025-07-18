@@ -11,6 +11,11 @@ import {
   deleteLead,
 } from "../../redux/slices/propertySlice";
 import {
+  fetchAgentStats,
+  fetchAgentProperties,
+  fetchAgents,
+} from "../../redux/slices/agentSlice";
+import {
   Building2,
   Users,
   BarChart2,
@@ -96,11 +101,25 @@ const StatsCard = ({ stat }) => {
 
 const AgentDashboard = () => {
   const dispatch = useDispatch();
-  const properties = useSelector((state) => state.properties || []);
-  const leads = useSelector((state) => state.properties.leads);
+  const user = useSelector((state) => state.auth.user);
+  const agents = useSelector((state) => state.agent.agents);
+
+  const agentProperties = properties.filter(property => 
+  property.agent?.email === user?.email ||
+  property.property_agents?.some(pa => pa.agent?.email === user?.email)
+);
+const leads = useSelector((state) => state.properties.leads);
+
+  const agentStats = useSelector(
+    (state) => state.agent.agentStats[user?.email] || {}
+  );
+  const currentAgent = agents.find(agent => agent.email === user?.email);
+  const agentLeads = leads.filter(lead => 
+    agentProperties.some(property => property.id === lead.property?.id)
+  );
+  const properties = agentProperties;
   const leadSources = useSelector((state) => state.properties.leadSources);
   const loading = useSelector((state) => state.properties.loading);
-  const user = useSelector((state) => state.auth.user);
 
   const [activeTab, setActiveTab] = useState("properties");
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -115,10 +134,12 @@ const AgentDashboard = () => {
   const [statsPeriod, setStatsPeriod] = useState("7days");
   const [leadStatsPeriod, setLeadStatsPeriod] = useState("30days");
 
-  useEffect(() => {
-    dispatch(fetchProperties({ agent: user?.id }));
-    dispatch(fetchLeads({ agent: user?.id }));
-  }, [dispatch, user?.id]);
+   useEffect(() => {
+    // Fetch all agents and properties on mount
+    dispatch(fetchAgents());
+    dispatch(fetchProperties());
+    dispatch(fetchLeads());
+  }, [dispatch]);
 
   const filteredProperties = Array.isArray(properties)
     ? properties.filter(
@@ -166,9 +187,7 @@ const AgentDashboard = () => {
     },
     {
       title: "Active Leads",
-      value: leads.filter(
-        (l) => l.status !== "converted" && l.status !== "lost"
-      ).length,
+      value: agentStats.active_leads || 0,
       icon: <Users size={24} />,
       color: "#4CAF50",
       change: "+5%",
@@ -192,6 +211,15 @@ const AgentDashboard = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Agent Dashboard</h1>
+          {currentAgent && (
+            <p className="text-gray-600">
+              Welcome back, {currentAgent.first_name} {currentAgent.surname}
+            </p>
+          )}
+        </div>
+
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Agent Dashboard</h1>
           <div className="flex space-x-4">

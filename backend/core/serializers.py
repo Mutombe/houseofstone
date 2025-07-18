@@ -9,10 +9,15 @@ from decimal import Decimal
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    is_agent = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
-        fields = ("id", "username", "email", "password", "is_staff", "is_superuser", 'is_active', 'date_joined', 'last_login')
+        fields = ("id", "username", "email", "password", "is_staff", 
+                 "is_superuser", "is_active", "date_joined", "last_login", "is_agent")
+        
+    def get_is_agent(self, obj):
+        return hasattr(obj, 'agent_profile')
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
