@@ -36,3 +36,43 @@ Email sent successfully: Welcome to House of Stone Properties! to ['simbamtombe@
 Failed to send email: New User Registration: Mutombe - Error: emails/new_user_admin.html
 Email sent successfully: New Property Created: House For Sale in Shawasha Hills to ['simbamtombe@gmail.com']
 Email sent successfully: Property Assigned to You: House For Sale in Shawasha Hills to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: House For Sale in Avonlea to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: House For Sale in Avonlea to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: Industrial Property For Sale in Norton to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: Industrial Property For Sale in Norton to ['simbamtombe@gmail.com']
+Failed to send email: Property Assigned: Industrial Property For Sale in Norton - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: Industrial Property For Sale in Norton - Error: emails/property_agent_assigned_admin.html
+Failed to send email: Property Assigned: Industrial Property For Sale in Norton - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: Industrial Property For Sale in Norton - Error: emails/property_agent_assigned_admin.html
+Email sent successfully: New Property Created: House For Sale in Sentosa to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: House For Sale in Sentosa to ['simbamtombe@gmail.com']
+Failed to send email: Property Updated: House For Sale in Sentosa - Error: emails/property_updated.html
+Failed to send email: Property Assigned: House For Sale in Sentosa - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: House For Sale in Sentosa - Error: emails/property_agent_assigned_admin.html
+Failed to send email: Property Updated: House For Sale in Sentosa - Error: emails/property_updated.html
+Failed to send email: Property Unassigned: House For Sale in Sentosa - Error: emails/property_agent_unassigned.html
+Failed to send email: Agent Unassigned from Property: House For Sale in Sentosa - Error: emails/property_agent_unassigned_admin.html
+Failed to send email: Property Assigned: House For Sale in Sentosa - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: House For Sale in Sentosa - Error: emails/property_agent_assigned_admin.html
+Email sent successfully: New Property Created: House For Sale in Southlea Park to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: House For Sale in Southlea Park to ['simbamtombe@gmail.com']
+Failed to send email: Property Assigned: House For Sale in Southlea Park - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: House For Sale in Southlea Park - Error: emails/property_agent_assigned_admin.html
+Email sent successfully: New Property Created: House For Sale in Borrowdale to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: House For Sale in Borrowdale to ['simbamtombe@gmail.com']
+Failed to send email: Property Assigned: House For Sale in Borrowdale - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: House For Sale in Borrowdale - Error: emails/property_agent_assigned_admin.html
+Email sent successfully: New Property Created: House For Sale in Greendale to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: House For Sale in Greendale to ['simbamtombe@gmail.com']
+Failed to send email: Property Assigned: House For Sale in Greendale - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: House For Sale in Greendale - Error: emails/property_agent_assigned_admin.html
+Email sent successfully: New Property Created: House For Sale in Marlborough to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: House For Sale in Marlborough to ['simbamtombe@gmail.com']
+Failed to send email: Property Assigned: House For Sale in Marlborough - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: House For Sale in Marlborough - Error: emails/property_agent_assigned_admin.html
+Email sent successfully: New Property Created: Townhouse/Complex/Cluster For Sale in Pomona to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: Townhouse/Complex/Cluster For Sale in Pomona to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: House For Sale in Manresa to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: House For Sale in Manresa to ['simbamtombe@gmail.com']
+Failed to send email: Property Assigned: House For Sale in Manresa - Error: emails/property_agent_assigned.html
+Failed to send email: Agent Assigned to Property: House For Sale in Manresa - Error: emails/property_agent_assigned_admin.html
