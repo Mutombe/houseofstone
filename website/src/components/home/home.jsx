@@ -25,6 +25,7 @@ import { useDispatch } from "react-redux";
 import { motion, useInView } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { fetchProperties } from "../../redux/slices/propertySlice";
+import { Link } from "react-router-dom";
 import { selectAllProperties } from "../../redux/selectors";
 import { useSelector } from 'react-redux';
 
@@ -459,6 +460,11 @@ const EnhancedHomepage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {featuredProperties?.map((property, i) => (
+              <Link
+                to={`/properties/${property.id}`}
+                key={property.id}
+                className="group"
+              >
               <motion.div
                 key={property.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -526,16 +532,21 @@ const EnhancedHomepage = () => {
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0">
-                    <button className="flex items-center justify-center sm:justify-start text-[#DCC471] font-semibold hover:text-[#DCC471] transition-colors py-2 sm:py-0 min-h-[44px] sm:min-h-0 touch-manipulation">
+                    <button className="flex items-center justify-center sm:justify-start text-[#DCC471] font-semibold hover:text-[#DCC471] transition-colors py-2 sm:py-0 min-h-[44px] sm:min-h-0 touch-manipulation"
+                      onClick={() => navigate(`/property/${property.id}`)}
+                      >
                       <Eye className="w-4 h-4 mr-1" />
                       View Details
                     </button>
-                    <button className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-[#DCC471] hover:text-slate-900 transition-colors text-sm font-medium min-h-[44px] touch-manipulation">
+                    <button className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-[#DCC471] hover:text-slate-900 transition-colors text-sm font-medium min-h-[44px] touch-manipulation"
+                      onClick={() => navigate(`/property/${property.id}`)}
+                    >
                       Contact Agent
                     </button>
                   </div>
                 </div>
               </motion.div>
+              </Link>
             ))}
           </div>
 
