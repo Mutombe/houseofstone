@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { selectAllProperties } from "../../redux/selectors";
 import {
   createProperty,
   updateProperty,
@@ -100,24 +101,28 @@ const StatsCard = ({ stat }) => {
 };
 
 const AgentDashboard = () => {
+  
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const agents = useSelector((state) => state.agent.agents);
+  const allproperties = useSelector(selectAllProperties);
 
-  const agentProperties = properties.filter(property => 
-  property.agent?.email === user?.email ||
-  property.property_agents?.some(pa => pa.agent?.email === user?.email)
-);
-const leads = useSelector((state) => state.properties.leads);
+  const agentProperties = allproperties?.filter(
+    (property) =>
+      property.agent?.email === user?.email ||
+      property.property_agents?.some((pa) => pa.agent?.email === user?.email)
+  );
+  const leads = useSelector((state) => state.properties.leads);
 
   const agentStats = useSelector(
     (state) => state.agent.agentStats[user?.email] || {}
   );
-  const currentAgent = agents.find(agent => agent.email === user?.email);
-  const agentLeads = leads.filter(lead => 
-    agentProperties.some(property => property.id === lead.property?.id)
-  );
   const properties = agentProperties;
+  const currentAgent = agents.find((agent) => agent.email === user?.email);
+  const agentLeads = leads.filter((lead) =>
+    agentProperties.some((property) => property.id === lead.property?.id)
+  );
+
   const leadSources = useSelector((state) => state.properties.leadSources);
   const loading = useSelector((state) => state.properties.loading);
 
@@ -134,7 +139,7 @@ const leads = useSelector((state) => state.properties.leads);
   const [statsPeriod, setStatsPeriod] = useState("7days");
   const [leadStatsPeriod, setLeadStatsPeriod] = useState("30days");
 
-   useEffect(() => {
+  useEffect(() => {
     // Fetch all agents and properties on mount
     dispatch(fetchAgents());
     dispatch(fetchProperties());

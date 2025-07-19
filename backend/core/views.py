@@ -6,12 +6,12 @@ from django.contrib.auth.hashers import make_password
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
-from django.db.models import Avg, Count
+from django.db.models import Avg, Count, Sum, Min, Max
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
-from .serializers import AdminActionLogSerializer, BlogPostSerializer, PropertyAlertSerializer, UserSerializer, ProfileSerializer, PropertySerializer, PropertyWithStatsSerializer, LeadSourceSerializer, PropertyLeadSerializer
+from .serializers import AdminActionLogSerializer, BlogPostSerializer, PropertyAlertSerializer, UserSerializer, ProfileSerializer, PropertySerializer, PropertyWithStatsSerializer, LeadSourceSerializer, PropertyLeadSerializer, PropertyStatSerializer
 from .models import BlogPost, Profile, PropertyAlert, PropertyShare
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -34,6 +34,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import filters
 from .models import Agent
 from .serializers import AgentSerializer
+from datetime import datetime
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -170,7 +171,9 @@ class PropertyLeadViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return PropertyLead.objects.filter(
-            Q(agent=user) | Q(property__agent=user))
+            Q(agent=user) | 
+            Q(property__agent__user=user)  # Traverse through Agent->User
+        )
     
     def perform_create(self, serializer):
         serializer.save(agent=self.request.user)
@@ -179,7 +182,9 @@ class PropertyLeadViewSet(viewsets.ModelViewSet):
     def summary(self, request):
         user = request.user
         leads = PropertyLead.objects.filter(
-            Q(agent=user) | Q(property__agent=user))
+            Q(agent=user) | 
+            Q(property__agent__user=user)  # Traverse through Agent->User
+        )
         
         total_leads = leads.count()
         leads_by_status = leads.values('status').annotate(

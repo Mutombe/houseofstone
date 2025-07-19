@@ -94,3 +94,42 @@ Failed to send email: Property Assigned: Townhouse/Complex/Cluster For Sale in P
 Failed to send email: Agent Assigned to Property: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_assigned_admin.html
 Failed to send email: Property Assigned: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_assigned.html
 Failed to send email: Agent Assigned to Property: Townhouse/Complex/Cluster For Sale in Pomona - Error: emails/property_agent_assigned_admin.html
+Email sent successfully: New Property Created: Industrial Property For Sale in Bulawayo City Centre to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: Industrial Property For Sale in Bulawayo City Centre to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned: Industrial Property For Sale in Bulawayo City Centre to ['prince@hsp.co.zw']
+Email sent successfully: Agent Assigned to Property: Industrial Property For Sale in Bulawayo City Centre to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: Townhouse/Complex/Cluster For Sale in Greendale to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: House For Sale in Gletwin Park to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: House For Sale in Gletwin Park to ['simbamtombe@gmail.com']
+Failed to send email: Property Assigned: House For Sale in Gletwin Park - Error: {'lionita@hsp.co.zw': (550, b'No Such User Here"')}
+Email sent successfully: Agent Assigned to Property: House For Sale in Gletwin Park to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: House For Sale in Pomona to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: House For Sale in Pomona to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: Townhouse/Complex/Cluster For Sale in Greendale to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: Townhouse/Complex/Cluster For Sale in Greendale to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: House For Sale in Mount Pleasant Heights to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: House For Sale in Mount Pleasant Heights to ['simbamtombe@gmail.com']
+Email sent successfully: Property Updated: House For Sale in Mount Pleasant Heights to ['simbamtombe@gmail.com']
+Email sent successfully: Property Updated: House For Sale in Mount Pleasant Heights to ['simbamtombe@gmail.com']
+Failed to send email: Property Assigned: House For Sale in Mount Pleasant Heights - Error: {'lionita@hsp.co.zw': (550, b'No Such User Here"')}
+Email sent successfully: Agent Assigned to Property: House For Sale in Mount Pleasant Heights to ['simbamtombe@gmail.com']
+Failed to send email: Property Unassigned: House For Sale in Mount Pleasant Heights - Error: {'lionita@hsp.co.zw': (550, b'No Such User Here"')}
+Email sent successfully: Agent Unassigned from Property: House For Sale in Mount Pleasant Heights to ['simbamtombe@gmail.com']
+Failed to send email: Property Assigned: House For Sale in Mount Pleasant Heights - Error: {'lionita@hsp.co.zw': (550, b'No Such User Here"')}
+Email sent successfully: Agent Assigned to Property: House For Sale in Mount Pleasant Heights to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: House For Sale in Mount Pleasant Heights to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: House For Sale in Mount Pleasant Heights to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned: House For Sale in Mount Pleasant Heights to ['michael@hsp.co.zw']
+Email sent successfully: Agent Assigned to Property: House For Sale in Mount Pleasant Heights to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: Commercial Property For Sale in Marlborough to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: Commercial Property For Sale in Marlborough to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned: Commercial Property For Sale in Marlborough to ['nairgel@hsp.co.zw']
+Email sent successfully: Agent Assigned to Property: Commercial Property For Sale in Marlborough to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: Townhouse/Complex/Cluster For Sale in Quinnington to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: House For Sale in Hogerty Hill to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: House For Sale in Hogerty Hill to ['simbamtombe@gmail.com']
+Failed to send email: Property Assigned: House For Sale in Hogerty Hill - Error: {'lionita@hsp.co.zw': (550, b'No Such User Here"')}
+Email sent successfully: Agent Assigned to Property: House For Sale in Hogerty Hill to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned: House For Sale in Hogerty Hill to ['nairgel@hsp.co.zw']
+Email sent successfully: Agent Assigned to Property: House For Sale in Hogerty Hill to ['simbamtombe@gmail.com']
+Email sent successfully: Property Updated: Townhouse/Complex/Cluster For Sale in Quinnington to ['simbamtombe@gmail.com']

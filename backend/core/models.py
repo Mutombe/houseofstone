@@ -116,13 +116,7 @@ class Property(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     is_published = models.BooleanField(default=True)
-    agent = models.ForeignKey(
-        Agent, 
-        on_delete=models.SET_NULL, 
-        null=True,
-        blank=True,
-        related_name='primary_properties'
-    )
+    agent = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     virtual_tour_url = models.URLField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
