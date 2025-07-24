@@ -79,7 +79,7 @@ const agents = [
       twitter: "#",
     },
   },
-    {
+  {
     id: 3,
     name: "Winnifilda Shadaya",
     title: "Head of Rentals Department",
@@ -105,7 +105,7 @@ const agents = [
       twitter: "#",
     },
   },
-    {
+  {
     id: 4,
     name: "James Mudzikitiri",
     title: "Marketing & Media Executive",
@@ -131,7 +131,7 @@ const agents = [
       twitter: "#",
     },
   },
-    {
+  {
     id: 5,
     name: "Arthur Tumbwe",
     title: "Executive Personal Assistant",
@@ -157,7 +157,7 @@ const agents = [
       twitter: "#",
     },
   },
-    {
+  {
     id: 6,
     name: "Sarah Mugweni",
     title: "Administrator",
@@ -209,7 +209,7 @@ const agents = [
       twitter: "#",
     },
   },
-    {
+  {
     id: 8,
     name: "Chomu Sithole",
     title: "Senior Sales Consultant",
@@ -235,7 +235,7 @@ const agents = [
       twitter: "#",
     },
   },
-    {
+  {
     id: 9,
     name: "Emily Matsika",
     title: "Senior Sales Consultant",
@@ -339,7 +339,7 @@ const agents = [
       twitter: "#",
     },
   },
-    {
+  {
     id: 10,
     name: "Michael Madanha",
     title: "Sales Negotiator",
@@ -365,8 +365,34 @@ const agents = [
       twitter: "#",
     },
   },
-      {
-    id: 10,
+  {
+    id: 11,
+    name: "Tatenda Dzumbunu",
+    title: "Sales Negotiator",
+    specialization: "Negotiation",
+    experience: "7+ Years",
+    image: "Tatenda.jpeg",
+    rating: 4.9,
+    reviews: 0,
+    propertiesSold: 0,
+    languages: ["Shona"],
+    phone: "+263 784 532 812",
+    email: "tatenda@hsp.co.zw",
+    bio: "Tatenda is hardworking Sales Negotiator",
+    achievements: [
+      "Property Manager of the Year",
+      "Client Satisfaction Award",
+      "Operational Excellence",
+    ],
+    areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
+    social: {
+      linkedin: "#",
+      facebook: "#",
+      twitter: "#",
+    },
+  },
+  {
+    id: 12,
     name: "Lloyd Chitsowe",
     title: "Care Taker",
     specialization: "Care Taker",
@@ -472,7 +498,6 @@ const AgentDetailsModal = ({ agent, isOpen, onClose }) => {
                   {agent.title}
                 </p>
                 <p className="text-gray-600 mb-2">{agent.specialization}</p>
-
               </div>
 
               {/* Stats Grid */}
