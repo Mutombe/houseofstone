@@ -202,7 +202,7 @@ const EnhancedHomepage = () => {
   return (
     <div className="min-h-screen bg-white overflow-hidden">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center">
+        <section className="relative min-h-screen flex items-center justify-center sm:pt-0 pt-14">
         {/* Background with parallax effect */}
         <motion.div
           className="absolute inset-0 z-0"

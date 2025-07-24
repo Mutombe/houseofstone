@@ -433,25 +433,30 @@ const Navbar = () => {
   const isAdmin = user?.is_superuser;
   const dispatch = useDispatch();
 
-  // Handle scroll effect
+  // Enhanced scroll effect with smooth transitions
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      const scrollPosition = window.scrollY;
+      setScrolled(scrollPosition > 20);
     };
-    window.addEventListener("scroll", handleScroll);
+    
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu when clicking outside and handle body scroll
+  // Enhanced mobile menu handling with smooth body scroll lock
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = '0px'; // Prevent layout shift
     } else {
       document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = '0px';
     }
 
     return () => {
       document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = '0px';
     };
   }, [isOpen]);
 
@@ -482,420 +487,608 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Top Info Bar with blue gradient background */}
-      <div className="w-full bg-slate-800 text-white py-3 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Top Info Bar - Enhanced with better mobile responsiveness */}
+      <motion.div 
+        className="w-full bg-slate-800 text-white py-2 sm:py-3 shadow-sm relative z-40"
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4 text-sm">
-              <a
+            <div className="flex items-center space-x-3 sm:space-x-4 text-xs sm:text-sm">
+              <motion.a
                 href="tel:+263772329569"
-                className="flex items-center hover:text-blue-200 transition-colors duration-200"
+                className="flex items-center hover:text-[#DCC471] transition-all duration-300 group"
                 aria-label="Call Us"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Phone className="w-4 h-4 mr-2 text-[#DCC471]" />
-                <span className="hidden sm:inline text-[#DCC471]">+263 772 329 569</span>
-                <span className="sm:hidden text-[#DCC471]">Call</span>
-              </a>
-              <a
+                <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-[#DCC471] group-hover:animate-pulse" />
+                <span className="hidden sm:inline text-white group-hover:text-[#DCC471] transition-colors">+263 772 329 569</span>
+                <span className="sm:hidden text-white group-hover:text-[#DCC471] transition-colors">Call</span>
+              </motion.a>
+              <motion.a
                 href="mailto:info@hsp.co.zw"
-                className="flex items-center hover:text-blue-200 transition-colors duration-200"
+                className="flex items-center hover:text-[#DCC471] transition-all duration-300 group"
                 aria-label="Email Us"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Mail className="w-4 h-4 mr-2 text-[#DCC471]" />
-                <span className="hidden sm:inline text-[#DCC471]">info@hsp.co.zw</span>
-                <span className="sm:hidden text-[#DCC471]">Email</span>
-              </a>
+                <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-[#DCC471] group-hover:animate-pulse" />
+                <span className="hidden sm:inline text-white group-hover:text-[#DCC471] transition-colors">info@hsp.co.zw</span>
+                <span className="sm:hidden text-white group-hover:text-[#DCC471] transition-colors">Email</span>
+              </motion.a>
             </div>
-            <div className="text-xs hidden lg:flex items-center">
+            <motion.div 
+              className="text-xs hidden md:flex items-center"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
               <MapPin className="w-3 h-3 mr-1 text-[#DCC471]" />
-              <span className="text-[#DCC471]">
+              <span className="text-white">
                 21 Harare Drive Borrowdale, Harare
               </span>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Main Navigation */}
-      <nav
-        className={`sticky top-0 w-full z-50 transition-all duration-300 ${
+      {/* Main Navigation - Enhanced with transparent to slate-800 transition */}
+      <motion.nav
+        className={`fixed top-[20px] sm:top-[36px] w-full z-50 transition-all duration-500 ease-in-out ${
           scrolled
-            ? "bg-gradient-to-br from-white via-blue-50 to-blue-100 shadow-lg"
+            ? "bg-slate-800/95 backdrop-blur-xl shadow-2xl border-b border-slate-700/50"
             : "bg-transparent shadow-none"
         }`}
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo Section - More Prominent */}
-            <div className="flex items-center">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16 sm:h-20">
+            {/* Logo Section - Enhanced with better animations */}
+            <motion.div 
+              className="flex items-center"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
               <NavLink to="/" className="flex items-center group">
-                {/* Blue background container for logo */}
-                <div className="p-3 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 mr-3">
+                <motion.div 
+                  className={`p-2 sm:p-3 rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-300 mr-2 sm:mr-3 ${
+                    scrolled 
+                      ? "bg-white/10 backdrop-blur-sm border border-white/20" 
+                      : "backdrop-blur-sm"
+                  }`}
+                  whileHover={{ 
+                    scale: 1.1,
+                    rotate: [0, -5, 5, 0],
+                    transition: { duration: 0.3 }
+                  }}
+                >
                   <img
                     src="/logo2.webp"
                     alt="House of Stone Properties"
-                    className="h-12 w-auto filter"
+                    className="h-8 sm:h-12 w-auto filter group-hover:brightness-110 transition-all duration-300"
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = "";
                     }}
                   />
-                </div>
-                {/* Company name with gradient text */}
+                </motion.div>
               </NavLink>
-            </div>
+            </motion.div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8">
-              {navLinks.map((link) => (
-                <NavLink
+            {/* Desktop Navigation - Enhanced with better hover effects */}
+            <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
+              {navLinks.map((link, index) => (
+                <motion.div
                   key={link.path}
-                  to={link.path}
-                  className={({ isActive }) =>
-                    `relative text-sm font-medium transition-all duration-200 ${
-                      isActive
-                        ? "text-slate-800"
-                        : "text-gray-700 hover:text-yellow-500"
-                    } flex items-center space-x-2 py-2 px-3 rounded-lg hover:bg-yellow-50 group`
-                  }
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
                 >
-                  {({ isActive }) => (
-                    <>
-                      <link.icon
-                        className={`w-4 h-4 transition-colors ${
-                          isActive
-                            ? "text-slate-800"
-                            : "text-gray-500 group-hover:text-yellow-500"
-                        }`}
-                      />
-                      <span>{link.label}</span>
-                      {isActive && (
+                  <NavLink
+                    to={link.path}
+                    className={({ isActive }) =>
+                      `relative text-sm font-medium transition-all duration-300 flex items-center space-x-2 py-2 px-3 rounded-lg group ${
+                        isActive
+                          ? scrolled 
+                            ? "text-[#DCC471] bg-white/10" 
+                            : "text-slate-800 bg-slate-100"
+                          : scrolled
+                            ? "text-white hover:text-[#DCC471] hover:bg-white/10"
+                            : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
                         <motion.div
-                          className="absolute -bottom-1 left-0 right-0 h-0.5 bg-slate-800 rounded-full"
-                          layoutId="activeTab"
-                        />
-                      )}
-                    </>
-                  )}
-                </NavLink>
+                          whileHover={{ scale: 1.2, rotate: 360 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <link.icon
+                            className={`w-4 h-4 transition-colors ${
+                              isActive
+                                ? scrolled ? "text-[#DCC471]" : "text-slate-800"
+                                : scrolled 
+                                  ? "text-white/80 group-hover:text-[#DCC471]" 
+                                  : "text-[#DCC471] group-hover:text-slate-800"
+                            }`}
+                          />
+                        </motion.div>
+                        <span>{link.label}</span>
+                        {isActive && (
+                          <motion.div
+                            className={`absolute -bottom-1 left-0 right-0 h-0.5 rounded-full ${
+                              scrolled ? "bg-[#DCC471]" : "bg-slate-800"
+                            }`}
+                            layoutId="activeTab"
+                            transition={{ type: "spring", duration: 0.5 }}
+                          />
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+                </motion.div>
               ))}
 
-              {/* Desktop Resources Dropdown */}
-              <div 
+              {/* Desktop Resources Dropdown - Enhanced */}
+              <motion.div 
                 className="relative"
                 onMouseEnter={() => setResourcesOpen(true)}
                 onMouseLeave={() => setResourcesOpen(false)}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
               >
-                <button
-                  className={`flex items-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                <motion.button
+                  className={`flex items-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 group ${
                     resourcesOpen 
-                      ? "text-slate-800 bg-yellow-50" 
-                      : "text-gray-700 hover:text-yellow-500 hover:bg-yellow-50"
+                      ? scrolled 
+                        ? "text-[#DCC471] bg-white/10" 
+                        : "text-slate-800 bg-slate-100"
+                      : scrolled
+                        ? "text-white hover:text-[#DCC471] hover:bg-white/10"
+                        : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
                   }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <BookOpen className="w-4 h-4" />
+                  <motion.div
+                    whileHover={{ scale: 1.2 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <BookOpen className="w-4 h-4" />
+                  </motion.div>
                   <span>Resources</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${resourcesOpen ? 'transform rotate-180' : ''}`} />
-                </button>
+                  <motion.div
+                    animate={{ rotate: resourcesOpen ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </motion.div>
+                </motion.button>
                 
                 <AnimatePresence>
                   {resourcesOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl z-[60] border border-gray-100"
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="absolute left-0 mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl z-[60] border border-gray-200/50 overflow-hidden"
                     >
                       <div className="py-2">
-                        {resourcesLinks.map((link) => (
-                          <NavLink
+                        {resourcesLinks.map((link, index) => (
+                          <motion.div
                             key={link.path}
-                            to={link.path}
-                            className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                            onClick={() => setResourcesOpen(false)}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05, duration: 0.3 }}
                           >
-                            <link.icon className="w-4 h-4 mr-3 text-gray-500" />
-                            {link.label}
-                          </NavLink>
+                            <NavLink
+                              to={link.path}
+                              className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-slate-50 hover:text-slate-800 transition-all duration-200 group"
+                              onClick={() => setResourcesOpen(false)}
+                            >
+                              <motion.div
+                                whileHover={{ scale: 1.2, rotate: 360 }}
+                                transition={{ duration: 0.3 }}
+                              >
+                                <link.icon className="w-4 h-4 mr-3 text-gray-500 group-hover:text-slate-600" />
+                              </motion.div>
+                              {link.label}
+                            </NavLink>
+                          </motion.div>
                         ))}
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
 
-              {/* Auth Buttons */}
-              <div className="ml-6 flex items-center space-x-4">
+              {/* Auth Buttons - Enhanced */}
+              <motion.div 
+                className="ml-6 flex items-center space-x-4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.8, duration: 0.5 }}
+              >
                 {isAuthenticated ? (
                   <div className="flex items-center space-x-4">
                     {isAdmin && (
-                      <Link
-                        to="/admin"
-                        className="flex items-center text-sm font-medium text-gray-700 hover:text-slate-800 transition-colors"
-                      >
-                        <BarChart2 className="mr-2 h-4 w-4" />
-                        Admin
-                      </Link>
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Link
+                          to="/admin"
+                          className={`flex items-center text-sm font-medium transition-all duration-300 px-3 py-2 rounded-lg ${
+                            scrolled 
+                              ? "text-white hover:text-[#DCC471] hover:bg-white/10" 
+                              : "text-gray-700 hover:text-slate-800 hover:bg-slate-100"
+                          }`}
+                        >
+                          <BarChart2 className="mr-2 h-4 w-4" />
+                          Admin
+                        </Link>
+                      </motion.div>
                     )}
-                    <div className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg">
-                      <User className="w-4 h-4 text-slate-800" />
-                      <span className="text-sm font-medium text-slate-900">
+                    <motion.div 
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${
+                        scrolled 
+                          ? "bg-white/10 backdrop-blur-sm border border-white/20" 
+                          : "bg-slate-100 border border-slate-200"
+                      }`}
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <User className={`w-4 h-4 ${scrolled ? "text-[#DCC471]" : "text-slate-800"}`} />
+                      <span className={`text-sm font-medium ${scrolled ? "text-white" : "text-slate-900"}`}>
                         {user?.username || "User"}
                       </span>
-                    </div>
+                    </motion.div>
 
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={handleLogout}
-                      sx={{
-                        color: "#dc2626",
-                        borderColor: "#dc2626",
-                        borderRadius: "8px",
-                        textTransform: "none",
-                        "&:hover": {
-                          borderColor: "#b91c1c",
-                          backgroundColor: "#1e293b",
-                        },
-                      }}
-                      startIcon={<LogOut className="w-4 h-4" />}
-                    >
-                      Logout
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={handleLogout}
+                        sx={{
+                          color: scrolled ? "#ffffff" : "#dc2626",
+                          borderColor: scrolled ? "#ffffff" : "#dc2626",
+                          borderRadius: "8px",
+                          textTransform: "none",
+                          "&:hover": {
+                            borderColor: "#b91c1c",
+                            backgroundColor: scrolled ? "rgba(255,255,255,0.1)" : "#fef2f2",
+                          },
+                        }}
+                        startIcon={<LogOut className="w-4 h-4" />}
+                      >
+                        Logout
+                      </Button>
+                    </motion.div>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-3">
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => setAuthModal("login")}
-                      sx={{
-                        color: "#1e293b",
-                        borderColor: "#1e293b",
-                        borderRadius: "8px",
-                        textTransform: "none",
-                        "&:hover": {
-                          borderColor: "#1d4ed8",
-                          backgroundColor: "#eff6ff",
-                        },
-                      }}
-                      startIcon={<LogIn className="w-4 h-4" />}
-                    >
-                      Login
-                    </Button>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={() => setAuthModal("register")}
-                      sx={{
-                        background: "#1e293b",
-                        borderRadius: "8px",
-                        textTransform: "none",
-                        boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
-                        "&:hover": {
-                          background:
-                            "linear-gradient(135deg,rgb(21, 30, 57) 0%,rgb(26, 33, 56) 100%)",
-                          boxShadow: "0 6px 16px rgba(37, 99, 235, 0.4)",
-                        },
-                      }}
-                      startIcon={<User className="w-4 h-4" />}
-                    >
-                      Register
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => setAuthModal("login")}
+                        sx={{
+                          color: scrolled ? "#ffffff" : "#DCC471",
+                          borderColor: scrolled ? "#ffffff" : "#DCC471",
+                          borderRadius: "8px",
+                          textTransform: "none",
+                          "&:hover": {
+                            borderColor: scrolled ? "#DCC471" : "#1d4ed8",
+                            backgroundColor: scrolled ? "rgba(255,255,255,0.1)" : "#eff6ff",
+                          },
+                        }}
+                        startIcon={<LogIn className="w-4 h-4" />}
+                      >
+                        Login
+                      </Button>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => setAuthModal("register")}
+                        sx={{
+                          background: scrolled 
+                            ? "linear-gradient(135deg, #DCC471 0%, #B8A965 100%)" 
+                            : "#1e293b",
+                          borderRadius: "8px",
+                          textTransform: "none",
+                          boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
+                          "&:hover": {
+                            background: scrolled
+                              ? "linear-gradient(135deg, #B8A965 0%, #A69659 100%)"
+                              : "linear-gradient(135deg,rgb(21, 30, 57) 0%,rgb(26, 33, 56) 100%)",
+                            boxShadow: "0 6px 16px rgba(37, 99, 235, 0.4)",
+                          },
+                        }}
+                        startIcon={<User className="w-4 h-4" />}
+                      >
+                        Register
+                      </Button>
+                    </motion.div>
                   </div>
                 )}
-              </div>
+              </motion.div>
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Button - Enhanced */}
             <div className="lg:hidden flex items-center">
-              <button
-                onClick={() => {
-                  console.log('Mobile menu button clicked', !isOpen); // Debug log
-                  setIsOpen(!isOpen);
-                }}
-                className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+              <motion.button
+                onClick={() => setIsOpen(!isOpen)}
+                className={`inline-flex items-center justify-center p-2 rounded-xl transition-all duration-300 ${
+                  scrolled 
+                    ? "text-white hover:text-[#DCC471] hover:bg-white/10" 
+                    : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
+                }`}
                 aria-label="Toggle menu"
                 aria-expanded={isOpen}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
               >
-                {isOpen ? (
-                  <X className="h-6 w-6" />
-                ) : (
-                  <Menu className="h-6 w-6" />
-                )}
-              </button>
+                <motion.div
+                  animate={{ rotate: isOpen ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {isOpen ? (
+                    <X className="h-6 w-6" />
+                  ) : (
+                    <Menu className="h-6 w-6" />
+                  )}
+                </motion.div>
+              </motion.button>
             </div>
           </div>
         </div>
 
-        {/* Mobile Navigation - Full Screen */}
-        {isOpen && (
-          <div className="lg:hidden fixed inset-0 top-[116px] z-[100] bg-gradient-to-br from-white via-blue-50 to-blue-100 shadow-2xl">
-            <div className="h-full overflow-y-auto">
-              <div className="px-6 pt-6 pb-8 space-y-3">
-                {/* Main Navigation Links */}
-                {navLinks.map((link, index) => (
-                  <div key={link.path}>
-                    <NavLink
-                      to={link.path}
-                      onClick={handleMobileNavClick}
-                      className={({ isActive }) =>
-                        `flex items-center px-4 py-4 rounded-xl text-lg font-medium transition-all duration-200 ${
-                          isActive
-                            ? "bg-slate-500 text-white shadow-lg"
-                            : "text-gray-700 hover:bg-white hover:text-yellow-600 hover:shadow-md"
-                        }`
-                      }
+        {/* Mobile Navigation - Epic Full Screen Experience */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              className="lg:hidden fixed inset-0 top-[100px] sm:top-[116px] z-[100] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 backdrop-blur-xl"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <div className="h-full overflow-y-auto">
+                <div className="px-4 sm:px-6 pt-6 pb-8 space-y-2">
+                  {/* Main Navigation Links - Enhanced */}
+                  {navLinks.map((link, index) => (
+                    <motion.div 
+                      key={link.path}
+                      initial={{ opacity: 0, x: -50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1, duration: 0.5 }}
                     >
-                      <link.icon className="w-6 h-6 mr-4" />
-                      <span>{link.label}</span>
-                    </NavLink>
-                  </div>
-                ))}
+                      <NavLink
+                        to={link.path}
+                        onClick={handleMobileNavClick}
+                        className={({ isActive }) =>
+                          `flex items-center px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
+                            isActive
+                              ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
+                              : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
+                          }`
+                        }
+                      >
+                        <motion.div
+                          whileHover={{ scale: 1.3, rotate: 360 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <link.icon className="w-6 h-6 mr-4 group-hover:animate-pulse" />
+                        </motion.div>
+                        <span>{link.label}</span>
+                      </NavLink>
+                    </motion.div>
+                  ))}
 
-                {/* Mobile Resources Section */}
-                <div>
-                  <button
-                    onClick={() => setResourcesOpen(!resourcesOpen)}
-                    className={`w-full flex items-center justify-between px-4 py-4 rounded-xl text-lg font-medium transition-all duration-200 ${
-                      resourcesOpen 
-                        ? "bg-slate-500 text-white shadow-lg" 
-                        : "text-gray-700 hover:bg-white hover:text-yellow-600 hover:shadow-md"
-                    }`}
+                  {/* Mobile Resources Section - Enhanced */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6, duration: 0.5 }}
                   >
-                    <div className="flex items-center">
-                      <BookOpen className="w-6 h-6 mr-4" />
-                      <span>Resources</span>
-                    </div>
-                    <ChevronDown className={`w-5 h-5 transition-transform ${resourcesOpen ? 'transform rotate-180' : ''}`} />
-                  </button>
-
-                  {resourcesOpen && (
-                    <div className="mt-2 ml-4 space-y-2">
-                      {resourcesLinks.map((link) => (
-                        <div key={link.path}>
-                          <NavLink
-                            to={link.path}
-                            onClick={handleMobileNavClick}
-                            className="flex items-center px-4 py-3 rounded-lg text-base text-gray-600 hover:bg-white hover:text-blue-600 transition-colors"
-                          >
-                            <link.icon className="w-5 h-5 mr-3 text-gray-500" />
-                            {link.label}
-                          </NavLink>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Mobile Auth Section */}
-                <div className="pt-6 mt-6 border-t border-blue-200">
-                  {isAuthenticated ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between px-4 py-4 bg-white rounded-xl shadow-sm">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
-                            <User className="w-5 h-5 text-white" />
-                          </div>
-                          <span className="font-medium text-gray-900 text-lg">
-                            {user?.username || "User"}
-                          </span>
-                        </div>
-                        {isAdmin && (
-                          <Link
-                            to="/admin"
-                            className="flex items-center text-slate-600 hover:text-slate-700"
-                            onClick={handleMobileNavClick}
-                          >
-                            <BarChart2 className="mr-2 h-5 w-5" />
-                            <span>Admin</span>
-                          </Link>
-                        )}
+                    <motion.button
+                      onClick={() => setResourcesOpen(!resourcesOpen)}
+                      className={`w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
+                        resourcesOpen 
+                          ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105" 
+                          : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center">
+                        <motion.div
+                          whileHover={{ scale: 1.3, rotate: 360 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <BookOpen className="w-6 h-6 mr-4 group-hover:animate-pulse" />
+                        </motion.div>
+                        <span>Resources</span>
                       </div>
-                      <Button
-                        fullWidth
-                        variant="outlined"
-                        onClick={() => {
-                          handleLogout();
-                          handleMobileNavClick();
-                        }}
-                        sx={{
-                          color: "#dc2626",
-                          borderColor: "#1e293b",
-                          borderRadius: "12px",
-                          py: 2,
-                          fontSize: "1rem",
-                          textTransform: "none",
-                          "&:hover": {
-                            borderColor: "#b91c1c",
-                            backgroundColor: "#fef2f2",
-                          },
-                        }}
-                        startIcon={<LogOut className="w-5 h-5" />}
+                      <motion.div
+                        animate={{ rotate: resourcesOpen ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
                       >
-                        Logout
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col space-y-4">
-                      <Button
-                        fullWidth
-                        variant="outlined"
-                        onClick={() => {
-                          setAuthModal("login");
-                          handleMobileNavClick();
-                        }}
-                        sx={{
-                          color: "#1e293b",
-                          borderColor: "#1e293b",
-                          borderRadius: "12px",
-                          py: 2,
-                          fontSize: "1rem",
-                          textTransform: "none",
-                          "&:hover": {
-                            borderColor: "#1d4ed8",
-                            backgroundColor: "#eff6ff",
-                          },
-                        }}
-                        startIcon={<LogIn className="w-5 h-5" />}
-                      >
-                        Login
-                      </Button>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        onClick={() => {
-                          setAuthModal("register");
-                          handleMobileNavClick();
-                        }}
-                        sx={{
-                          background: "#1e293b",
-                          borderRadius: "12px",
-                          py: 2,
-                          fontSize: "1rem",
-                          textTransform: "none",
-                          boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
-                          "&:hover": {
-                            background:
-                              "linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)",
-                            boxShadow: "0 6px 16px rgba(37, 99, 235, 0.4)",
-                          },
-                        }}
-                        startIcon={<User className="w-5 h-5" />}
-                      >
-                        Register
-                      </Button>
-                    </div>
-                  )}
+                        <ChevronDown className="w-5 h-5" />
+                      </motion.div>
+                    </motion.button>
+
+                    <AnimatePresence>
+                      {resourcesOpen && (
+                        <motion.div 
+                          className="mt-2 ml-4 sm:ml-6 space-y-2"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {resourcesLinks.map((link, index) => (
+                            <motion.div 
+                              key={link.path}
+                              initial={{ opacity: 0, x: -30 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.1, duration: 0.3 }}
+                            >
+                              <NavLink
+                                to={link.path}
+                                onClick={handleMobileNavClick}
+                                className="flex items-center px-4 py-3 rounded-lg text-sm sm:text-base text-white/80 hover:bg-white/10 hover:text-[#DCC471] transition-all duration-300 group"
+                              >
+                                <motion.div
+                                  whileHover={{ scale: 1.2, rotate: 360 }}
+                                  transition={{ duration: 0.3 }}
+                                >
+                                  <link.icon className="w-5 h-5 mr-3 text-white/60 group-hover:text-[#DCC471]" />
+                                </motion.div>
+                                {link.label}
+                              </NavLink>
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+
+                  {/* Mobile Auth Section - Enhanced */}
+                  <motion.div 
+                    className="pt-6 mt-6 border-t border-white/20"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8, duration: 0.5 }}
+                  >
+                    {isAuthenticated ? (
+                      <div className="space-y-4">
+                        <motion.div 
+                          className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 bg-white/10 backdrop-blur-sm rounded-xl shadow-lg border border-white/20"
+                          whileHover={{ scale: 1.02 }}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <motion.div 
+                              className="w-10 h-10 sm:w-12 sm:h-12 bg-[#DCC471] rounded-full flex items-center justify-center"
+                              whileHover={{ scale: 1.1, rotate: 360 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <User className="w-5 h-5 sm:w-6 sm:h-6 text-slate-900" />
+                            </motion.div>
+                            <span className="font-medium text-white text-base sm:text-lg">
+                              {user?.username || "User"}
+                            </span>
+                          </div>
+                          {isAdmin && (
+                            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                              <Link
+                                to="/admin"
+                                className="flex items-center text-[#DCC471] hover:text-white transition-colors"
+                                onClick={handleMobileNavClick}
+                              >
+                                <BarChart2 className="mr-2 h-5 w-5" />
+                                <span className="text-sm">Admin</span>
+                              </Link>
+                            </motion.div>
+                          )}
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                          <Button
+                            fullWidth
+                            variant="outlined"
+                            onClick={() => {
+                              handleLogout();
+                              handleMobileNavClick();
+                            }}
+                            sx={{
+                              color: "#ffffff",
+                              borderColor: "#ffffff",
+                              borderRadius: "12px",
+                              py: 2,
+                              fontSize: "1rem",
+                              textTransform: "none",
+                              "&:hover": {
+                                borderColor: "#dc2626",
+                                backgroundColor: "rgba(220, 38, 38, 0.1)",
+                                color: "#dc2626",
+                              },
+                            }}
+                            startIcon={<LogOut className="w-5 h-5" />}
+                          >
+                            Logout
+                          </Button>
+                        </motion.div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col space-y-4">
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                          <Button
+                            fullWidth
+                            variant="outlined"
+                            onClick={() => {
+                              setAuthModal("login");
+                              handleMobileNavClick();
+                            }}
+                            sx={{
+                              color: "#ffffff",
+                              borderColor: "#ffffff",
+                              borderRadius: "12px",
+                              py: 2,
+                              fontSize: "1rem",
+                              textTransform: "none",
+                              "&:hover": {
+                                borderColor: "#DCC471",
+                                backgroundColor: "rgba(220, 196, 113, 0.1)",
+                                color: "#DCC471",
+                              },
+                            }}
+                            startIcon={<LogIn className="w-5 h-5" />}
+                          >
+                            Login
+                          </Button>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                          <Button
+                            fullWidth
+                            variant="contained"
+                            onClick={() => {
+                              setAuthModal("register");
+                              handleMobileNavClick();
+                            }}
+                            sx={{
+                              background: "linear-gradient(135deg, #DCC471 0%, #B8A965 100%)",
+                              borderRadius: "12px",
+                              py: 2,
+                              fontSize: "1rem",
+                              textTransform: "none",
+                              boxShadow: "0 4px 12px rgba(220, 196, 113, 0.3)",
+                              "&:hover": {
+                                background: "linear-gradient(135deg, #B8A965 0%, #A69659 100%)",
+                                boxShadow: "0 6px 16px rgba(220, 196, 113, 0.4)",
+                              },
+                            }}
+                            startIcon={<User className="w-5 h-5" />}
+                          >
+                            Register
+                          </Button>
+                        </motion.div>
+                      </div>
+                    )}
+                  </motion.div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         <AuthModals openType={authModal} onClose={() => setAuthModal(null)} />
-      </nav>
+      </motion.nav>
     </>
   );
 };
