@@ -37,6 +37,7 @@ const PropertyDetail = () => {
   const [similarProperties, setSimilarProperties] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [viewCount, setViewCount] = useState(
     Math.floor(Math.random() * 500) + 100
@@ -100,7 +101,7 @@ const PropertyDetail = () => {
   // Function to create WhatsApp link
   const getWhatsAppLink = (property) => {
     const primaryAgent = getPrimaryAgent(property);
-    const phoneNumber = primaryAgent?.agent?.phone || "263772329569";
+    const phoneNumber = primaryAgent?.agent?.cell_number || "263772329569";
     const agentName = primaryAgent?.agent?.first_name || "HSP Team";
 
     return `https://wa.me/${phoneNumber}?text=Hello%20${encodeURIComponent(
@@ -426,7 +427,7 @@ const PropertyDetail = () => {
                 getPrimaryAgent(property).agent.email
               }</p>
               <p><strong>Phone:</strong> ${
-                getPrimaryAgent(property).agent.phone
+                getPrimaryAgent(property).agent.cell_number
               }</p>
             </div>
             `
@@ -475,6 +476,26 @@ const PropertyDetail = () => {
       );
     }
   };
+
+  const toggleFavorite = (propertyId) => {
+    setFavorites((prev) => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(propertyId)) {
+        newFavorites.delete(propertyId);
+      } else {
+        newFavorites.add(propertyId);
+      }
+      return newFavorites;
+    });
+  };
+
+  const handleScheduleTour = () => {
+    navigate('/contact');
+  };
+
+  const handleCloseScheduleTourModal = () => {
+    setShowScheduleTourModal(false);
+  };  
 
   const propertyStats = [
     { icon: Bed, label: "Bedrooms", value: property.beds || "N/A" },
@@ -716,10 +737,10 @@ const PropertyDetail = () => {
                         {getPrimaryAgent(property).agent.email}
                       </div>
                     )}
-                    {getPrimaryAgent(property).agent.phone && (
+                    {getPrimaryAgent(property).agent.cell_number && (
                       <div className="flex items-center text-stone-600 text-sm">
                         <Phone className="w-4 h-4 mr-2" />
-                        {getPrimaryAgent(property).agent.phone}
+                        {getPrimaryAgent(property).agent.cell_number}
                       </div>
                     )}
                   </div>
@@ -798,6 +819,7 @@ const PropertyDetail = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="w-full bg-gradient-to-r from-stone-600 to-stone-700 text-white py-3 px-4 rounded-lg hover:from-stone-700 hover:to-stone-800 transition-all flex items-center justify-center font-medium shadow-lg"
+                  onClick={handleScheduleTour}
                 >
                   <Calendar className="w-5 h-5 mr-2" />
                   Schedule Tour

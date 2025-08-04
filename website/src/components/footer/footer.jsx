@@ -9,9 +9,9 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <h3 className="text-xl font-bold">House of Stone</h3>
+            <h3 className="text-xl font-bold">House of Stone Properties</h3>
             <p className="text-stone-400">
-              Luxury real estate solutions for discerning clients.
+              Your Property Our Priority.
             </p>
             <div className="flex space-x-4">
               <a
@@ -55,7 +55,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/properties"
+                  to="/sale"
                   className="text-stone-400 hover:text-white transition-colors"
                 >
                   Properties
@@ -77,7 +77,7 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">Services</h3>
             <ul className="space-y-2">
               <li className="text-stone-400">
-                <Link to="/sales">Property Sales</Link>
+                <Link to="/sale">Property Sales</Link>
               </li>
               <li className="text-stone-400">
                 <Link to="/management">Property Management</Link>

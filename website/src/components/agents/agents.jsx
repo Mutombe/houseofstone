@@ -394,8 +394,8 @@ const agents = [
   {
     id: 12,
     name: "Lloyd Chitsowe",
-    title: "Care Taker",
-    specialization: "Care Taker",
+    title: "Maintenance Supervisor",
+    specialization: "Maintenance",
     experience: "7+ Years",
     image: "caretaker.jpeg",
     rating: 4.9,

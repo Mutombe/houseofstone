@@ -462,10 +462,10 @@ const Navbar = () => {
 
   const navLinks = [
     { path: "/", label: "Home", icon: Home },
-    { path: "/about", label: "About", icon: Users },
-    { path: "/agents", label: "Agents", icon: Handshake },
-    { path: "/sale", label: "Sale", icon: Building2 },
+    { path: "/sale", label: "Buy", icon: Building2 },
     { path: "/rent", label: "Rent", icon: Building2 },
+    { path: "/about", label: "About Us", icon: Users },
+    { path: "/agents", label: "Agents", icon: Handshake },
     { path: "/contact", label: "Contact", icon: PhoneCall },
   ];
 
@@ -558,7 +558,7 @@ const Navbar = () => {
                 <motion.div 
                   className={`p-2 sm:p-3 rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-300 mr-2 sm:mr-3 ${
                     scrolled 
-                      ? "bg-white/10 backdrop-blur-sm border border-white/20" 
+                      ? "backdrop-blur-sm border border-white/20" 
                       : "backdrop-blur-sm"
                   }`}
                   whileHover={{ 

@@ -47,7 +47,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "core.middleware.InteractionTrackingMiddleware",
-    "core.middleware.AdminActionLoggingMiddleware",
+    'core.middleware.AdminActionLoggerMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -219,7 +219,7 @@ DATABASES = {
         'PORT': '5434',
         'CONN_MAX_AGE': 0,
         'OPTIONS': {
-            'options': '-c search_path=hospital_schema,public',
+            'options': '-c search_path=django_schema,public',
             'connect_timeout': 5,
         },
     }

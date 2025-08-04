@@ -86,7 +86,7 @@ DATABASES = {
         'PORT': '5434',
         'CONN_MAX_AGE': 0,
         'OPTIONS': {
-            'options': '-c search_path=hospital_schema,public',
+            'options': '-c search_path=django_schema,public',
             'connect_timeout': 5,
         },
     }
