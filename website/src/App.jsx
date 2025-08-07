@@ -14,6 +14,7 @@ import MortgageCalculator from "./components/mortgage/morgage";
 import About from "./components/about/about";
 import Contact from "./components/contact/contact";
 import Footer from "./components/footer/footer";
+import Downloads from "./components/about/downloads";
 import PropertyManagement from "./components/properties/management";
 import MarketAnalysis from "./components/properties/market";
 import Consulting from "./components/properties/consulting";
@@ -29,6 +30,7 @@ import CitiesOverview from "./components/neighborhood/neighborhood";
 import AgentDashboard from "./components/dashboards/agent";
 
 import { useEffect } from "react";
+import Developments from './components/about/developments';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -68,6 +70,8 @@ function App() {
               element={<SuburbDetail />}
             />
             <Route path="/agent-dashboard" element={<AgentDashboard />} />
+            <Route path="/downloads" element={<Downloads />} />
+            <Route path="/developments" element={<Developments />} />
           </Routes>
         </AnimatePresence>
         <Footer />

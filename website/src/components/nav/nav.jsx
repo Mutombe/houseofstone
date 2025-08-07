@@ -14,7 +14,7 @@ import {
   ChevronDown,
   BarChart,
   Banknote,
-  TrendingUpDown,
+  TrendingUp,
   PhoneCall,
   Mail,
   Phone,
@@ -430,6 +430,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [resourcesOpen, setResourcesOpen] = useState(false);
+  const [buyOpen, setBuyOpen] = useState(false);
   const isAdmin = user?.is_superuser;
   const dispatch = useDispatch();
 
@@ -462,17 +463,46 @@ const Navbar = () => {
 
   const navLinks = [
     { path: "/", label: "Home", icon: Home },
-    { path: "/sale", label: "Buy", icon: Building2 },
     { path: "/rent", label: "Rent", icon: Building2 },
     { path: "/about", label: "About Us", icon: Users },
-    { path: "/agents", label: "Agents", icon: Handshake },
     { path: "/contact", label: "Contact", icon: PhoneCall },
   ];
 
+    const buyLinks = [
+    { 
+      path: "/sale", 
+      label: "Residential", 
+      icon: Home,
+      description: "Houses, Townhouses, Clusters, etc"
+    },
+    { 
+      path: "/sale", 
+      label: "Commercial", 
+      icon: Building2,
+      description: "Office buildings, retail spaces"
+    },
+    { 
+      path: "/sale", 
+      label: "Industrial", 
+      icon: Briefcase,
+      description: "Warehouses, factories"
+    },
+    { 
+      path: "/sale", 
+      label: "Development", 
+      icon: TrendingUp,
+      description: "Land and development projects"
+    },
+  ];
+
+
   const resourcesLinks = [
+    { path: "/agents", label: "Agents", icon: Handshake },
+    { path: "/developments", label: "Developments", icon: TrendingUp },
+    { path: "/downloads", label: "Downloads", icon: TrendingUp },
+    { path: "/neighborhoods", label: "Neighborhood Guide", icon: MapIcon },
     { path: "/consulting", label: "Consulting", icon: Briefcase },
     { path: "/market", label: "Market Analysis", icon: BarChart },
-    { path: "/neighborhoods", label: "Neighborhood Guide", icon: MapIcon },
     { path: "/mortgage", label: "Mortgage", icon: Banknote },
   ];
 
@@ -634,6 +664,88 @@ const Navbar = () => {
                   </NavLink>
                 </motion.div>
               ))}
+
+              <motion.div 
+                className="relative"
+                onMouseEnter={() => setBuyOpen(true)}
+                onMouseLeave={() => setBuyOpen(false)}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+              >
+                <motion.button
+                  className={`flex items-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 group ${
+                    buyOpen 
+                      ? scrolled 
+                        ? "text-[#DCC471] bg-white/10" 
+                        : "text-slate-800 bg-slate-100"
+                      : scrolled
+                        ? "text-white hover:text-[#DCC471] hover:bg-white/10"
+                        : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.2 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Building2 className="w-4 h-4" />
+                  </motion.div>
+                  <span>Buy</span>
+                  <motion.div
+                    animate={{ rotate: buyOpen ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </motion.div>
+                </motion.button>
+                
+                <AnimatePresence>
+                  {buyOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="absolute left-0 mt-2 w-72 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl z-[60] border border-gray-200/50 overflow-hidden"
+                    >
+                      <div className="py-2">
+                        {buyLinks.map((link, index) => (
+                          <motion.div
+                            key={link.path}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05, duration: 0.3 }}
+                          >
+                            <NavLink
+                              to={link.path}
+                              className="flex items-center px-4 py-3 text-sm hover:bg-slate-50 transition-all duration-200 group"
+                              onClick={() => setBuyOpen(false)}
+                            >
+                              <motion.div
+                                whileHover={{ scale: 1.2, rotate: 360 }}
+                                transition={{ duration: 0.3 }}
+                                className="flex-shrink-0"
+                              >
+                                <link.icon className="w-5 h-5 mr-3 text-gray-500 group-hover:text-slate-600" />
+                              </motion.div>
+                              <div className="flex flex-col">
+                                <span className="font-medium text-gray-800 group-hover:text-slate-900">
+                                  {link.label}
+                                </span>
+                                <span className="text-xs text-gray-500 group-hover:text-gray-600">
+                                  {link.description}
+                                </span>
+                              </div>
+                            </NavLink>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
 
               {/* Desktop Resources Dropdown - Enhanced */}
               <motion.div 
@@ -890,6 +1002,79 @@ const Navbar = () => {
                       </NavLink>
                     </motion.div>
                   ))}
+
+                   {/* Mobile Buy Section */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                  >
+                    <motion.button
+                      onClick={() => setBuyOpen(!buyOpen)}
+                      className={`w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
+                        buyOpen 
+                          ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105" 
+                          : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center">
+                        <motion.div
+                          whileHover={{ scale: 1.3, rotate: 360 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Building2 className="w-6 h-6 mr-4 group-hover:animate-pulse" />
+                        </motion.div>
+                        <span>Buy</span>
+                      </div>
+                      <motion.div
+                        animate={{ rotate: buyOpen ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ChevronDown className="w-5 h-5" />
+                      </motion.div>
+                    </motion.button>
+
+                    <AnimatePresence>
+                      {buyOpen && (
+                        <motion.div 
+                          className="mt-2 ml-4 sm:ml-6 space-y-2"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {buyLinks.map((link, index) => (
+                            <motion.div 
+                              key={link.path}
+                              initial={{ opacity: 0, x: -30 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.1, duration: 0.3 }}
+                            >
+                              <NavLink
+                                to={link.path}
+                                onClick={handleMobileNavClick}
+                                className="flex items-start px-4 py-3 rounded-lg text-sm sm:text-base text-white/80 hover:bg-white/10 hover:text-[#DCC471] transition-all duration-300 group"
+                              >
+                                <motion.div
+                                  whileHover={{ scale: 1.2, rotate: 360 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="flex-shrink-0 mt-0.5"
+                                >
+                                  <link.icon className="w-5 h-5 mr-3 text-white/60 group-hover:text-[#DCC471]" />
+                                </motion.div>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{link.label}</span>
+                                  <span className="text-xs text-white/60 mt-0.5">{link.description}</span>
+                                </div>
+                              </NavLink>
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
 
                   {/* Mobile Resources Section - Enhanced */}
                   <motion.div
