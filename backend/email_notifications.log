@@ -133,3 +133,5 @@ Email sent successfully: Agent Assigned to Property: House For Sale in Hogerty H
 Email sent successfully: Property Assigned: House For Sale in Hogerty Hill to ['nairgel@hsp.co.zw']
 Email sent successfully: Agent Assigned to Property: House For Sale in Hogerty Hill to ['simbamtombe@gmail.com']
 Email sent successfully: Property Updated: Townhouse/Complex/Cluster For Sale in Quinnington to ['simbamtombe@gmail.com']
+Failed to send email: Your Agent Profile Has Been Updated - Error: {'lionita@hsp.co.zw': (550, b'No Such User Here"')}
+Email sent successfully: Agent Profile Updated: Leonita Mhishi to ['simbamtombe@gmail.com']

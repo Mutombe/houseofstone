@@ -13,6 +13,8 @@ import {
   Phone,
   Mail,
   Calendar,
+  ChevronLeft,
+  ChevronRight,
   Eye,
   Heart,
   Share2,
@@ -22,7 +24,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useDispatch } from "react-redux";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { fetchProperties } from "../../redux/slices/propertySlice";
 import { Link } from "react-router-dom";
@@ -81,6 +83,41 @@ const testimonials = [
     image:
       "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",
   },
+];
+
+const carouselImages = [
+  {
+    url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&h=1080&fit=crop",
+    alt: "Luxury Modern Home"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&h=1080&fit=crop",
+    alt: "Contemporary Villa"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1920&h=1080&fit=crop",
+    alt: "Elegant Estate"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&h=1080&fit=crop",
+    alt: "Modern Architecture"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1920&h=1080&fit=crop",
+    alt: "Luxury Interior"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1920&h=1080&fit=crop",
+    alt: "Premium Property"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1920&h=1080&fit=crop",
+    alt: "Dream Home"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=1920&h=1080&fit=crop",
+    alt: "Stunning Residence"
+  }
 ];
 
 // Animated counter component
@@ -165,6 +202,288 @@ const GlowButton = ({
   </motion.button>
 );
 
+const HeroSection = () => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [searchParams, setSearchParams] = useState({
+    location: '',
+    propertyType: 'Any Type'
+  });
+
+  // Auto-advance carousel
+  useEffect(() => {
+    if (!isAutoPlaying) return;
+    
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % carouselImages.length);
+    }, 5000); // Change image every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [isAutoPlaying]);
+
+  const goToSlide = (index) => {
+    setCurrentImageIndex(index);
+    setIsAutoPlaying(false);
+    // Resume auto-play after 10 seconds of inactivity
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const goToPrevious = () => {
+    setCurrentImageIndex((prev) => 
+      prev === 0 ? carouselImages.length - 1 : prev - 1
+    );
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const goToNext = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % carouselImages.length);
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchParams({
+      ...searchParams,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleViewProperties = () => {
+    console.log('Navigate to properties');
+  };
+
+  return (
+    <section className="relative min-h-screen flex items-center justify-center sm:pt-0 pt-14 overflow-hidden">
+      {/* Background Carousel */}
+      <div className="absolute inset-0 z-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentImageIndex}
+            className="absolute inset-0"
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
+          >
+            <div
+              className="w-full h-full bg-cover bg-center transition-all duration-1000"
+              style={{
+                backgroundImage: `url('${carouselImages[currentImageIndex].url}')`,
+              }}
+            />
+          </motion.div>
+        </AnimatePresence>
+        
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/85 via-slate-800/75 to-yellow-900/35" />
+      </div>
+
+      {/* Carousel Controls */}
+      <div className="absolute inset-0 z-5 flex items-center justify-between px-4 sm:px-8 pointer-events-none">
+        <motion.button
+          onClick={goToPrevious}
+          className="pointer-events-auto bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 text-white hover:text-[#DCC471] group"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </motion.button>
+        
+        <motion.button
+          onClick={goToNext}
+          className="pointer-events-auto bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 text-white hover:text-[#DCC471] group"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <ChevronRight className="w-6 h-6" />
+        </motion.button>
+      </div>
+
+      {/* Carousel Indicators */}
+      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
+        {carouselImages.map((_, index) => (
+          <motion.button
+            key={index}
+            onClick={() => goToSlide(index)}
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              index === currentImageIndex
+                ? 'bg-[#DCC471] scale-125'
+                : 'bg-white/40 hover:bg-white/60'
+            }`}
+            whileHover={{ scale: 1.2 }}
+          />
+        ))}
+      </div>
+
+      {/* Floating decorative elements - Hidden on small screens */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block z-5">
+        <FloatingElement delay={0}>
+          <div className="absolute top-20 left-4 sm:left-10 w-16 h-16 sm:w-20 sm:h-20 bg-yellow-400/20 rounded-full blur-xl" />
+        </FloatingElement>
+        <FloatingElement delay={1}>
+          <div className="absolute top-40 right-4 sm:right-20 w-24 h-24 sm:w-32 sm:h-32 bg-yellow-500/10 rounded-full blur-2xl" />
+        </FloatingElement>
+        <FloatingElement delay={2}>
+          <div className="absolute bottom-20 left-1/4 w-20 h-20 sm:w-24 sm:h-24 bg-white/10 rounded-full blur-xl" />
+        </FloatingElement>
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-6">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          {/* Left Content - Mobile Optimized */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center lg:text-left order-2 lg:order-1"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="inline-flex items-center px-3 sm:px-4 py-2 bg-yellow-400/20 rounded-full mb-4 sm:mb-6 backdrop-blur-sm border border-yellow-400/30"
+            >
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#DCC471] mr-2" />
+              <a href="/showdays" className="text-yellow-100 font-medium text-sm sm:text-base">
+                Show Days
+              </a>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight"
+            >
+              <span className="text-white">Find Your</span>
+              <br />
+              <span className="text-transparent bg-clip-text bg-[#DCC471]">
+                Dream Home
+              </span>
+              <br />
+              <span className="text-white">Today</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="text-base sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-8 max-w-lg mx-auto lg:mx-0 px-2 sm:px-0"
+            >
+              Discover luxury properties with House of Stone Properties. Your
+              journey to the perfect home starts here.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.7 }}
+              className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start px-4 sm:px-0"
+            >
+              <GlowButton
+                onClick={handleViewProperties}
+                className="flex-1 sm:flex-none"
+              >
+                <Search className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                Explore Properties
+              </GlowButton>
+              <GlowButton 
+                variant="secondary" 
+                className="flex-1 sm:flex-none"
+                onClick={() => console.log('Navigate to contact')}
+              >
+                <Phone className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                Contact Agent
+              </GlowButton>
+            </motion.div>
+          </motion.div>
+
+          {/* Right Content - Search Card - Mobile Optimized */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="w-full max-w-md mx-auto lg:mx-0 lg:justify-self-end order-1 lg:order-2"
+          >
+            <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 border border-white/20 mx-4 sm:mx-0">
+              <div className="text-center mb-4 sm:mb-6">
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2">
+                  Property Search
+                </h3>
+                <p className="text-gray-600 text-sm sm:text-base">
+                  Find your perfect property
+                </p>
+              </div>
+
+              <div className="space-y-4 sm:space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Location
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      name="location"
+                      placeholder="Enter location"
+                      className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none transition-colors text-slate-800 text-sm sm:text-base min-h-[48px]"
+                      value={searchParams.location}
+                      onChange={handleSearchChange}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Property Type
+                  </label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                    <select
+                      name="propertyType"
+                      className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none transition-colors text-slate-800 bg-white text-sm sm:text-base min-h-[48px]"
+                      value={searchParams.propertyType}
+                      onChange={handleSearchChange}
+                    >
+                      <option>Any Type</option>
+                      <option>House</option>
+                      <option>Apartment</option>
+                      <option>Villa</option>
+                      <option>Townhouse</option>
+                    </select>
+                  </div>
+                </div>
+
+                <motion.button
+                  onClick={handleViewProperties}
+                  className="w-full bg-[#DCC471] text-slate-900 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 min-h-[48px] touch-manipulation"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5 mr-2 inline" />
+                  Search Properties
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Scroll indicator - Hidden on mobile */}
+      <motion.div
+        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 hidden sm:block"
+        animate={{ y: [0, 10, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <div className="w-6 h-10 border-2 border-[#DCC471] rounded-full flex justify-center">
+          <div className="w-1 h-3 bg-[#DCC471] rounded-full mt-2" />
+        </div>
+      </motion.div>
+    </section>
+  );
+};
+
 const EnhancedHomepage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -201,188 +520,7 @@ const EnhancedHomepage = () => {
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
-      {/* Hero Section */}
-        <section className="relative min-h-screen flex items-center justify-center sm:pt-0 pt-14">
-        {/* Background with parallax effect */}
-        <motion.div
-          className="absolute inset-0 z-0"
-          initial={{ scale: 1.1 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 10, ease: "easeOut" }}
-        >
-          <div
-            className="w-full h-full bg-cover bg-center"
-            style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&h=1080&fit=crop')",
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/85 via-slate-800/75 to-yellow-900/35" />
-        </motion.div>
-
-        {/* Floating decorative elements - Hidden on small screens */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block">
-          <FloatingElement delay={0}>
-            <div className="absolute top-20 left-4 sm:left-10 w-16 h-16 sm:w-20 sm:h-20 bg-yellow-400/20 rounded-full blur-xl" />
-          </FloatingElement>
-          <FloatingElement delay={1}>
-            <div className="absolute top-40 right-4 sm:right-20 w-24 h-24 sm:w-32 sm:h-32 bg-yellow-500/10 rounded-full blur-2xl" />
-          </FloatingElement>
-          <FloatingElement delay={2}>
-            <div className="absolute bottom-20 left-1/4 w-20 h-20 sm:w-24 sm:h-24 bg-white/10 rounded-full blur-xl" />
-          </FloatingElement>
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-6">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Left Content - Mobile Optimized */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-center lg:text-left order-2 lg:order-1"
-            >
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="inline-flex items-center px-3 sm:px-4 py-2 bg-yellow-400/20 rounded-full mb-4 sm:mb-6 backdrop-blur-sm border border-yellow-400/30"
-              >
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#DCC471] mr-2" />
-                <span className="text-yellow-100 font-medium text-sm sm:text-base">
-                  Premium Real Estate
-                </span>
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight"
-              >
-                <span className="text-white">Find Your</span>
-                <br />
-                <span className="text-transparent bg-clip-text bg-[#DCC471]">
-                  Dream Home
-                </span>
-                <br />
-                <span className="text-white">Today</span>
-              </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-                className="text-base sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-8 max-w-lg mx-auto lg:mx-0 px-2 sm:px-0"
-              >
-                Discover luxury properties with House of Stone Properties. Your
-                journey to the perfect home starts here.
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.7 }}
-                className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start px-4 sm:px-0"
-              >
-                <GlowButton
-                  onClick={handleViewProperties}
-                  className="flex-1 sm:flex-none"
-                >
-                  <Search className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  Explore Properties
-                </GlowButton>
-                <GlowButton variant="secondary" className="flex-1 sm:flex-none"
-                  onClick={() => navigate("/contact")}
-                >
-                  <Phone className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  Contact Agent
-                </GlowButton>
-              </motion.div>
-            </motion.div>
-
-            {/* Right Content - Search Card - Mobile Optimized */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="w-full max-w-md mx-auto lg:mx-0 lg:justify-self-end order-1 lg:order-2"
-            >
-              <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 border border-white/20 mx-4 sm:mx-0">
-                <div className="text-center mb-4 sm:mb-6">
-                  <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2">
-                    Property Search
-                  </h3>
-                  <p className="text-gray-600 text-sm sm:text-base">
-                    Find your perfect property
-                  </p>
-                </div>
-
-                <div className="space-y-4 sm:space-y-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Location
-                    </label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                      <input
-                        type="text"
-                        name="location"
-                        placeholder="Enter location"
-                        className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none transition-colors text-slate-800 text-sm sm:text-base min-h-[48px]"
-                        value={searchParams.location}
-                        onChange={handleSearchChange}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Property Type
-                    </label>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                      <select
-                        name="propertyType"
-                        className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none transition-colors text-slate-800 bg-white text-sm sm:text-base min-h-[48px]"
-                        value={searchParams.propertyType}
-                        onChange={handleSearchChange}
-                      >
-                        <option>Any Type</option>
-                        <option>House</option>
-                        <option>Apartment</option>
-                        <option>Villa</option>
-                        <option>Townhouse</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <motion.button
-                    onClick={handleViewProperties}
-                    className="w-full bg-[#DCC471] text-slate-900 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 min-h-[48px] touch-manipulation"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Search className="w-4 h-4 sm:w-5 sm:h-5 mr-2 inline" />
-                    Search Properties
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Scroll indicator - Hidden on mobile */}
-        <motion.div
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 hidden sm:block"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <div className="w-6 h-10 border-2 border-[#DCC471] rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-[#DCC471] rounded-full mt-2" />
-          </div>
-        </motion.div>
-      </section>
+      <HeroSection />
 
       {/* Stats Section */}
       <section className="py-12 sm:py-16 lg:py-20 bg-slate-800 relative overflow-hidden">

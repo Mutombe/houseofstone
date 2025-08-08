@@ -29,6 +29,14 @@ import {
   BarChart2,
   MapPin,
   MapIcon,
+  Calendar,
+  PlusCircle,
+  FileText,
+  Download,
+  Calculator,
+  ArrowRight,
+  DollarSign,
+  ShoppingCart,
 } from "lucide-react";
 
 // Material UI
@@ -431,6 +439,8 @@ const Navbar = () => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [resourcesOpen, setResourcesOpen] = useState(false);
   const [buyOpen, setBuyOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [sellOpen, setSellOpen] = useState(false);
   const isAdmin = user?.is_superuser;
   const dispatch = useDispatch();
 
@@ -440,7 +450,7 @@ const Navbar = () => {
       const scrollPosition = window.scrollY;
       setScrolled(scrollPosition > 20);
     };
-    
+
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -448,58 +458,82 @@ const Navbar = () => {
   // Enhanced mobile menu handling with smooth body scroll lock
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = '0px'; // Prevent layout shift
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = "0px"; // Prevent layout shift
     } else {
-      document.body.style.overflow = 'unset';
-      document.body.style.paddingRight = '0px';
+      document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "0px";
     }
 
     return () => {
-      document.body.style.overflow = 'unset';
-      document.body.style.paddingRight = '0px';
+      document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "0px";
     };
   }, [isOpen]);
 
+  // Updated navigation links in the exact order requested
   const navLinks = [
     { path: "/", label: "Home", icon: Home },
     { path: "/rent", label: "Rent", icon: Building2 },
+  ];
+
+  const aboutLinks = [
     { path: "/about", label: "About Us", icon: Users },
-    { path: "/contact", label: "Contact", icon: PhoneCall },
+    { path: "/contact", label: "Contact Us", icon: PhoneCall },
   ];
 
-    const buyLinks = [
-    { 
-      path: "/sale", 
-      label: "Residential", 
+  const buyLinks = [
+    {
+      path: "/buy",
+      label: "Residential",
       icon: Home,
-      description: "Houses, Townhouses, Clusters, etc"
+      description: "Houses, Townhouses, Clusters, etc",
     },
-    { 
-      path: "/sale", 
-      label: "Commercial", 
+    {
+      path: "/buy",
+      label: "Commercial",
       icon: Building2,
-      description: "Office buildings, retail spaces"
+      description: "Office buildings, retail spaces",
     },
-    { 
-      path: "/sale", 
-      label: "Industrial", 
+    {
+      path: "/buy",
+      label: "Industrial",
       icon: Briefcase,
-      description: "Warehouses, factories"
+      description: "Warehouses, factories",
     },
-    { 
-      path: "/sale", 
-      label: "Development", 
+    {
+      path: "/buy",
+      label: "Development",
       icon: TrendingUp,
-      description: "Land and development projects"
+      description: "Land and development projects",
     },
   ];
 
+  const sellLinks = [
+    {
+      path: "/sell",
+      label: "List Property",
+      icon: PlusCircle,
+      description: "List your property for sale",
+    },
+    {
+      path: "/sell/valuation",
+      label: "Property Valuation",
+      icon: Calculator,
+      description: "Get your property valued",
+    },
+    {
+      path: "/sell/guide",
+      label: "Selling Guide",
+      icon: FileText,
+      description: "Tips for selling your property",
+    },
+  ];
 
   const resourcesLinks = [
     { path: "/agents", label: "Agents", icon: Handshake },
     { path: "/developments", label: "Developments", icon: TrendingUp },
-    { path: "/downloads", label: "Downloads", icon: TrendingUp },
+    { path: "/downloads", label: "Downloads", icon: Download },
     { path: "/neighborhoods", label: "Neighborhood Guide", icon: MapIcon },
     { path: "/consulting", label: "Consulting", icon: Briefcase },
     { path: "/market", label: "Market Analysis", icon: BarChart },
@@ -513,12 +547,14 @@ const Navbar = () => {
   const handleMobileNavClick = () => {
     setIsOpen(false);
     setResourcesOpen(false);
+    setBuyOpen(false);
+    setSellOpen(false);
   };
 
   return (
     <>
       {/* Top Info Bar - Enhanced with better mobile responsiveness */}
-      <motion.div 
+      <motion.div
         className="w-full bg-slate-800 text-white py-2 sm:py-3 shadow-sm relative z-40"
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -535,8 +571,12 @@ const Navbar = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-[#DCC471] group-hover:animate-pulse" />
-                <span className="hidden sm:inline text-white group-hover:text-[#DCC471] transition-colors">+263 772 329 569</span>
-                <span className="sm:hidden text-white group-hover:text-[#DCC471] transition-colors">Call</span>
+                <span className="hidden sm:inline text-white group-hover:text-[#DCC471] transition-colors">
+                  +263 772 329 569
+                </span>
+                <span className="sm:hidden text-white group-hover:text-[#DCC471] transition-colors">
+                  Call
+                </span>
               </motion.a>
               <motion.a
                 href="mailto:info@hsp.co.zw"
@@ -546,11 +586,15 @@ const Navbar = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-[#DCC471] group-hover:animate-pulse" />
-                <span className="hidden sm:inline text-white group-hover:text-[#DCC471] transition-colors">info@hsp.co.zw</span>
-                <span className="sm:hidden text-white group-hover:text-[#DCC471] transition-colors">Email</span>
+                <span className="hidden sm:inline text-white group-hover:text-[#DCC471] transition-colors">
+                  info@hsp.co.zw
+                </span>
+                <span className="sm:hidden text-white group-hover:text-[#DCC471] transition-colors">
+                  Email
+                </span>
               </motion.a>
             </div>
-            <motion.div 
+            <motion.div
               className="text-xs hidden md:flex items-center"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -579,22 +623,22 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-20">
             {/* Logo Section - Enhanced with better animations */}
-            <motion.div 
+            <motion.div
               className="flex items-center"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
             >
               <NavLink to="/" className="flex items-center group">
-                <motion.div 
+                <motion.div
                   className={`p-2 sm:p-3 rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-300 mr-2 sm:mr-3 ${
-                    scrolled 
-                      ? "backdrop-blur-sm border border-white/20" 
+                    scrolled
+                      ? "backdrop-blur-sm border border-white/20"
                       : "backdrop-blur-sm"
                   }`}
-                  whileHover={{ 
+                  whileHover={{
                     scale: 1.1,
                     rotate: [0, -5, 5, 0],
-                    transition: { duration: 0.3 }
+                    transition: { duration: 0.3 },
                   }}
                 >
                   <img
@@ -610,78 +654,79 @@ const Navbar = () => {
               </NavLink>
             </motion.div>
 
-            {/* Desktop Navigation - Enhanced with better hover effects */}
+            {/* Desktop Navigation - Enhanced with better hover effects in correct order */}
             <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
-              {navLinks.map((link, index) => (
-                <motion.div
-                  key={link.path}
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
+              {/* Home Link */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0, duration: 0.5 }}
+              >
+                <NavLink
+                  to="/"
+                  className={({ isActive }) =>
+                    `relative text-sm font-medium transition-all duration-300 flex items-center space-x-2 py-2 px-3 rounded-lg group ${
+                      isActive
+                        ? scrolled
+                          ? "text-[#DCC471] bg-white/10"
+                          : "text-slate-800 bg-slate-100"
+                        : scrolled
+                        ? "text-white hover:text-[#DCC471] hover:bg-white/10"
+                        : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
+                    }`
+                  }
                 >
-                  <NavLink
-                    to={link.path}
-                    className={({ isActive }) =>
-                      `relative text-sm font-medium transition-all duration-300 flex items-center space-x-2 py-2 px-3 rounded-lg group ${
-                        isActive
-                          ? scrolled 
-                            ? "text-[#DCC471] bg-white/10" 
-                            : "text-slate-800 bg-slate-100"
-                          : scrolled
-                            ? "text-white hover:text-[#DCC471] hover:bg-white/10"
-                            : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
-                      }`
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
+                  {({ isActive }) => (
+                    <>
+                      <motion.div
+                        whileHover={{ scale: 1.2, rotate: 360 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Home
+                          className={`w-4 h-4 transition-colors ${
+                            isActive
+                              ? scrolled
+                                ? "text-[#DCC471]"
+                                : "text-slate-800"
+                              : scrolled
+                              ? "text-white/80 group-hover:text-[#DCC471]"
+                              : "text-[#DCC471] group-hover:text-slate-800"
+                          }`}
+                        />
+                      </motion.div>
+                      <span>Home</span>
+                      {isActive && (
                         <motion.div
-                          whileHover={{ scale: 1.2, rotate: 360 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <link.icon
-                            className={`w-4 h-4 transition-colors ${
-                              isActive
-                                ? scrolled ? "text-[#DCC471]" : "text-slate-800"
-                                : scrolled 
-                                  ? "text-white/80 group-hover:text-[#DCC471]" 
-                                  : "text-[#DCC471] group-hover:text-slate-800"
-                            }`}
-                          />
-                        </motion.div>
-                        <span>{link.label}</span>
-                        {isActive && (
-                          <motion.div
-                            className={`absolute -bottom-1 left-0 right-0 h-0.5 rounded-full ${
-                              scrolled ? "bg-[#DCC471]" : "bg-slate-800"
-                            }`}
-                            layoutId="activeTab"
-                            transition={{ type: "spring", duration: 0.5 }}
-                          />
-                        )}
-                      </>
-                    )}
-                  </NavLink>
-                </motion.div>
-              ))}
+                          className={`absolute -bottom-1 left-0 right-0 h-0.5 rounded-full ${
+                            scrolled ? "bg-[#DCC471]" : "bg-slate-800"
+                          }`}
+                          layoutId="activeTab"
+                          transition={{ type: "spring", duration: 0.5 }}
+                        />
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              </motion.div>
 
-              <motion.div 
+              {/* Buy Dropdown */}
+              <motion.div
                 className="relative"
                 onMouseEnter={() => setBuyOpen(true)}
                 onMouseLeave={() => setBuyOpen(false)}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
+                transition={{ delay: 0.1, duration: 0.5 }}
               >
                 <motion.button
                   className={`flex items-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 group ${
-                    buyOpen 
-                      ? scrolled 
-                        ? "text-[#DCC471] bg-white/10" 
+                    buyOpen
+                      ? scrolled
+                        ? "text-[#DCC471] bg-white/10"
                         : "text-slate-800 bg-slate-100"
                       : scrolled
-                        ? "text-white hover:text-[#DCC471] hover:bg-white/10"
-                        : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
+                      ? "text-white hover:text-[#DCC471] hover:bg-white/10"
+                      : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
                   }`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -690,7 +735,7 @@ const Navbar = () => {
                     whileHover={{ scale: 1.2 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Building2 className="w-4 h-4" />
+                    <ShoppingCart className="w-4 h-4" />
                   </motion.div>
                   <span>Buy</span>
                   <motion.div
@@ -700,7 +745,7 @@ const Navbar = () => {
                     <ChevronDown className="w-4 h-4" />
                   </motion.div>
                 </motion.button>
-                
+
                 <AnimatePresence>
                   {buyOpen && (
                     <motion.div
@@ -713,7 +758,7 @@ const Navbar = () => {
                       <div className="py-2">
                         {buyLinks.map((link, index) => (
                           <motion.div
-                            key={link.path}
+                            key={`${link.path}-${index}`}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.05, duration: 0.3 }}
@@ -747,8 +792,221 @@ const Navbar = () => {
                 </AnimatePresence>
               </motion.div>
 
+              {/* Sell Dropdown */}
+              <motion.div
+                className="relative"
+                onMouseEnter={() => setSellOpen(true)}
+                onMouseLeave={() => setSellOpen(false)}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+              >
+                <motion.button
+                  className={`flex items-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 group ${
+                    sellOpen
+                      ? scrolled
+                        ? "text-[#DCC471] bg-white/10"
+                        : "text-slate-800 bg-slate-100"
+                      : scrolled
+                      ? "text-white hover:text-[#DCC471] hover:bg-white/10"
+                      : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.2 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <DollarSign className="w-4 h-4" />
+                  </motion.div>
+                  <span>Sell</span>
+                  <motion.div
+                    animate={{ rotate: sellOpen ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </motion.div>
+                </motion.button>
+
+                <AnimatePresence>
+                  {sellOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="absolute left-0 mt-2 w-72 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl z-[60] border border-gray-200/50 overflow-hidden"
+                    >
+                      <div className="py-2">
+                        {sellLinks.map((link, index) => (
+                          <motion.div
+                            key={`${link.path}-${index}`}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05, duration: 0.3 }}
+                          >
+                            <NavLink
+                              to={link.path}
+                              className="flex items-center px-4 py-3 text-sm hover:bg-slate-50 transition-all duration-200 group"
+                              onClick={() => setSellOpen(false)}
+                            >
+                              <motion.div
+                                whileHover={{ scale: 1.2, rotate: 360 }}
+                                transition={{ duration: 0.3 }}
+                                className="flex-shrink-0"
+                              >
+                                <link.icon className="w-5 h-5 mr-3 text-gray-500 group-hover:text-slate-600" />
+                              </motion.div>
+                              <div className="flex flex-col">
+                                <span className="font-medium text-gray-800 group-hover:text-slate-900">
+                                  {link.label}
+                                </span>
+                                <span className="text-xs text-gray-500 group-hover:text-gray-600">
+                                  {link.description}
+                                </span>
+                              </div>
+                            </NavLink>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* Remaining Nav Links (Rent, Show Days, About Us) */}
+              {navLinks.slice(1).map((link, index) => (
+                <motion.div
+                  key={link.path}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: (index + 3) * 0.1, duration: 0.5 }}
+                >
+                  <NavLink
+                    to={link.path}
+                    className={({ isActive }) =>
+                      `relative text-sm font-medium transition-all duration-300 flex items-center space-x-2 py-2 px-3 rounded-lg group ${
+                        isActive
+                          ? scrolled
+                            ? "text-[#DCC471] bg-white/10"
+                            : "text-slate-800 bg-slate-100"
+                          : scrolled
+                          ? "text-white hover:text-[#DCC471] hover:bg-white/10"
+                          : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <motion.div
+                          whileHover={{ scale: 1.2, rotate: 360 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <link.icon
+                            className={`w-4 h-4 transition-colors ${
+                              isActive
+                                ? scrolled
+                                  ? "text-[#DCC471]"
+                                  : "text-slate-800"
+                                : scrolled
+                                ? "text-white/80 group-hover:text-[#DCC471]"
+                                : "text-[#DCC471] group-hover:text-slate-800"
+                            }`}
+                          />
+                        </motion.div>
+                        <span>{link.label}</span>
+                        {isActive && (
+                          <motion.div
+                            className={`absolute -bottom-1 left-0 right-0 h-0.5 rounded-full ${
+                              scrolled ? "bg-[#DCC471]" : "bg-slate-800"
+                            }`}
+                            layoutId="activeTab"
+                            transition={{ type: "spring", duration: 0.5 }}
+                          />
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+                </motion.div>
+              ))}
+
+              <motion.div
+                className="relative"
+                onMouseEnter={() => setAboutOpen(true)}
+                onMouseLeave={() => setAboutOpen(false)}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+              >
+                <motion.button
+                  className={`flex items-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 group ${
+                    aboutOpen
+                      ? scrolled
+                        ? "text-[#DCC471] bg-white/10"
+                        : "text-slate-800 bg-slate-100"
+                      : scrolled
+                      ? "text-white hover:text-[#DCC471] hover:bg-white/10"
+                      : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.2 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Users className="w-4 h-4" />
+                  </motion.div>
+                  <span>About Us</span>
+                  <motion.div
+                    animate={{ rotate: aboutOpen ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </motion.div>
+                </motion.button>
+
+                <AnimatePresence>
+                  {aboutOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="absolute left-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl z-[60] border border-gray-200/50 overflow-hidden"
+                    >
+                      <div className="py-2">
+                        {aboutLinks.map((link, index) => (
+                          <motion.div
+                            key={`${link.path}-${index}`}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05, duration: 0.3 }}
+                          >
+                            <NavLink
+                              to={link.path}
+                              className="flex items-center px-4 py-3 text-sm hover:bg-slate-50 transition-all duration-200 group"
+                              onClick={() => setAboutOpen(false)}
+                            >
+                              <motion.div
+                                whileHover={{ scale: 1.2, rotate: 360 }}
+                                transition={{ duration: 0.3 }}
+                              >
+                                <link.icon className="w-4 h-4 mr-3 text-gray-500 group-hover:text-slate-600" />
+                              </motion.div>
+                              {link.label}
+                            </NavLink>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
               {/* Desktop Resources Dropdown - Enhanced */}
-              <motion.div 
+              <motion.div
                 className="relative"
                 onMouseEnter={() => setResourcesOpen(true)}
                 onMouseLeave={() => setResourcesOpen(false)}
@@ -758,13 +1016,13 @@ const Navbar = () => {
               >
                 <motion.button
                   className={`flex items-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 group ${
-                    resourcesOpen 
-                      ? scrolled 
-                        ? "text-[#DCC471] bg-white/10" 
+                    resourcesOpen
+                      ? scrolled
+                        ? "text-[#DCC471] bg-white/10"
                         : "text-slate-800 bg-slate-100"
                       : scrolled
-                        ? "text-white hover:text-[#DCC471] hover:bg-white/10"
-                        : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
+                      ? "text-white hover:text-[#DCC471] hover:bg-white/10"
+                      : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
                   }`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -783,7 +1041,7 @@ const Navbar = () => {
                     <ChevronDown className="w-4 h-4" />
                   </motion.div>
                 </motion.button>
-                
+
                 <AnimatePresence>
                   {resourcesOpen && (
                     <motion.div
@@ -823,7 +1081,7 @@ const Navbar = () => {
               </motion.div>
 
               {/* Auth Buttons - Enhanced */}
-              <motion.div 
+              <motion.div
                 className="ml-6 flex items-center space-x-4"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -832,12 +1090,15 @@ const Navbar = () => {
                 {isAuthenticated ? (
                   <div className="flex items-center space-x-4">
                     {isAdmin && (
-                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
                         <Link
                           to="/admin"
                           className={`flex items-center text-sm font-medium transition-all duration-300 px-3 py-2 rounded-lg ${
-                            scrolled 
-                              ? "text-white hover:text-[#DCC471] hover:bg-white/10" 
+                            scrolled
+                              ? "text-white hover:text-[#DCC471] hover:bg-white/10"
                               : "text-gray-700 hover:text-slate-800 hover:bg-slate-100"
                           }`}
                         >
@@ -846,21 +1107,32 @@ const Navbar = () => {
                         </Link>
                       </motion.div>
                     )}
-                    <motion.div 
+                    <motion.div
                       className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${
-                        scrolled 
-                          ? "bg-white/10 backdrop-blur-sm border border-white/20" 
+                        scrolled
+                          ? "bg-white/10 backdrop-blur-sm border border-white/20"
                           : "bg-slate-100 border border-slate-200"
                       }`}
                       whileHover={{ scale: 1.05 }}
                     >
-                      <User className={`w-4 h-4 ${scrolled ? "text-[#DCC471]" : "text-slate-800"}`} />
-                      <span className={`text-sm font-medium ${scrolled ? "text-white" : "text-slate-900"}`}>
+                      <User
+                        className={`w-4 h-4 ${
+                          scrolled ? "text-[#DCC471]" : "text-slate-800"
+                        }`}
+                      />
+                      <span
+                        className={`text-sm font-medium ${
+                          scrolled ? "text-white" : "text-slate-900"
+                        }`}
+                      >
                         {user?.username || "User"}
                       </span>
                     </motion.div>
 
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
                       <Button
                         variant="outlined"
                         size="small"
@@ -872,7 +1144,9 @@ const Navbar = () => {
                           textTransform: "none",
                           "&:hover": {
                             borderColor: "#b91c1c",
-                            backgroundColor: scrolled ? "rgba(255,255,255,0.1)" : "#fef2f2",
+                            backgroundColor: scrolled
+                              ? "rgba(255,255,255,0.1)"
+                              : "#fef2f2",
                           },
                         }}
                         startIcon={<LogOut className="w-4 h-4" />}
@@ -883,7 +1157,10 @@ const Navbar = () => {
                   </div>
                 ) : (
                   <div className="flex items-center space-x-3">
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
                       <Button
                         variant="outlined"
                         size="small"
@@ -895,7 +1172,9 @@ const Navbar = () => {
                           textTransform: "none",
                           "&:hover": {
                             borderColor: scrolled ? "#DCC471" : "#1d4ed8",
-                            backgroundColor: scrolled ? "rgba(255,255,255,0.1)" : "#eff6ff",
+                            backgroundColor: scrolled
+                              ? "rgba(255,255,255,0.1)"
+                              : "#eff6ff",
                           },
                         }}
                         startIcon={<LogIn className="w-4 h-4" />}
@@ -903,14 +1182,17 @@ const Navbar = () => {
                         Login
                       </Button>
                     </motion.div>
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
                       <Button
                         variant="contained"
                         size="small"
                         onClick={() => setAuthModal("register")}
                         sx={{
-                          background: scrolled 
-                            ? "linear-gradient(135deg, #DCC471 0%, #B8A965 100%)" 
+                          background: scrolled
+                            ? "linear-gradient(135deg, #DCC471 0%, #B8A965 100%)"
                             : "#1e293b",
                           borderRadius: "8px",
                           textTransform: "none",
@@ -937,8 +1219,8 @@ const Navbar = () => {
               <motion.button
                 onClick={() => setIsOpen(!isOpen)}
                 className={`inline-flex items-center justify-center p-2 rounded-xl transition-all duration-300 ${
-                  scrolled 
-                    ? "text-white hover:text-[#DCC471] hover:bg-white/10" 
+                  scrolled
+                    ? "text-white hover:text-[#DCC471] hover:bg-white/10"
                     : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
                 }`}
                 aria-label="Toggle menu"
@@ -973,13 +1255,194 @@ const Navbar = () => {
             >
               <div className="h-full overflow-y-auto">
                 <div className="px-4 sm:px-6 pt-6 pb-8 space-y-2">
-                  {/* Main Navigation Links - Enhanced */}
-                  {navLinks.map((link, index) => (
-                    <motion.div 
+                  {/* Home Link */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0, duration: 0.5 }}
+                  >
+                    <NavLink
+                      to="/"
+                      onClick={handleMobileNavClick}
+                      className={({ isActive }) =>
+                        `flex items-center px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
+                          isActive
+                            ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
+                            : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
+                        }`
+                      }
+                    >
+                      <motion.div
+                        whileHover={{ scale: 1.3, rotate: 360 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Home className="w-6 h-6 mr-4 group-hover:animate-pulse" />
+                      </motion.div>
+                      <span>Home</span>
+                    </NavLink>
+                  </motion.div>
+
+                  {/* Mobile Buy Section */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1, duration: 0.5 }}
+                  >
+                    <motion.button
+                      onClick={() => setBuyOpen(!buyOpen)}
+                      className={`w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
+                        buyOpen
+                          ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
+                          : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center">
+                        <motion.div
+                          whileHover={{ scale: 1.3, rotate: 360 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <ShoppingCart className="w-6 h-6 mr-4 group-hover:animate-pulse" />
+                        </motion.div>
+                        <span>Buy</span>
+                      </div>
+                      <motion.div
+                        animate={{ rotate: buyOpen ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ChevronDown className="w-5 h-5" />
+                      </motion.div>
+                    </motion.button>
+
+                    <AnimatePresence>
+                      {buyOpen && (
+                        <motion.div
+                          className="mt-2 ml-4 sm:ml-6 space-y-2"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {buyLinks.map((link, index) => (
+                            <motion.div
+                              key={`${link.path}-${index}`}
+                              initial={{ opacity: 0, x: -30 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.1, duration: 0.3 }}
+                            >
+                              <NavLink
+                                to={link.path}
+                                onClick={handleMobileNavClick}
+                                className="flex items-start px-4 py-3 rounded-lg text-sm sm:text-base text-white/80 hover:bg-white/10 hover:text-[#DCC471] transition-all duration-300 group"
+                              >
+                                <motion.div
+                                  whileHover={{ scale: 1.2, rotate: 360 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="flex-shrink-0 mt-0.5"
+                                >
+                                  <link.icon className="w-5 h-5 mr-3 text-white/60 group-hover:text-[#DCC471]" />
+                                </motion.div>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">
+                                    {link.label}
+                                  </span>
+                                  <span className="text-xs text-white/60 mt-0.5">
+                                    {link.description}
+                                  </span>
+                                </div>
+                              </NavLink>
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+
+                  {/* Mobile Sell Section */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                  >
+                    <motion.button
+                      onClick={() => setSellOpen(!sellOpen)}
+                      className={`w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
+                        sellOpen
+                          ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
+                          : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center">
+                        <motion.div
+                          whileHover={{ scale: 1.3, rotate: 360 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <DollarSign className="w-6 h-6 mr-4 group-hover:animate-pulse" />
+                        </motion.div>
+                        <span>Sell</span>
+                      </div>
+                      <motion.div
+                        animate={{ rotate: sellOpen ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ChevronDown className="w-5 h-5" />
+                      </motion.div>
+                    </motion.button>
+
+                    <AnimatePresence>
+                      {sellOpen && (
+                        <motion.div
+                          className="mt-2 ml-4 sm:ml-6 space-y-2"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {sellLinks.map((link, index) => (
+                            <motion.div
+                              key={`${link.path}-${index}`}
+                              initial={{ opacity: 0, x: -30 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.1, duration: 0.3 }}
+                            >
+                              <NavLink
+                                to={link.path}
+                                onClick={handleMobileNavClick}
+                                className="flex items-start px-4 py-3 rounded-lg text-sm sm:text-base text-white/80 hover:bg-white/10 hover:text-[#DCC471] transition-all duration-300 group"
+                              >
+                                <motion.div
+                                  whileHover={{ scale: 1.2, rotate: 360 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="flex-shrink-0 mt-0.5"
+                                >
+                                  <link.icon className="w-5 h-5 mr-3 text-white/60 group-hover:text-[#DCC471]" />
+                                </motion.div>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">
+                                    {link.label}
+                                  </span>
+                                  <span className="text-xs text-white/60 mt-0.5">
+                                    {link.description}
+                                  </span>
+                                </div>
+                              </NavLink>
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+
+                  {/* Remaining Mobile Navigation Links (Rent, Show Days, About Us) */}
+                  {navLinks.slice(1).map((link, index) => (
+                    <motion.div
                       key={link.path}
                       initial={{ opacity: 0, x: -50 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1, duration: 0.5 }}
+                      transition={{ delay: (index + 3) * 0.1, duration: 0.5 }}
                     >
                       <NavLink
                         to={link.path}
@@ -1003,17 +1466,17 @@ const Navbar = () => {
                     </motion.div>
                   ))}
 
-                   {/* Mobile Buy Section */}
+                  {/* Mobile About Section */}
                   <motion.div
                     initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
+                    transition={{ delay: 0.7, duration: 0.5 }}
                   >
                     <motion.button
-                      onClick={() => setBuyOpen(!buyOpen)}
+                      onClick={() => setAboutOpen(!aboutOpen)}
                       className={`w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
-                        buyOpen 
-                          ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105" 
+                        aboutOpen
+                          ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
                           : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
                       }`}
                       whileHover={{ scale: 1.02 }}
@@ -1024,12 +1487,12 @@ const Navbar = () => {
                           whileHover={{ scale: 1.3, rotate: 360 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <Building2 className="w-6 h-6 mr-4 group-hover:animate-pulse" />
+                          <Users className="w-6 h-6 mr-4 group-hover:animate-pulse" />
                         </motion.div>
-                        <span>Buy</span>
+                        <span>About</span>
                       </div>
                       <motion.div
-                        animate={{ rotate: buyOpen ? 180 : 0 }}
+                        animate={{ rotate: aboutOpen ? 180 : 0 }}
                         transition={{ duration: 0.3 }}
                       >
                         <ChevronDown className="w-5 h-5" />
@@ -1037,17 +1500,17 @@ const Navbar = () => {
                     </motion.button>
 
                     <AnimatePresence>
-                      {buyOpen && (
-                        <motion.div 
+                      {aboutOpen && (
+                        <motion.div
                           className="mt-2 ml-4 sm:ml-6 space-y-2"
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.3 }}
                         >
-                          {buyLinks.map((link, index) => (
-                            <motion.div 
-                              key={link.path}
+                          {aboutLinks.map((link, index) => (
+                            <motion.div
+                              key={`${link.path}-${index}`}
                               initial={{ opacity: 0, x: -30 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: index * 0.1, duration: 0.3 }}
@@ -1055,19 +1518,15 @@ const Navbar = () => {
                               <NavLink
                                 to={link.path}
                                 onClick={handleMobileNavClick}
-                                className="flex items-start px-4 py-3 rounded-lg text-sm sm:text-base text-white/80 hover:bg-white/10 hover:text-[#DCC471] transition-all duration-300 group"
+                                className="flex items-center px-4 py-3 rounded-lg text-sm sm:text-base text-white/80 hover:bg-white/10 hover:text-[#DCC471] transition-all duration-300 group"
                               >
                                 <motion.div
                                   whileHover={{ scale: 1.2, rotate: 360 }}
                                   transition={{ duration: 0.3 }}
-                                  className="flex-shrink-0 mt-0.5"
                                 >
                                   <link.icon className="w-5 h-5 mr-3 text-white/60 group-hover:text-[#DCC471]" />
                                 </motion.div>
-                                <div className="flex flex-col">
-                                  <span className="font-medium">{link.label}</span>
-                                  <span className="text-xs text-white/60 mt-0.5">{link.description}</span>
-                                </div>
+                                {link.label}
                               </NavLink>
                             </motion.div>
                           ))}
@@ -1085,8 +1544,8 @@ const Navbar = () => {
                     <motion.button
                       onClick={() => setResourcesOpen(!resourcesOpen)}
                       className={`w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
-                        resourcesOpen 
-                          ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105" 
+                        resourcesOpen
+                          ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
                           : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
                       }`}
                       whileHover={{ scale: 1.02 }}
@@ -1111,7 +1570,7 @@ const Navbar = () => {
 
                     <AnimatePresence>
                       {resourcesOpen && (
-                        <motion.div 
+                        <motion.div
                           className="mt-2 ml-4 sm:ml-6 space-y-2"
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
@@ -1119,7 +1578,7 @@ const Navbar = () => {
                           transition={{ duration: 0.3 }}
                         >
                           {resourcesLinks.map((link, index) => (
-                            <motion.div 
+                            <motion.div
                               key={link.path}
                               initial={{ opacity: 0, x: -30 }}
                               animate={{ opacity: 1, x: 0 }}
@@ -1145,8 +1604,35 @@ const Navbar = () => {
                     </AnimatePresence>
                   </motion.div>
 
+                  {/* Contact Us Link */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.7, duration: 0.5 }}
+                  >
+                    <NavLink
+                      to="/contact"
+                      onClick={handleMobileNavClick}
+                      className={({ isActive }) =>
+                        `flex items-center px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
+                          isActive
+                            ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
+                            : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
+                        }`
+                      }
+                    >
+                      <motion.div
+                        whileHover={{ scale: 1.3, rotate: 360 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <PhoneCall className="w-6 h-6 mr-4 group-hover:animate-pulse" />
+                      </motion.div>
+                      <span>Contact Us</span>
+                    </NavLink>
+                  </motion.div>
+
                   {/* Mobile Auth Section - Enhanced */}
-                  <motion.div 
+                  <motion.div
                     className="pt-6 mt-6 border-t border-white/20"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1154,12 +1640,12 @@ const Navbar = () => {
                   >
                     {isAuthenticated ? (
                       <div className="space-y-4">
-                        <motion.div 
+                        <motion.div
                           className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 bg-white/10 backdrop-blur-sm rounded-xl shadow-lg border border-white/20"
                           whileHover={{ scale: 1.02 }}
                         >
                           <div className="flex items-center space-x-3">
-                            <motion.div 
+                            <motion.div
                               className="w-10 h-10 sm:w-12 sm:h-12 bg-[#DCC471] rounded-full flex items-center justify-center"
                               whileHover={{ scale: 1.1, rotate: 360 }}
                               transition={{ duration: 0.3 }}
@@ -1171,7 +1657,10 @@ const Navbar = () => {
                             </span>
                           </div>
                           {isAdmin && (
-                            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                            <motion.div
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
                               <Link
                                 to="/admin"
                                 className="flex items-center text-[#DCC471] hover:text-white transition-colors"
@@ -1183,7 +1672,10 @@ const Navbar = () => {
                             </motion.div>
                           )}
                         </motion.div>
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
                           <Button
                             fullWidth
                             variant="outlined"
@@ -1212,7 +1704,10 @@ const Navbar = () => {
                       </div>
                     ) : (
                       <div className="flex flex-col space-y-4">
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
                           <Button
                             fullWidth
                             variant="outlined"
@@ -1238,7 +1733,10 @@ const Navbar = () => {
                             Login
                           </Button>
                         </motion.div>
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
                           <Button
                             fullWidth
                             variant="contained"
@@ -1247,15 +1745,18 @@ const Navbar = () => {
                               handleMobileNavClick();
                             }}
                             sx={{
-                              background: "linear-gradient(135deg, #DCC471 0%, #B8A965 100%)",
+                              background:
+                                "linear-gradient(135deg, #DCC471 0%, #B8A965 100%)",
                               borderRadius: "12px",
                               py: 2,
                               fontSize: "1rem",
                               textTransform: "none",
                               boxShadow: "0 4px 12px rgba(220, 196, 113, 0.3)",
                               "&:hover": {
-                                background: "linear-gradient(135deg, #B8A965 0%, #A69659 100%)",
-                                boxShadow: "0 6px 16px rgba(220, 196, 113, 0.4)",
+                                background:
+                                  "linear-gradient(135deg, #B8A965 0%, #A69659 100%)",
+                                boxShadow:
+                                  "0 6px 16px rgba(220, 196, 113, 0.4)",
                               },
                             }}
                             startIcon={<User className="w-5 h-5" />}
@@ -1271,7 +1772,7 @@ const Navbar = () => {
             </motion.div>
           )}
         </AnimatePresence>
-        
+
         <AuthModals openType={authModal} onClose={() => setAuthModal(null)} />
       </motion.nav>
     </>
