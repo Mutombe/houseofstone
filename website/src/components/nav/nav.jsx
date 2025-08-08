@@ -485,25 +485,25 @@ const Navbar = () => {
 
   const buyLinks = [
     {
-      path: "/buy",
+      path: "/sale",
       label: "Residential",
       icon: Home,
       description: "Houses, Townhouses, Clusters, etc",
     },
     {
-      path: "/buy",
+      path: "/sale",
       label: "Commercial",
       icon: Building2,
       description: "Office buildings, retail spaces",
     },
     {
-      path: "/buy",
+      path: "/sale",
       label: "Industrial",
       icon: Briefcase,
       description: "Warehouses, factories",
     },
     {
-      path: "/buy",
+      path: "/sale",
       label: "Development",
       icon: TrendingUp,
       description: "Land and development projects",
