@@ -479,6 +479,7 @@ const Navbar = () => {
 
   const aboutLinks = [
     { path: "/about", label: "About Us", icon: Users },
+    { path: "/agents", label: "Agents", icon: Handshake },
     { path: "/contact", label: "Contact Us", icon: PhoneCall },
   ];
 
@@ -531,7 +532,6 @@ const Navbar = () => {
   ];
 
   const resourcesLinks = [
-    { path: "/agents", label: "Agents", icon: Handshake },
     { path: "/developments", label: "Developments", icon: TrendingUp },
     { path: "/downloads", label: "Downloads", icon: Download },
     { path: "/neighborhoods", label: "Neighborhood Guide", icon: MapIcon },
