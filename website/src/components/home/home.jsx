@@ -205,6 +205,7 @@ const GlowButton = ({
 const HeroSection = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useState({
     location: '',
     propertyType: 'Any Type'
@@ -250,7 +251,7 @@ const HeroSection = () => {
   };
 
   const handleViewProperties = () => {
-    console.log('Navigate to properties');
+    navigate("/sale");
   };
 
   return (
@@ -391,7 +392,7 @@ const HeroSection = () => {
               <GlowButton 
                 variant="secondary" 
                 className="flex-1 sm:flex-none"
-                onClick={() => console.log('Navigate to contact')}
+                onClick={() => navigate('/contact')}
               >
                 <Phone className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Contact Agent
