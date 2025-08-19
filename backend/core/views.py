@@ -485,6 +485,21 @@ class AdminDashboardView(APIView):
         popular_properties = Property.objects.annotate(
             view_count=Count('propertyinteraction')
         ).order_by('-view_count')[:5]
+        
+        # Fix: Convert AdminActionLog objects to dictionaries
+        recent_actions = AdminActionLog.objects.filter(admin=request.user).select_related('admin', 'target_user').order_by('-timestamp')[:10]
+        recent_actions_data = []
+        for action in recent_actions:
+            recent_actions_data.append({
+                'id': action.id,
+                'action_type': action.action_type,
+                'admin_username': action.admin.username if action.admin else None,
+                'target_user_username': action.target_user.username if action.target_user else None,
+                'details': action.details,
+                'ip_address': action.ip_address,
+                'timestamp': action.timestamp.isoformat(),
+            })
+        
         stats = {
             'total_views': PropertyInteraction.objects.filter(interaction_type='view').count(),
             'views_last_7_days': list(view_stats),
@@ -495,24 +510,22 @@ class AdminDashboardView(APIView):
                     'views': p.view_count
                 } for p in popular_properties
             ],
-            # Add this to existing stats
-            'views_by_type': PropertyInteraction.objects.values('interaction_type')
-                              .annotate(count=Count('id')),
+            'views_by_type': list(PropertyInteraction.objects.values('interaction_type')
+                              .annotate(count=Count('id'))),
             'total_users': User.objects.count(),
             'active_listings': Property.objects.filter(is_published=True).count(),
             'total_inquiries': Inquiry.objects.count(),
-            'popular_locations': Property.objects.values('location')
+            'popular_locations': list(Property.objects.values('location')
                              .annotate(count=Count('id'))
-                             .order_by('-count')[:5],
+                             .order_by('-count')[:5]),
             'active_admins': User.objects.filter(is_staff=True).count(),
-            'recent_actions': AdminActionLog.objects.filter(admin=request.user)
-                              .order_by('-timestamp')[:10],
-            'user_growth': User.objects.extra({
+            'recent_actions': recent_actions_data,  # Fixed: Now serializable
+            'user_growth': list(User.objects.extra({
                 'date': "date(date_joined)"
-            }).values('date').annotate(count=Count('id')).order_by('-date')[:7],
-            'admin_activity': AdminActionLog.objects.values('action_type')
+            }).values('date').annotate(count=Count('id')).order_by('-date')[:7]),
+            'admin_activity': list(AdminActionLog.objects.values('action_type')
                                .annotate(total=Count('id'))
-                               .order_by('-total')
+                               .order_by('-total'))
         }
         return Response(stats)
     

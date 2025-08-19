@@ -1762,7 +1762,7 @@ const PropertyDashboard = () => {
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-16">
         {/* Views by Interaction Type */}
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold mb-4">Interaction Types</h3>
@@ -1934,7 +1934,7 @@ const PropertyDashboard = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 pt-16">
       {/* Mobile sidebar toggle */}
       <div className="lg:hidden fixed top-4 left-4 z-20 pt-20">
         <button

@@ -269,7 +269,7 @@ const RentalProperties = () => {
   if (status === "loading") {
     return (
       <div className="min-h-screen pt-8 bg-gradient-to-br from-stone-50 via-white to-stone-100 pt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-16">
           {/* Search Bar Skeleton */}
           <div className="flex flex-col lg:flex-row gap-4 items-center mb-4">
             <div className="flex-1 w-full relative">

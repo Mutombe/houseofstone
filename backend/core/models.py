@@ -286,8 +286,7 @@ class PropertyShare(models.Model):
     share_token = models.UUIDField(default=uuid.uuid4, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
-
-# models.py
+    
 class PropertyInteraction(models.Model):
     INTERACTION_TYPES = [
         ('view', 'View'),
