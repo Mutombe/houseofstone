@@ -696,7 +696,7 @@ const Navbar = () => {
                       <span>Home</span>
                       {isActive && (
                         <motion.div
-                          className={`absolute -bottom-1 left-0 right-0 h-0.5 rounded-full ${
+                          className={`rounded-full ${
                             scrolled ? "bg-[#DCC471]" : "bg-slate-800"
                           }`}
                           layoutId="activeTab"
@@ -917,7 +917,7 @@ const Navbar = () => {
                         <span>{link.label}</span>
                         {isActive && (
                           <motion.div
-                            className={`absolute -bottom-1 left-0 right-0 h-0.5 rounded-full ${
+                            className={` rounded-full ${
                               scrolled ? "bg-[#DCC471]" : "bg-slate-800"
                             }`}
                             layoutId="activeTab"
