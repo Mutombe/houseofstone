@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
-from .serializers import AdminActionLogSerializer, BlogPostSerializer, PropertyAlertSerializer, UserSerializer, ProfileSerializer, PropertySerializer, PropertyWithStatsSerializer, LeadSourceSerializer, PropertyLeadSerializer, PropertyStatSerializer
+from .serializers import AdminActionLogSerializer, BlogPostSerializer, PropertyAlertSerializer, PropertyDetailSerializer, PropertyListSerializer, UserSerializer, ProfileSerializer, PropertySerializer, PropertyWithStatsSerializer, LeadSourceSerializer, PropertyLeadSerializer, PropertyStatSerializer
 from .models import BlogPost, Profile, PropertyAlert, PropertyShare
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -116,47 +116,113 @@ class ProfileView(APIView):
     
 class PropertyViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
-    queryset = Property.objects.prefetch_related('property_agents__agent')
-    queryset = Property.objects.filter(is_published=True)
     serializer_class = PropertySerializer
     filterset_fields = {
         'price': ['lte', 'gte'],
         'property_type': ['exact'],
-        'location': ['icontains']
+        'location': ['icontains'],
+        'status': ['exact'],
+        'category': ['exact'],
+        'beds': ['lte', 'gte'],
+        'baths': ['lte', 'gte'],
     }
+    pagination_class = PageNumberPagination  # Add pagination
+    page_size = 20  # Default page size
+    page_size_query_param = 'page_size'  # Allow client to set page size
+    max_page_size = 100 
+    
+    def get_queryset(self):
+        """Optimized queryset with selective prefetching based on action"""
+        base_queryset = Property.objects.filter(is_published=True)
+        
+        if self.action in ['retrieve', 'stats']:
+            # Full prefetch for detail views and stats
+            return base_queryset.select_related('agent').prefetch_related(
+                'images',
+                'features',
+                'property_agents__agent',
+                'stats',
+                'leads__source'
+            )
+        elif self.action == 'list':
+            # Minimal prefetch for list views
+            return base_queryset.select_related('agent').prefetch_related('images')
+        
+        return base_queryset
+
+    def get_serializer_class(self):
+        """Use different serializers for different actions"""
+        if self.action == 'list':
+            return PropertySerializer  # Lighter serializer for list view
+        elif self.action == 'retrieve':
+            return PropertyDetailSerializer  # Full serializer for detail view
+        return PropertySerializer
 
     def perform_create(self, serializer):
         serializer.save(agent=self.request.user)
 
-        def get_serializer_class(self):
-            if self.action in ['retrieve', 'list']:
-                return PropertyWithStatsSerializer
-            return PropertySerializer
+    def list(self, request, *args, **kwargs):
+        # Apply filters
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # Handle search parameter
+        search_term = request.query_params.get('search')
+        if search_term:
+            queryset = queryset.filter(
+                Q(title__icontains=search_term) |
+                Q(location__icontains=search_term) |
+                Q(description__icontains=search_term)
+            )
+        
+        # Apply ordering
+        ordering = request.query_params.get('ordering')
+        if ordering:
+            queryset = queryset.order_by(ordering)
+        
+        # Paginate the queryset
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
     def stats(self, request, pk=None):
         property = self.get_object()
         
-        # Summary stats
-        total_views = property.stats.aggregate(total=Sum('views'))['total'] or 0
-        total_leads = property.leads.count()
+        # Use aggregation and annotation for better performance
+        from django.db.models import Sum, Count, F
+        from django.utils import timezone
         
-        # Last 7 days stats
-        date_7_days_ago = datetime.now().date() - timedelta(days=7)
-        recent_stats = property.stats.filter(date__gte=date_7_days_ago)
+        # Get stats in a single query with annotations
+        stats_data = property.stats.aggregate(
+            total_views=Sum('views'),
+            avg_daily_views=Avg('views')
+        )
         
-        # Lead sources breakdown
+        # Last 7 days stats with single query
+        date_7_days_ago = timezone.now().date() - timedelta(days=7)
+        recent_stats = property.stats.filter(
+            date__gte=date_7_days_ago
+        ).values('date', 'views').order_by('date')
+        
+        # Lead sources breakdown with single query
         lead_sources = property.leads.values('source__name').annotate(
             count=Count('id')
         ).order_by('-count')
         
+        # Total leads count
+        total_leads = property.leads.count()
+        
         return Response({
-            'total_views': total_views,
+            'total_views': stats_data['total_views'] or 0,
+            'avg_daily_views': stats_data['avg_daily_views'] or 0,
             'total_leads': total_leads,
-            'recent_stats': PropertyStatSerializer(recent_stats, many=True).data,
-            'lead_sources': lead_sources
+            'recent_stats': list(recent_stats),
+            'lead_sources': list(lead_sources)
         })
-
 class LeadSourceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = LeadSource.objects.all()
     serializer_class = LeadSourceSerializer

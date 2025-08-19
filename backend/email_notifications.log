@@ -135,3 +135,24 @@ Email sent successfully: Agent Assigned to Property: House For Sale in Hogerty H
 Email sent successfully: Property Updated: Townhouse/Complex/Cluster For Sale in Quinnington to ['simbamtombe@gmail.com']
 Failed to send email: Your Agent Profile Has Been Updated - Error: {'lionita@hsp.co.zw': (550, b'No Such User Here"')}
 Email sent successfully: Agent Profile Updated: Leonita Mhishi to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: Watermark to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: Watermark to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: Watermark2 to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: Watermark2 to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: Mark to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: Mark to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: dfgdg to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: dfgdg to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: Example to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: Example to ['simbamtombe@gmail.com']
+Email sent successfully: New Property Created: sdfsdfsd to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: sdfsdfsd to ['simbamtombe@gmail.com']
+Watermark process started
+Email sent successfully: New Property Created: Sample to ['simbamtombe@gmail.com']
+Email sent successfully: Property Assigned to You: Sample to ['simbamtombe@gmail.com']
+Watermark process started
+Watermark process started
+Email sent successfully: Property Unassigned: sdfsdfsd to ['arthur@hsp.co.zw']
+Email sent successfully: Agent Unassigned from Property: sdfsdfsd to ['simbamtombe@gmail.com']
+Email sent successfully: Property Unassigned: Sample to ['arthur@hsp.co.zw']
+Email sent successfully: Agent Unassigned from Property: Sample to ['simbamtombe@gmail.com']

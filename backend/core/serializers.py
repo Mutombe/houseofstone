@@ -97,10 +97,51 @@ class PropertyAgentSerializer(serializers.ModelSerializer):
         model = PropertyAgent
         fields = ['id', 'agent', 'agent_id', 'is_primary', 'assigned_date']
 
+class PropertyListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for list views"""
+    primary_image = serializers.SerializerMethodField()
+    agent_name = serializers.CharField(source='agent.get_full_name', read_only=True)
+    
+    class Meta:
+        model = Property
+        fields = [
+            'id', 'title', 'price', 'location', 'property_type', 'category',
+            'status', 'beds', 'baths', 'area_measurement', 'area_unit',
+            'primary_image', 'agent_name', 'created_at'
+        ]
+    
+    def get_primary_image(self, obj):
+        # Get first image efficiently
+        first_image = obj.images.first()
+        return first_image.image.url if first_image else None
+
+
+class PropertyDetailSerializer(serializers.ModelSerializer):
+    """Full serializer for detail views"""
+    images = PropertyImageSerializer(many=True, read_only=True)
+    features = PropertyFeatureSerializer(many=True, read_only=True)
+    property_agents = PropertyAgentSerializer(many=True, read_only=True)
+    agent_info = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Property
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at', 'agent']
+    
+    def get_agent_info(self, obj):
+        if obj.agent:
+            return {
+                'id': obj.agent.id,
+                'name': obj.agent.get_full_name(),
+                'email': obj.agent.email
+            }
+        return None
+
+
 class PropertySerializer(serializers.ModelSerializer):
+    """Standard serializer for create/update operations"""
     images = PropertyImageSerializer(many=True, required=False, read_only=True)
-    features = PropertyFeatureSerializer(many=True, required=False)
-    agents = serializers.SerializerMethodField()
+    features = PropertyFeatureSerializer(many=True, required=False, read_only=True)
     property_agents = PropertyAgentSerializer(many=True, required=False, read_only=True)
     
     class Meta:
@@ -108,187 +149,204 @@ class PropertySerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['created_at', 'updated_at', 'agent']
 
-    def get_agents(self, obj):
-        return PropertyAgentSerializer(
-            obj.property_agents.all(),
-            many=True
-        ).data
-
     def create(self, validated_data):
-        # Extract and remove features data (it's now a JSON string from frontend)
+        # Extract and process related data
         features_data = []
         agents_data = []
         request = self.context.get('request')
+        
+        # Use transaction for data consistency and performance
+        from django.db import transaction
+        
+        with transaction.atomic():
+            if request:
+                # Handle features
+                if 'features' in request.data:
+                    try:
+                        features_data = json.loads(request.data.get('features', '[]'))
+                        validated_data.pop('features', None)
+                    except json.JSONDecodeError:
+                        raise serializers.ValidationError("Invalid features format")
+                
+                # Handle agents
+                if 'agents' in request.data:
+                    try:
+                        agents_data = json.loads(request.data.get('agents', '[]'))
+                        validated_data.pop('agents', None)
+                    except json.JSONDecodeError:
+                        raise serializers.ValidationError("Invalid agents format")
             
-        if request:
-            # Handle features
-            if 'features' in request.data:
-                try:
-                    features_data = json.loads(request.data.get('features', '[]'))
-                    if 'features' in validated_data:
-                        validated_data.pop('features')
-                except json.JSONDecodeError:
-                    raise serializers.ValidationError("Invalid features format")
+            # Create property instance
+            property_instance = Property.objects.create(**validated_data)
             
-            # Handle agents
-            if 'agents' in request.data:
-                try:
-                    agents_data = json.loads(request.data.get('agents', '[]'))
-                    if 'agents' in validated_data:
-                        validated_data.pop('agents')
-                except json.JSONDecodeError:
-                    raise serializers.ValidationError("Invalid agents format")
-        
-        # Create property instance first
-        property = Property.objects.create(**validated_data)
-        
-        # Process images
-        images_data = request.FILES.getlist('images') if request else []
-        
-        # Get image captions if provided
-        image_captions = []
-        if request and 'image_captions' in request.data:
-            try:
-                image_captions = json.loads(request.data.get('image_captions', '[]'))
-            except json.JSONDecodeError:
-                pass
-        
-        # Create images with captions
-        for index, image_data in enumerate(images_data):
-            caption = ""
-            # Find caption for this image if it exists
-            for caption_data in image_captions:
-                if caption_data.get('file') == image_data.name:
-                    caption = caption_data.get('caption', '')
-                    break
+            # Bulk create features for better performance
+            if features_data:
+                features_to_create = []
+                for feature in features_data:
+                    if isinstance(feature, dict) and 'feature' in feature:
+                        features_to_create.append(
+                            PropertyFeature(property=property_instance, feature=feature['feature'])
+                        )
+                if features_to_create:
+                    PropertyFeature.objects.bulk_create(features_to_create)
             
-            PropertyImage.objects.create(
-                property=property, 
-                image=image_data,
-                caption=caption
-            )
-        
-        # Create features
-        for feature in features_data:
-            if isinstance(feature, dict) and 'feature' in feature:
-                PropertyFeature.objects.create(property=property, feature=feature['feature'])
-
-
-                # Create property-agent relationships
-        for agent_data in agents_data:
-            if isinstance(agent_data, dict) and 'agent_id' in agent_data:
-                try:
-                    agent = Agent.objects.get(id=agent_data['agent_id'])
-                    PropertyAgent.objects.create(
-                        property=property,
-                        agent=agent,
-                        is_primary=agent_data.get('is_primary', False)
-                    )
-                except Agent.DoesNotExist:
-                    continue
-        
-        return property
+            # Bulk create property agents
+            if agents_data:
+                agents_to_create = []
+                for agent_data in agents_data:
+                    if isinstance(agent_data, dict) and 'agent_id' in agent_data:
+                        try:
+                            agent = Agent.objects.get(id=agent_data['agent_id'])
+                            agents_to_create.append(
+                                PropertyAgent(
+                                    property=property_instance,
+                                    agent=agent,
+                                    is_primary=agent_data.get('is_primary', False)
+                                )
+                            )
+                        except Agent.DoesNotExist:
+                            continue
+                if agents_to_create:
+                    PropertyAgent.objects.bulk_create(agents_to_create)
+            
+            # Process images
+            self._process_images(request, property_instance)
+            
+        return property_instance
 
     def update(self, instance, validated_data):
-        # Handle features similar to create method
-        features_data = []
-        agents_data = []
-        request = self.context.get('request')
+        from django.db import transaction
         
-        if request and 'features' in request.data:
-            try:
-                features_data = json.loads(request.data.get('features', '[]'))
-                if 'features' in validated_data:
-                    validated_data.pop('features')
-            except json.JSONDecodeError:
-                raise serializers.ValidationError("Invalid features format")
-                
-        if 'agents' in self.context['request'].data:
-            agents_data = json.loads(self.context['request'].data['agents'])
+        with transaction.atomic():
+            features_data = []
+            agents_data = []
+            request = self.context.get('request')
+            
+            if request:
+                if 'features' in request.data:
+                    try:
+                        features_data = json.loads(request.data.get('features', '[]'))
+                        validated_data.pop('features', None)
+                    except json.JSONDecodeError:
+                        raise serializers.ValidationError("Invalid features format")
+                        
+                if 'agents' in request.data:
+                    try:
+                        agents_data = json.loads(request.data.get('agents', '[]'))
+                        validated_data.pop('agents', None)
+                    except json.JSONDecodeError:
+                        raise serializers.ValidationError("Invalid agents format")
+            
+            # Update instance
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+            instance.save()
+            
+            # Handle deleted images
+            if request and 'deleted_images' in request.data:
+                try:
+                    deleted_images = json.loads(request.data.get('deleted_images', '[]'))
+                    if deleted_images:
+                        PropertyImage.objects.filter(id__in=deleted_images).delete()
+                except json.JSONDecodeError:
+                    pass
+            
+            # Process new images
+            self._process_images(request, instance)
+            
+            # Update features (bulk operations)
+            if features_data is not None:  # Allow empty list to clear features
+                instance.features.all().delete()
+                if features_data:
+                    features_to_create = []
+                    for feature in features_data:
+                        if isinstance(feature, dict) and 'feature' in feature:
+                            features_to_create.append(
+                                PropertyFeature(property=instance, feature=feature['feature'])
+                            )
+                    if features_to_create:
+                        PropertyFeature.objects.bulk_create(features_to_create)
+            
+            # Update agents (bulk operations)
+            if agents_data is not None:
+                instance.property_agents.all().delete()
+                if agents_data:
+                    agents_to_create = []
+                    for agent_data in agents_data:
+                        if isinstance(agent_data, dict) and 'agent_id' in agent_data:
+                            try:
+                                agent = Agent.objects.get(id=agent_data['agent_id'])
+                                agents_to_create.append(
+                                    PropertyAgent(
+                                        property=instance,
+                                        agent=agent,
+                                        is_primary=agent_data.get('is_primary', False)
+                                    )
+                                )
+                            except Agent.DoesNotExist:
+                                continue
+                    if agents_to_create:
+                        PropertyAgent.objects.bulk_create(agents_to_create)
         
-        # Update instance
-        instance = super().update(instance, validated_data)
-        
-        # Delete removed images
-        if request and 'deleted_images' in request.data:
-            try:
-                deleted_images = json.loads(request.data.get('deleted_images', '[]'))
-                PropertyImage.objects.filter(id__in=deleted_images).delete()
-            except json.JSONDecodeError:
-                pass
-        
-        # Add new images with captions
-        images_data = request.FILES.getlist('images') if request else []
+        return instance
+    
+    def _process_images(self, request, property_instance):
+        """Helper method to process images efficiently"""
+        if not request:
+            return
+            
+        images_data = request.FILES.getlist('images')
+        if not images_data:
+            return
+            
+        # Get image captions
         image_captions = []
-        
-        if request and 'image_captions' in request.data:
+        if 'image_captions' in request.data:
             try:
                 image_captions = json.loads(request.data.get('image_captions', '[]'))
             except json.JSONDecodeError:
                 pass
         
-        # Create new images with captions
+        # Create images in bulk
+        images_to_create = []
         for image_data in images_data:
             caption = ""
-            # Find caption for this image if it exists
+            # Find caption for this image
             for caption_data in image_captions:
                 if caption_data.get('file') == image_data.name:
                     caption = caption_data.get('caption', '')
                     break
             
-            PropertyImage.objects.create(
-                property=instance, 
-                image=image_data,
-                caption=caption
+            images_to_create.append(
+                PropertyImage(
+                    property=property_instance,
+                    image=image_data,
+                    caption=caption
+                )
             )
+        
+        if images_to_create:
+            for img in images_to_create:
+                img.save()
         
         # Update existing image captions
         for caption_data in image_captions:
             if 'id' in caption_data and caption_data['id']:
                 try:
-                    image = PropertyImage.objects.get(id=caption_data['id'])
-                    image.caption = caption_data.get('caption', '')
-                    image.save()
-                except PropertyImage.DoesNotExist:
+                    PropertyImage.objects.filter(
+                        id=caption_data['id']
+                    ).update(caption=caption_data.get('caption', ''))
+                except Exception:
                     pass
-        
-        # Replace features
-        instance.features.all().delete()
-        for feature in features_data:
-            if isinstance(feature, dict) and 'feature' in feature:
-                PropertyFeature.objects.create(property=instance, feature=feature['feature'])
 
-        instance.property_agents.all().delete()
-        for agent_data in agents_data:
-            PropertyAgent.objects.create(
-                property=instance,
-                agent_id=agent_data['agent_id'],
-                is_primary=agent_data.get('is_primary', False)
-            )
-        
-        return instance
-    
     def validate_price(self, value):
         if value < 0:
             raise serializers.ValidationError("Price must be a positive number.")
         return value
     
-    def validate_features(self, value):
-        if not isinstance(value, list):
-            raise serializers.ValidationError("Features must be a list")
-        return value
-    
     def validate_area_measurement(self, value):
         if value is not None and value < 0:
             raise serializers.ValidationError("Area measurement must be a positive number.")
-        return value
-    
-    def validate_agents(self, value):
-        if not isinstance(value, list):
-            raise serializers.ValidationError("Agents must be a list")
-        for agent in value:
-            if not isinstance(agent, dict) or 'agent_id' not in agent:
-                raise serializers.ValidationError("Invalid agent format")
         return value
 
 from .models import PropertyLead, LeadSource, PropertyStat

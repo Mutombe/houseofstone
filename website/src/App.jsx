@@ -13,6 +13,9 @@ import EnhancedContact from "./components/contact/contact";
 import MortgageCalculator from "./components/mortgage/morgage";
 import About from "./components/about/about";
 import Contact from "./components/contact/contact";
+import ListPropertyPage from "./components/properties/listwithus";
+import PropertyValuationPage from "./components/properties/valuation";
+import SellingGuidePage from "./components/properties/guide";
 import Footer from "./components/footer/footer";
 import Downloads from "./components/about/downloads";
 import PropertyManagement from "./components/properties/management";
@@ -28,9 +31,13 @@ import CitySuburbs from "./components/neighborhood/suburbs";
 import SuburbDetail from "./components/neighborhood/detail";
 import CitiesOverview from "./components/neighborhood/neighborhood";
 import AgentDashboard from "./components/dashboards/agent";
-
+import { setStore } from "./utils/api";
 import { useEffect } from "react";
-import Developments from './components/about/developments';
+import Developments from "./components/about/developments";
+import { useSelector } from "react-redux";
+import { checkAuth } from "./redux/slices/authSlice";
+import SessionExpiryHandler from "./utils/sessionExpiry";
+import { useDispatch } from "react-redux";
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -42,7 +49,27 @@ const ScrollToTop = () => {
   return null;
 };
 
-function App() {
+function App({ store }) {
+  const { sessionExpired, isAuthenticated } = useSelector(
+    (state) => state.auth
+  );
+  const dispatch = useDispatch();
+  //useEffect(() => {
+    // Set store reference for API interceptors
+    //setStore(store);
+
+    // Check authentication status on app load
+    //dispatch(checkAuth());
+  //}, [store, dispatch]);
+
+  // Handle navigation (replace with your router navigation)
+  const handleNavigation = (path, state = {}) => {
+    // Replace this with your actual navigation logic
+    // For React Router: navigate(path, { state });
+    // For Next.js: router.push({ pathname: path, query: state });
+    console.log("Navigate to:", path, "with state:", state);
+    window.location.href = path;
+  };
   return (
     <Router>
       <div className="min-h-screen bg-neutral-50">
@@ -52,7 +79,11 @@ function App() {
           <Routes>
             <Route path="/" element={<EnhancedHomepage />} />
             <Route path="/sale" element={<Properties />} />
+            <Route path="/guide" element={<SellingGuidePage />} />
             <Route path="/rent" element={<RentalProperties />} />
+            <Route path="/list" element={<ListPropertyPage />} />
+            <Route path="/valuation" element={<PropertyValuationPage />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/properties/:id" element={<PropertyDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<EnhancedContact />} />
@@ -75,6 +106,12 @@ function App() {
           </Routes>
         </AnimatePresence>
         <Footer />
+        <SessionExpiryHandler
+          dispatch={dispatch}
+          sessionExpired={sessionExpired}
+          isAuthenticated={isAuthenticated}
+          onNavigate={handleNavigation}
+        />
       </div>
     </Router>
   );

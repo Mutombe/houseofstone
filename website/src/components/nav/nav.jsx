@@ -512,19 +512,19 @@ const Navbar = () => {
 
   const sellLinks = [
     {
-      path: "/sell",
+      path: "/list",
       label: "List Property",
       icon: PlusCircle,
       description: "List your property for sale",
     },
     {
-      path: "/sell/valuation",
+      path: "/valuation",
       label: "Property Valuation",
       icon: Calculator,
       description: "Get your property valued",
     },
     {
-      path: "/sell/guide",
+      path: "/guide",
       label: "Selling Guide",
       icon: FileText,
       description: "Tips for selling your property",
