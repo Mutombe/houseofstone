@@ -283,7 +283,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 z-5 flex items-center justify-between px-4 sm:px-8 pointer-events-none">
         <motion.button
           onClick={goToPrevious}
-          className="pointer-events-auto bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 text-white hover:text-[#DCC471] group"
+          className="hidden sm:inline-block pointer-events-auto bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 text-white hover:text-[#DCC471] group"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -292,7 +292,7 @@ const HeroSection = () => {
         
         <motion.button
           onClick={goToNext}
-          className="pointer-events-auto bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 text-white hover:text-[#DCC471] group"
+          className="hidden sm:inline-block pointer-events-auto bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 text-white hover:text-[#DCC471] group"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
         >

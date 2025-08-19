@@ -630,14 +630,13 @@ const Navbar = () => {
             >
               <NavLink to="/" className="flex items-center group">
                 <motion.div
-                  className={`p-2 sm:p-3 rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-300 mr-2 sm:mr-3 ${
+                  className={`p-2 sm:p-3 rounded-xl group-hover:shadow-2xl transition-all duration-300 mr-2 sm:mr-3 ${
                     scrolled
-                      ? "backdrop-blur-sm border border-white/20"
-                      : "backdrop-blur-sm"
+                      ? ""
+                      : ""
                   }`}
                   whileHover={{
                     scale: 1.1,
-                    rotate: [0, -5, 5, 0],
                     transition: { duration: 0.3 },
                   }}
                 >
