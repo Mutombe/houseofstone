@@ -19,6 +19,7 @@ import SellingGuidePage from "./components/properties/guide";
 import Footer from "./components/footer/footer";
 import Downloads from "./components/about/downloads";
 import PropertyManagement from "./components/properties/management";
+import Management from "./components/about/management";
 import MarketAnalysis from "./components/properties/market";
 import Consulting from "./components/properties/consulting";
 import PropertySales from "./components/properties/sales";
@@ -27,6 +28,8 @@ import AgentsPage from "./components/agents/agents";
 import Properties from "./components/properties/properties";
 import RentalProperties from "./components/properties/forrent";
 import PropertyDetail from "./components/properties/details";
+import OurStaff from "./components/about/staff";
+import Founders from "./components/about/founder";
 import CitySuburbs from "./components/neighborhood/suburbs";
 import SuburbDetail from "./components/neighborhood/detail";
 import CitiesOverview from "./components/neighborhood/neighborhood";
@@ -88,12 +91,15 @@ function App({ store }) {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<EnhancedContact />} />
             <Route path="/management" element={<PropertyManagement />} />
+            <Route path="/about/management" element={<Management />} />
             <Route path="/market" element={<MarketAnalysis />} />
             <Route path="/consulting" element={<Consulting />} />
             <Route path="/sales" element={<PropertySales />} />
             <Route path="/admin" element={<PropertyDashboard />} />
             <Route path="/mortgage" element={<MortgageCalculator />} />
             <Route path="/agents" element={<AgentsPage />} />
+            <Route path="/staff" element={<OurStaff />} />
+            <Route path="/founders" element={<Founders />} />
             <Route path="/neighborhoods" element={<CitiesOverview />} />
             <Route path="/neighborhoods/:cityName" element={<CitySuburbs />} />
             <Route

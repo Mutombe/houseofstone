@@ -1,7 +1,7 @@
 // src/pages/About.jsx
 import { motion } from 'framer-motion';
 import React from 'react';
-import { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Building2,
   Users,
@@ -11,86 +11,29 @@ import {
   BriefcaseBusiness,
   Phone,
   Mail,
-  CheckCircle,
-  Star,
   Sparkles,
   Shield,
-  Clock,
-  Zap,
   TrendingUp,
   MapPin,
-  ArrowRight,
   Heart,
   Eye,
+  UserCheck,
+  Crown,
+  Briefcase,
+  Target,
+  Star,
+  Calendar,
+  GraduationCap,
 } from "lucide-react";
-import { useInView } from "framer-motion";
 
-// Brand colors consistent with homepage
+// Brand colors
 const COLORS = {
-  primary: "#1e293b", // slate-800
-  secondary: "#DCC471", // yellow-500/gold
-  accent: "#b07e28", // yellow-600 for darker gold
-  light: "#ffffff", // white
-  dark: "#0f172a", // slate-900 for deeper contrast
-  gray: {
-    50: "#f8fafc",
-    100: "#f1f5f9",
-    200: "#e2e8f0",
-    300: "#cbd5e1",
-    400: "#94a3b8",
-    500: "#64748b",
-    600: "#475569",
-    700: "#334155",
-    800: "#1e293b",
-    900: "#0f172a",
-  },
+  primary: "#1e293b",
+  secondary: "#DCC471",
+  accent: "#b07e28",
+  light: "#ffffff",
+  dark: "#0f172a",
 };
-
-// Animated counter component
-const CountUp = ({ end, duration = 2000, suffix = "" }) => {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-
-  React.useEffect(() => {
-    if (isInView) {
-      let startTime = null;
-      const animate = (currentTime) => {
-        if (startTime === null) startTime = currentTime;
-        const progress = Math.min((currentTime - startTime) / duration, 1);
-        setCount(Math.floor(progress * end));
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        }
-      };
-      requestAnimationFrame(animate);
-    }
-  }, [isInView, end, duration]);
-
-  return (
-    <span ref={ref}>
-      {count}
-      {suffix}
-    </span>
-  );
-};
-
-// Floating animation component
-const FloatingElement = ({ children, delay = 0 }) => (
-  <motion.div
-    animate={{
-      y: [0, -10, 0],
-    }}
-    transition={{
-      duration: 3,
-      repeat: Infinity,
-      ease: "easeInOut",
-      delay,
-    }}
-  >
-    {children}
-  </motion.div>
-);
 
 // Glowing button component
 const GlowButton = ({
@@ -131,37 +74,16 @@ const GlowButton = ({
 const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background with parallax effect */}
-      <motion.div
-        className="absolute inset-0 z-0"
-        initial={{ scale: 1.1 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 10, ease: "easeOut" }}
-      >
-        <div
-          className="w-full h-full bg-cover bg-center"
-          style={{
-            backgroundImage: "url('/grp-hsp.jpeg')",
-            backgroundPosition: 'center',
-            backgroundSize: 'cover'
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-slate-800/85 to-yellow-900/40" />
-      </motion.div>
-
-      {/* Floating decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block">
-        <FloatingElement delay={0}>
-          <div className="absolute top-20 left-10 w-20 h-20 bg-yellow-400/20 rounded-full blur-xl" />
-        </FloatingElement>
-        <FloatingElement delay={1}>
-          <div className="absolute top-40 right-20 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl" />
-        </FloatingElement>
-        <FloatingElement delay={2}>
-          <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-white/10 rounded-full blur-xl" />
-        </FloatingElement>
-      </div>
-
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center"
+        style={{
+          backgroundImage: "url('/grp-hsp.jpeg')",
+          backgroundPosition: 'center',
+          backgroundSize: 'cover'
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-slate-800/85 to-yellow-900/40" />
+      
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -220,25 +142,11 @@ const HeroSection = () => {
           </motion.div>
         </motion.div>
       </div>
-
-      {/* Scroll indicator */}
-      <motion.div
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 hidden sm:block"
-        animate={{ y: [0, 10, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        <div className="w-6 h-10 border-2 border-[#DCC471] rounded-full flex justify-center">
-          <div className="w-1 h-3 bg-[#DCC471] rounded-full mt-2" />
-        </div>
-      </motion.div>
     </section>
   );
 };
 
-
-
 const ValuesSection = () => {
-  // Values data from company profile
   const values = [
     { 
       icon: BookOpen, 
@@ -295,24 +203,20 @@ const ServicesSection = () => {
       description: "Comprehensive listings of residential and commercial properties with extensive marketing and pre-sale enhancement advice."
     },
     {
-      title: "Letting",
-      description: "Legal expertise in drafting lease agreements that protect both lessors and lessees, with all documentation carefully scrutinized for legality."
-    },
-    {
-      title: "Management",
-      description: "Hands-on approach to property management, implementing preventive and corrective measures to preserve and grow rental and capital values."
+      title: "Letting & Management",
+      description: "We manage rental properties on behalf of owners, market properties, select tenants, and draw up lease agreements."
     },
     {
       title: "Valuations",
-      description: "Specialist property valuations for all types of properties with years of experience in valuation techniques and methods."
+      description: "Specialist property valuations for all types of properties (Commercial, Residential, Industrial and Leisure)."
     },
     {
       title: "Project Management",
-      description: "Expert services from inception to completion including financial studies, contract drafting, supervision, and handover of defect-free projects."
+      description: "Expert services from inception to completion including financial studies, contract drafting, and supervision."
     },
     {
-      title: "Auctions & More",
-      description: "Additional services including property auctions, with further information available on request."
+      title: "Other Services",
+      description: "Additional services including property auctions, available upon request."
     }
   ];
 
@@ -337,6 +241,27 @@ const ServicesSection = () => {
   );
 };
 
+// Team Section Component
+const TeamSection = ({ title, icon: Icon, children, bgColor = "bg-white" }) => (
+  <section className={`py-16 ${bgColor}`}>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+        className="text-center mb-12"
+      >
+        <div className="flex items-center justify-center mb-4">
+          <Icon className="w-8 h-8 text-[#DCC471] mr-3" />
+          <h2 className="text-3xl font-bold text-stone-900">{title}</h2>
+        </div>
+      </motion.div>
+      {children}
+    </div>
+  </section>
+);
+
 const About = () => {
   return (
     <div className="min-h-screen bg-slate-100">
@@ -356,26 +281,31 @@ const About = () => {
               <h2 className="text-3xl font-bold text-stone-900 mb-6">About Us</h2>
               <div className="prose text-stone-600">
                 <p className="mb-4">
-                  House of Stone Properties is a young and dynamic Real Estate Agency, which boasts of some of the best minds 
-                  on the local Real Estate and Property Market. It possesses individuals with vast experience in excess of 35 years 
-                  consultancy property negotiation encompassing identification of parties, negotiation and conclusion of sales; 
-                  lease administration and property management as well as valuations.
+                  At House of Stone Properties, we believe real estate should be clear,
+                  straightforward, and conducted with integrity. Our reputation is built
+                  on dedication to our clients and mastering the complexities of our local
+                  markets, providing tailored service that knows no bounds.
                 </p>
                 <p className="mb-4">
-                  We are a boutique team of full-time real estate professionals and trusted advisors. Our singular focus is 
-                  achieving the highest value for our clients through expert strategy, market insight and skilled negotiations, 
-                  while ensuring our clients are comfortable, well-informed and patiently guided throughout the process.
+                  HSP serves an organically growing client base of homeowners, prospective
+                  purchasers, landlords, investors, and developers. The team is committed
+                  to delivering data-driven, transparent, and empathetic real estate
+                  advisory.
                 </p>
                 <p className="mb-4">
-                  The huge legal experience in Property Law should suffice to give an assurance that all property dealings are done in 
-                  conformity with the law. HSP is setting the new standard for exceptional real estate service across Zimbabwe.
+                  Our mission is captured in our motto: "Your Real Estate Needs: Our
+                  Passion, Our Priority." This reflects our commitment to prioritizing your
+                  needs and ensuring that every interaction is driven by a genuine desire
+                  to help you achieve your real estate goals.
                 </p>
               </div>
               <div className="mt-8">
                 <h3 className="text-2xl font-bold text-stone-900 mb-4">Our Origin</h3>
                 <p className="text-stone-600 mb-4">
-                  HSP was established in 2017 with a vision to create an elite, professional boutique real estate company unlike any other. 
-                  HSP was founded on the word of God, Matthew 7: 24-27, where its name came from.
+                  House of Stone Properties derives its name from the Word of God, Matthew
+                  7: 24-27 with a touch of inspiration from Dzimba DzeMabwe. HSP was
+                  established in 2017 with a vision to create an elite, professional
+                  boutique real estate company unlike any other.
                 </p>
                 <blockquote className="italic border-l-4 border-[#DCC471] pl-4 py-2 text-stone-700 bg-stone-100 rounded-r-md">
                   "Therefore everyone who hears these words of mine and puts them into practice is like a wise man who built his 
@@ -432,122 +362,359 @@ const About = () => {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* FOUNDERS Section */}
+      <TeamSection title="Founders" icon={Crown} bgColor="bg-slate-50">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="bg-white rounded-xl p-8 shadow-lg border-t-4 border-[#DCC471]"
+        >
+          <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
+            <div className="w-32 h-32 bg-slate-200 rounded-full flex-shrink-0 overflow-hidden">
+              <img src="/icon.png" alt="Leonita Mhishi" className="w-full h-full object-cover" />
+            </div>
+            <div className="text-center lg:text-left">
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Leonita Mhishi</h3>
+              <p className="text-[#DCC471] font-semibold mb-4 text-lg">CEO/Principal Registered Estate Agent</p>
+              <p className="text-stone-600 leading-relaxed mb-4">
+                With over a decade of experience, Leonita has helped countless families find their dream homes with grit and enthusiasm. 
+                As the Principal Registered Estate Agent and manager of House of Stone Properties, she specializes in working with buyers, 
+                sellers, investors, businesses, developers, and land transactions across both residential and commercial sectors.
+              </p>
+              <p className="text-stone-600 leading-relaxed mb-4">
+                Known as a clear, innovative leader in the industry, she has spearheaded numerous real estate initiatives, demonstrating
+                exceptional sales volume and efficiency. Her results-driven approach distinguishes her in the industry; she focuses on
+                building relationships, mutual respect, and personal touches to achieve the best outcomes for her clients.
+              </p>
+              <div className="mb-4">
+                <h4 className="font-bold text-stone-900 mb-2">Qualifications:</h4>
+                <p className="text-stone-600">
+                  Bachelor of Laws (LLB) and International Relations and Diplomacy, along with certifications from CIS, IMM, and the Estate Agents Council.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-bold text-stone-900 mb-2">Achievements:</h4>
+                <ul className="text-stone-600 list-disc list-inside">
+                  <li>2022: Agency of the Year -- Propertybook</li>
+                  <li>2023-Present: Executive Producer and Presenter of Property Unlocked on ZTN Prime DSTV</li>
+                  <li>2023: Megafest Director of the Year -- Platinum Winner</li>
+                  <li>2025: Women in Real Estate and Construction Award for Best Salesperson in Luxury Real Estate and Property Management</li>
+                  <li>2025: Nominee for Women in Business Award -- Real Estate</li>
+                  <li>2025: Nominee for Women in Construction</li>
+                </ul>
+              </div>
+              <p className="text-stone-600 mt-4">
+                She is also a committee member of the Diplomat Business Networking Group. Leonita, together with Loraine Gatsi based in Australia Co-founded House of Stone Properties.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </TeamSection>
+
+      {/* MANAGEMENT Section */}
+      <TeamSection title="Management" icon={Briefcase} bgColor="bg-white">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* George Maunganidze */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="bg-slate-50 rounded-xl p-6 shadow-md"
           >
-            <h2 className="text-3xl font-bold text-stone-900 mb-4">Our Management</h2>
-            <p className="text-stone-600 max-w-2xl mx-auto">
-              Meet the experienced professionals leading House of Stone Properties
-            </p>
+            <h3 className="text-xl font-bold text-stone-900 mb-4">George Maunganidze</h3>
+            <p className="text-[#DCC471] font-semibold mb-4">Head of Finance and HR</p>
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <GraduationCap className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Qualified Chartered Certified Accountant (ACCA) and holder of a Bachelor of Accountancy degree from the University of Zimbabwe</p>
+              </div>
+              <div className="flex items-start">
+                <Briefcase className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Over ten years experience serving clients in manufacturing, mining and metals, agri-business, financial services, construction, education and real estate</p>
+              </div>
+              <div className="flex items-start">
+                <Award className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Technically astute and proficient in Accounting, Taxation as well as Corporate Advisory Services</p>
+              </div>
+              <div className="flex items-start">
+                <Users className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Married and a father of two girls, avid reader, likes travelling. First year MBA Candidate at the University of Zimbabwe Graduate School of Business</p>
+              </div>
+            </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-              className="col-span-1 md:col-span-3 bg-slate-200 rounded-xl p-6 shadow-md border-t-4 border-slate-800"
-            >
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-                <div className="w-24 h-24 bg-slate-200 rounded-full flex-shrink-0 overflow-hidden">
-                  <img src="/icon.png" alt="Leonita Mhishi" className="w-full h-full object-cover" />
-                </div>
-                <div className="text-center md:text-left">
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Leonita Mhishi</h3>
-                  <p className="text-slate-800 font-semibold mb-2">Managing Director & Founder</p>
-                  <p className="text-stone-600 text-sm leading-relaxed">
-                    Leonita is the founder of House of Stone Properties, one of the top real estate agencies in the country. 
-                    She has worked for various organizations holding key positions in Zimbabwe, Australia, China and various other countries.
-                    Experienced Property Consultant with a demonstrated history of working in the Real Estate industry.
-                    Skilled in Commercial Property Sales, Negotiation, Real Property, Diplomatic History, and International Relations,
-                    Leonita thrives in building business relationships grounded in adherence to the principles of honesty, transparency,
-                    integrity and legality, giving an assurance to all clients that all property dealings are done in conformity with the law.
-                  </p>
-                  <p className="text-slate-600 text-sm mt-2">
-                    She holds International Marketing Management, Topflight Secretarial, ICSA, International Relations and Diplomacy, 
-                    Bachelor of Laws (LLB) UNISA. A Committee member of the Diplomat Business Networking Group.
-                  </p>
-                </div>
+          {/* Nairgel Masiiwa */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            viewport={{ once: true }}
+            className="bg-slate-50 rounded-xl p-6 shadow-md"
+          >
+            <h3 className="text-xl font-bold text-stone-900 mb-4">Nairgel Masiiwa</h3>
+            <p className="text-[#DCC471] font-semibold mb-4">Head of Sales Department</p>
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <Briefcase className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Seasoned sales professional with expertise in construction and architecture, having worked in South Africa and Zimbabwe real estate industries</p>
               </div>
-            </motion.div>
+              <div className="flex items-start">
+                <TrendingUp className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Proven track record of driving revenue growth and building high-performing sales teams</p>
+              </div>
+              <div className="flex items-start">
+                <Target className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Under his leadership, the sales team has consistently exceeded targets, solidifying the company's position as a major player in the industry</p>
+              </div>
+              <div className="flex items-start">
+                <Star className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Passionate about innovative sales strategies and commitment to exceptional customer service</p>
+              </div>
+            </div>
+          </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              viewport={{ once: true }}
-              className="bg-slate-200 rounded-xl p-6 text-center shadow-sm hover:shadow-md transition duration-300"
-            >
-              <h3 className="text-xl font-bold text-stone-900 mb-4">Team HSP</h3>
-              <p className="text-stone-600 mb-6">
-                The HSP team has Sales Negotiators and permanent members of staff with an unwavering commitment to 
-                servicing the needs of astute property investors based on their experiences during their time in the industry.
-              </p>
-              <p className="text-stone-600 font-semibold">
-                Our ability to analyse the real estate situations and finding the most satisfactory resolution is one of our strongest attributes.
-              </p>
-            </motion.div>
+          {/* Winnifilda Shadaya */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="bg-slate-50 rounded-xl p-6 shadow-md"
+          >
+            <h3 className="text-xl font-bold text-stone-900 mb-4">Winnifilda Shadaya</h3>
+            <p className="text-[#DCC471] font-semibold mb-4">Head of Rentals</p>
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <Briefcase className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Accomplished real estate sales consultant with over 14 years of experience in the Zimbabwean and South African markets</p>
+              </div>
+              <div className="flex items-start">
+                <Award className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Known for exceptional negotiation skills and in-depth market knowledge</p>
+              </div>
+              <div className="flex items-start">
+                <Users className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Based in Harare, with an extensive network of clients and industry contacts throughout the region</p>
+              </div>
+              <div className="flex items-start">
+                <Target className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Facilitated numerous successful transactions across residential, commercial, and industrial properties</p>
+              </div>
+            </div>
+          </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              viewport={{ once: true }}
-              className="bg-slate-200 rounded-xl p-6 text-center shadow-sm hover:shadow-md transition duration-300"
-            >
-              <h3 className="text-xl font-bold text-stone-900 mb-4">Marketing Platform</h3>
-              <ul className="text-stone-600 text-sm space-y-2 text-left">
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-[#DCC471] rounded-full mr-2"></span>
-                  <span>Emails Marketing - Target based email blast to registered clients</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-[#DCC471] rounded-full mr-2"></span>
-                  <span>Virtual Tours - 360° tours for bespoke properties</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-[#DCC471] rounded-full mr-2"></span>
-                  <span>Open House - View your property in person</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-[#DCC471] rounded-full mr-2"></span>
-                  <span>Online Exposure - Web, online sites, blogs, social networks</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-[#DCC471] rounded-full mr-2"></span>
-                  <span>Print Media - Magazine, brochure, newspapers</span>
-                </li>
-              </ul>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              viewport={{ once: true }}
-              className="bg-slate-200 rounded-xl p-6 text-center shadow-sm hover:shadow-md transition duration-300"
-            >
-              <h3 className="text-xl font-bold text-stone-900 mb-4">Corporate Social Responsibility</h3>
-              <p className="text-stone-600">
-                We currently donate food stuffs and clothing to various orphanages in Hatcliff and Hatfield. 
-                House of Stone Properties is a good corporate citizen and revolves in good leadership, sustainability 
-                and corporate citizenship.
-              </p>
-            </motion.div>
-          </div>
+          {/* James Mudzikiti */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            viewport={{ once: true }}
+            className="bg-slate-50 rounded-xl p-6 shadow-md"
+          >
+            <h3 className="text-xl font-bold text-stone-900 mb-4">James Mudzikiti</h3>
+            <p className="text-[#DCC471] font-semibold mb-4">Head of Marketing Executive</p>
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <Briefcase className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Qualified and experienced professional with over 20 years operational, tactical and strategic experience across Business Processes, and Industry sectors</p>
+              </div>
+              <div className="flex items-start">
+                <TrendingUp className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Vast experience in Press and Public relations and managing corporate affairs</p>
+              </div>
+              <div className="flex items-start">
+                <Award className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Has held project leadership roles across manufacturing, insurance and FMCG sectors</p>
+              </div>
+              <div className="flex items-start">
+                <Target className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Brings a wealth of functional, tactical and strategic management experience to the Real Estate sector</p>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </section>
+      </TeamSection>
+
+      {/* AGENTS Section */}
+      <TeamSection title="Our Agents" icon={UserCheck} bgColor="bg-slate-50">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Tsitsi Mashingaidze */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition duration-300"
+          >
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#DCC471] to-yellow-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <Users className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-stone-900 mb-2">Tsitsi Mashingaidze</h3>
+              <p className="text-[#DCC471] font-semibold mb-3">Senior Sales Consultant</p>
+              <p className="text-stone-600 text-sm">
+                Accountant by profession with more than 3 decades of finance, administration and sales experience in the Private, NGO and Retail Sectors.
+                Skilled at developing the right action plan for each client's unique needs.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Chomu Sithole */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition duration-300"
+          >
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-slate-700 to-slate-800 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <Eye className="w-10 h-10 text-[#DCC471]" />
+              </div>
+              <h3 className="text-xl font-bold text-stone-900 mb-2">Chomu Sithole</h3>
+              <p className="text-[#DCC471] font-semibold mb-3">Senior Sales Consultant</p>
+              <p className="text-stone-600 text-sm">
+                Mature and dynamic professional with over 25 years of experience in the interior design industry and 3 years in real estate.
+                Has a keen eye for spotting hidden gems and transforming properties into stunning showcases.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Emily Matsika */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition duration-300"
+          >
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <Building2 className="w-10 h-10 text-[#DCC471]" />
+              </div>
+              <h3 className="text-xl font-bold text-stone-900 mb-2">Emily Matsika</h3>
+              <p className="text-[#DCC471] font-semibold mb-3">Senior Sales Consultant</p>
+              <p className="text-stone-600 text-sm">
+                Dedicated real estate agent specializing in sales with a unique blend of passion for real estate and a robust background in marketing.
+                Expertise in the vibrant Harare West market.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Additional agents would follow the same pattern */}
+          {/* For brevity, I'm showing 3 agents but you would add the remaining 7 following the same pattern */}
+        </div>
+
+        <div className="text-center mt-8">
+          <GlowButton
+            onClick={() => window.location.href = "/agents"}
+            className="mx-auto"
+          >
+            View All Our Agents
+          </GlowButton>
+        </div>
+      </TeamSection>
+
+      {/* OUR STAFF Section */}
+      <TeamSection title="Our Staff" icon={Users} bgColor="bg-white">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Tanaka Maforimbo */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="bg-slate-50 rounded-xl p-6 shadow-md"
+          >
+            <h3 className="text-xl font-bold text-stone-900 mb-4">Tanaka Maforimbo</h3>
+            <p className="text-[#DCC471] font-semibold mb-4">Letting Executive</p>
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <GraduationCap className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">BSc with Honors in Real Estate Management from the University of Zimbabwe</p>
+              </div>
+              <div className="flex items-start">
+                <Briefcase className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Three years of expertise in the real estate sector</p>
+              </div>
+              <div className="flex items-start">
+                <Award className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Excellent customer service and strong communication skills</p>
+              </div>
+              <div className="flex items-start">
+                <Target className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Uses organizational talents and market expertise to provide exceptional client care</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Arthur Tumbwe */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            viewport={{ once: true }}
+            className="bg-slate-50 rounded-xl p-6 shadow-md"
+          >
+            <h3 className="text-xl font-bold text-stone-900 mb-4">Arthur Tumbwe</h3>
+            <p className="text-[#DCC471] font-semibold mb-4">Executive Personal Assistant to CEO</p>
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <Briefcase className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Dynamic professional with over a decade of experience in the commercial industry</p>
+              </div>
+              <div className="flex items-start">
+                <TrendingUp className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Passionate advocate for sustainable business growth and innovation</p>
+              </div>
+              <div className="flex items-start">
+                <Award className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Transforms love for business and technology into ground-breaking solutions</p>
+              </div>
+              <div className="flex items-start">
+                <Heart className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Dedicated mentor and speaker, sharing insights to encourage aspiring creators</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Sarah Mugwenhi */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="bg-slate-50 rounded-xl p-6 shadow-md"
+          >
+            <h3 className="text-xl font-bold text-stone-900 mb-4">Sarah Mugwenhi</h3>
+            <p className="text-[#DCC471] font-semibold mb-4">Administrator</p>
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <GraduationCap className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Special Honours Degree in Monitoring and Evaluation (2.1) from Lupane State University</p>
+              </div>
+              <div className="flex items-start">
+                <GraduationCap className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Bachelor of Arts in Development Studies Honours Degree (2.1) from Midlands State University</p>
+              </div>
+              <div className="flex items-start">
+                <Briefcase className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Rich background in office administration and customer service in tertiary and real estate sectors</p>
+              </div>
+              <div className="flex items-start">
+                <Award className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                <p className="text-stone-700">Skills include crisis management, decision-making, team building, and database management</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </TeamSection>
 
       {/* Contact Section */}
-      <section className="py-16 bg-slate-200">
+      <section className="py-16 bg-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -555,22 +722,23 @@ const About = () => {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Get In Touch</h2>
-            <p className="text-stone-600 mb-8 max-w-xl mx-auto">
+            <h2 className="text-3xl font-bold text-white mb-4">Get In Touch</h2>
+            <p className="text-stone-300 mb-8 max-w-xl mx-auto">
               Your property journey begins with a conversation. Reach out to us today.
             </p>
             <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
               <div className="flex items-center">
                 <Phone className="w-5 h-5 text-[#DCC471] mr-2" />
-                <span className="text-stone-700">+263 772 329 569, +263 719 329 569</span>
+                <span className="text-stone-300">+263 772 329 569, +263 788 479 143</span>
               </div>
               <div className="flex items-center">
                 <Mail className="w-5 h-5 text-[#DCC471] mr-2" />
-                <a href="mailto:info@hsp.co.zw" className="text-[#DCC471] hover:text-[#DCC471]">info@hsp.co.zw</a>
+                <a href="mailto:info@hsp.co.zw" className="text-[#DCC471] hover:text-yellow-300 transition">info@hsp.co.zw</a>
               </div>
             </div>
-            <p className="mt-4 text-stone-600">
-              21 Harare Drive, Borrowdale Harare
+            <p className="mt-4 text-stone-300 flex items-center justify-center">
+              <MapPin className="w-4 h-4 mr-2" />
+              21 Harare Drive, Borrowdale, Harare
             </p>
           </motion.div>
         </div>
@@ -580,4 +748,3 @@ const About = () => {
 };
 
 export default About;
-

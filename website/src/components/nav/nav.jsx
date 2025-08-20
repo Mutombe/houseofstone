@@ -38,6 +38,9 @@ import {
   DollarSign,
   ShoppingCart,
 } from "lucide-react";
+import { MdManageAccounts } from "react-icons/md";
+import { FaPeopleGroup } from "react-icons/fa6";
+import { IoIosPeople } from "react-icons/io";
 
 // Material UI
 import {
@@ -479,7 +482,10 @@ const Navbar = () => {
 
   const aboutLinks = [
     { path: "/about", label: "About Us", icon: Users },
+    { path: "/founders", label: "Founders", icon: IoIosPeople },
+    { path: "/about/management", label: "Management", icon: MdManageAccounts },
     { path: "/agents", label: "Agents", icon: Handshake },
+    { path: "/staff", label: "Our Staff", icon: FaPeopleGroup },
     { path: "/contact", label: "Contact Us", icon: PhoneCall },
   ];
 
@@ -631,9 +637,7 @@ const Navbar = () => {
               <NavLink to="/" className="flex items-center group">
                 <motion.div
                   className={`p-2 sm:p-3 rounded-xl group-hover:shadow-2xl transition-all duration-300 mr-2 sm:mr-3 ${
-                    scrolled
-                      ? ""
-                      : ""
+                    scrolled ? "" : ""
                   }`}
                   whileHover={{
                     scale: 1.1,
