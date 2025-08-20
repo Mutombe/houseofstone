@@ -109,7 +109,7 @@ const Footer = () => {
 
         <div className="border-t border-stone-800 mt-12 pt-8 text-center text-stone-400">
           <p>
-            &copy; {new Date().getFullYear()} House of Stone. All rights
+            &copy; {new Date().getFullYear()} House of Stone Properties. All rights
             reserved.
           </p>
         </div>
