@@ -119,7 +119,7 @@ CELERY_TIMEZONE = 'UTC'
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://houseofstone.onrender.com')
 
 ADMIN_BASE_URL = 'hsp.co.zw'
-ADMINS = [('HSP Admin', 'simbamtombe@gmail.com')]
+ADMINS = [('HSP Admin', 'simbamtombe@gmail.com'), ('HSP Admin', 'sales@hsp.co.zw'), ('HSP Admin', 'info@hsp.co.zw'),('HSP Admin', 'leonita@hsp.co.zw',)]
 APP_NAME = 'House of Stone Properties'
 
 # settings.py
