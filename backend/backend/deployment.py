@@ -16,12 +16,19 @@ SECRET_KEY = SECRET_KEY
 # CORS SETTINGS
 CORS_ALLOWED_ORIGINS = [
     'https://houseofstone.onrender.com',
-    'https://www.houseofstone.onrender.com'
+    'https://houseofstone-backend.onrender.com',
     'http://localhost:5173',
+    'http://127.0.0.1:5173'
+]
+
+CORS_TRUSTED_ORIGINS = [
+    'https://houseofstone.onrender.com',
+    'https://houseofstone-backend.onrender.com',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173'
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_EXPOSE_HEADERS = ['Content-Type', 'Authorization']
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -44,15 +51,14 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-CORS_EXPOSE_HEADERS = [
-    'content-type',
-    'x-csrftoken',
-    'authorization'
-]
+CORS_EXPOSE_HEADERS = ['content-type', 'authorization']
 
+# Security settings for production
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
     'https://houseofstone.onrender.com',
-    'https://houseofstone-backend.onrender.com/'
+    'https://houseofstone-backend.onrender.com',
 ]
 
 # MIDDLEWARE CONFIGURATION
