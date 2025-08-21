@@ -55,7 +55,7 @@ const COLORS = {
 const testimonials = [
   {
     id: 1,
-    name: "Sarah Johnson",
+    name: "Joe Maramba",
     role: "Property Investor",
     content:
       "House of Stone Properties helped me find the perfect investment opportunity. Their market knowledge is exceptional.",
@@ -65,7 +65,7 @@ const testimonials = [
   },
   {
     id: 2,
-    name: "Michael Chen",
+    name: "Linda Moyo",
     role: "First-time Buyer",
     content:
       "The team made my first home purchase seamless and stress-free. Highly recommended!",
@@ -75,7 +75,7 @@ const testimonials = [
   },
   {
     id: 3,
-    name: "Lisa Rodriguez",
+    name: "John Ncube",
     role: "Property Developer",
     content:
       "Professional service and deep market insights. They've been our go-to real estate partner for years.",
