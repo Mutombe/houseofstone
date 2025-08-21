@@ -23,6 +23,52 @@ ALLOWED_HOSTS = [
     '127.0.0.1'
 ]
 
+CORS_ALLOWED_ORIGINS = [
+    'https://houseofstone.onrender.com',
+    'https://houseofstone-backend.onrender.com',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173'
+]
+
+CORS_TRUSTED_ORIGINS = [
+    'https://houseofstone.onrender.com',
+    'https://houseofstone-backend.onrender.com',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173'
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+CORS_EXPOSE_HEADERS = ['content-type', 'authorization']
+
+# Security settings for production
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = [
+    'https://houseofstone.onrender.com',
+    'https://houseofstone-backend.onrender.com',
+]
 
 # Application definition
 
@@ -55,46 +101,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
-CORS_ALLOWED_ORIGINS = [
-    'https://houseofstone.onrender.com',  
-    'http://localhost:5173',
-    'http://127.0.0.1:5173'
-]
-
-CORS_TRUSTED_ORIGINS = [
-    'https://houseofstone.onrender.com/',
-    'http://localhost:5173',
-]
-
-CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
-
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
-
-CORS_EXPOSE_HEADERS = ['content-type', 'authorization']
-CORS_ALLOW_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
