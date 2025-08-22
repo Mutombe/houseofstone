@@ -1,34 +1,35 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchProperties, updatePageSize, resetPage } from './../../redux/slices/propertySlice';
-import { selectPaginationInfo } from './../../redux/slices/propertySlice';
-import { selectCurrentFilters } from './../../redux/slices/propertySlice';
+import React from "react";
+import { motion } from "framer-motion";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  fetchProperties,
+  updatePageSize,
+  resetPage,
+} from "./../../redux/slices/propertySlice";
+import { selectPaginationInfo } from "./../../redux/slices/propertySlice";
+import { selectCurrentFilters } from "./../../redux/slices/propertySlice";
 const PaginationControls = () => {
   const dispatch = useDispatch();
   const pagination = useSelector(selectPaginationInfo);
-    const reduxFilters = useSelector(selectCurrentFilters); // <-- This was missing
+  const reduxFilters = useSelector(selectCurrentFilters); // <-- This was missing
 
-  
-
-const handlePageChange = (newPage) => {
-  if (newPage >= 1 && newPage <= pagination.totalPages) {
-    // Pass current filters along with page number
-    dispatch(fetchProperties({ 
-      page: newPage,
-      page_size: pagination.pageSize,
-      ...reduxFilters // Add existing filters
-    }));
-  }
-};
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      dispatch(
+        fetchProperties({
+          page: newPage,
+          page_size: pagination.pageSize,
+          ...reduxFilters, // Make sure to include current filters
+        })
+      );
+    }
+  };
 
   const handlePageSizeChange = (e) => {
-  const newSize = Number(e.target.value);
-  dispatch(updatePageSize(newSize)); // Update state
-  dispatch(fetchProperties({ page: 1, page_size: newSize })); // Fetch with new size
-};
-
-
+    const newSize = Number(e.target.value);
+    dispatch(updatePageSize(newSize)); // Update state
+    dispatch(fetchProperties({ page: 1, page_size: newSize })); // Fetch with new size
+  };
 
   // Generate page numbers with windowing
   const getPageNumbers = () => {
@@ -36,7 +37,7 @@ const handlePageChange = (newPage) => {
     const pages = [];
     const startPage = Math.max(1, pagination.page - 2);
     const endPage = Math.min(pagination.totalPages, startPage + 4);
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
@@ -67,8 +68,8 @@ const handlePageChange = (newPage) => {
           disabled={!pagination.hasPrevious}
           className={`px-3 py-1 rounded ${
             pagination.hasPrevious
-              ? 'bg-stone-900 text-white hover:bg-stone-800'
-              : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+              ? "bg-stone-900 text-white hover:bg-stone-800"
+              : "bg-stone-200 text-stone-400 cursor-not-allowed"
           }`}
         >
           Previous
@@ -84,8 +85,8 @@ const handlePageChange = (newPage) => {
                 onClick={() => handlePageChange(pageNum)}
                 className={`w-8 h-8 rounded-full ${
                   pagination.page === pageNum
-                    ? 'bg-stone-900 text-white'
-                    : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                    ? "bg-stone-900 text-white"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
                 }`}
               >
                 {pageNum}
@@ -101,8 +102,8 @@ const handlePageChange = (newPage) => {
           disabled={!pagination.hasNext}
           className={`px-3 py-1 rounded ${
             pagination.hasNext
-              ? 'bg-stone-900 text-white hover:bg-stone-800'
-              : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+              ? "bg-stone-900 text-white hover:bg-stone-800"
+              : "bg-stone-200 text-stone-400 cursor-not-allowed"
           }`}
         >
           Next
@@ -112,15 +113,15 @@ const handlePageChange = (newPage) => {
       <div className="text-sm text-stone-600">
         {pagination.totalCount > 0 ? (
           <>
-            Showing {(pagination.page - 1) * pagination.pageSize + 1} -{' '}
+            Showing {(pagination.page - 1) * pagination.pageSize + 1} -{" "}
             {Math.min(
               pagination.page * pagination.pageSize,
               pagination.totalCount
-            )}{' '}
+            )}{" "}
             of {pagination.totalCount} properties
           </>
         ) : (
-          'No properties found'
+          "No properties found"
         )}
       </div>
     </div>

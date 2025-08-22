@@ -321,7 +321,7 @@ const propertySlice = createSlice({
   extraReducers: (builder) => {
     builder
       // Fetch properties
-      .addCase(fetchProperties.pending, (state, action) => {
+      .addCase(fetchProperties.pending, (state) => {
         state.status = "loading";
         state.loading = true;
         state.error = null;
@@ -335,9 +335,13 @@ const propertySlice = createSlice({
         if (action.payload.fromCache) return;
 
         // Fix: Use 'results' instead of 'data' for paginated response
-        const { results, count, next, previous } = action.payload;
 
-        state.items = results || []; // Handle empty results
+        const results = action.payload.results || action.payload;
+        const count = action.payload.count || results.length;
+        const next = action.payload.next;
+        const previous = action.payload.previous;
+
+        state.items = results || [];
         state.lastFetch = action.payload.lastFetch;
         state.lastCacheKey = action.payload.lastCacheKey;
 
