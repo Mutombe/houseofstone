@@ -1,48 +1,15 @@
-import {
-  createSlice,
-  createAsyncThunk,
-  createSelector,
-} from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, createSelector } from "@reduxjs/toolkit";
 import { propertyAPI } from "../../utils/api";
 import api from "./../../utils/api";
 
-// Async thunks with enhanced error handling and caching
+// Async thunks with enhanced error handling (NO pagination)
 export const fetchProperties = createAsyncThunk(
   "properties/fetchAll",
-  async (filters = {}, { rejectWithValue, getState }) => {
+  async (filters = {}, { rejectWithValue }) => {
     try {
-      const { properties } = getState();
-      const { pagination } = properties;
-
-      // Extract pagination parameters
-      const page = filters.page || pagination.page || 1;
-      const pageSize = filters.page_size || pagination.pageSize || 20;
-
-      // Create unique cache key including pagination parameters
-      const cacheKey = JSON.stringify({
-        ...filters,
-        page,
-        page_size: pageSize,
-        ordering: pagination.sortBy,
-      });
-
-      // Check if we can use cached data
-      if (
-        properties.lastCacheKey === cacheKey &&
-        properties.items.length > 0 &&
-        Date.now() - properties.lastFetch < 30000
-      ) {
-        return { fromCache: true };
-      }
-
       // Prepare API request parameters
-      const params = {
-        ...filters,
-        page,
-        page_size: pageSize,
-        ordering: pagination.sortBy,
-      };
-
+      const params = { ...filters };
+      
       // Remove undefined values
       Object.keys(params).forEach(
         (key) => params[key] === undefined && delete params[key]
@@ -52,11 +19,9 @@ export const fetchProperties = createAsyncThunk(
       const response = await propertyAPI.getAll(params);
 
       return {
-        ...response.data,
-        page,
-        pageSize,
+        data: response.data,
+        filters,
         lastFetch: Date.now(),
-        lastCacheKey: cacheKey,
       };
     } catch (err) {
       return rejectWithValue({
@@ -232,7 +197,7 @@ export const deleteLead = createAsyncThunk(
   }
 );
 
-// Initial state with better organization
+// Initial state WITHOUT pagination
 const initialState = {
   items: [],
   selectedProperty: null,
@@ -245,30 +210,19 @@ const initialState = {
   itemLoading: {},
 
   // Status tracking
-  status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
+  status: "idle",
 
   // Error handling
   error: null,
   itemErrors: {},
 
-  // Pagination
-  pagination: {
-    page: 1,
-    pageSize: 20,
-    totalPages: 1,
-    totalCount: 0,
-    hasNext: false,
-    hasPrevious: false,
-    sortBy: "-created_at", // Default sort
-  },
-
-  // Caching
-  lastFetch: null,
-  lastFilters: null,
-
   // UI state
   filters: {},
   sortBy: "-created_at",
+  
+  // Keep track of last fetch for potential optimizations
+  lastFetch: null,
+  lastFilters: null,
 };
 
 const propertySlice = createSlice({
@@ -309,11 +263,6 @@ const propertySlice = createSlice({
       }
     },
 
-    updatePageSize: (state, action) => {
-      state.pagination.pageSize = action.payload;
-      state.pagination.page = 1; // Reset to first page
-    },
-
     // Reset state
     resetPropertyState: () => initialState,
   },
@@ -326,35 +275,15 @@ const propertySlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      // In extraReducers
       .addCase(fetchProperties.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.loading = false;
         state.error = null;
 
-        if (action.payload.fromCache) return;
-
-        // Fix: Use 'results' instead of 'data' for paginated response
-
-        const results = action.payload.results || action.payload;
-        const count = action.payload.count || results.length;
-        const next = action.payload.next;
-        const previous = action.payload.previous;
-
-        state.items = results || [];
+        // Set items directly from response data
+        state.items = action.payload.data || [];
         state.lastFetch = action.payload.lastFetch;
-        state.lastCacheKey = action.payload.lastCacheKey;
-
-        // Update pagination state
-        state.pagination = {
-          page: action.payload.page,
-          pageSize: action.payload.pageSize,
-          totalPages: Math.ceil(count / action.payload.pageSize),
-          totalCount: count,
-          hasNext: !!next,
-          hasPrevious: !!previous,
-          sortBy: state.pagination.sortBy,
-        };
+        state.lastFilters = action.payload.filters;
       })
       .addCase(fetchProperties.rejected, (state, action) => {
         state.status = "failed";
@@ -397,7 +326,6 @@ const propertySlice = createSlice({
         state.loading = false;
         state.status = "succeeded";
         state.items.unshift(action.payload); // Add to beginning
-        state.pagination.totalCount += 1;
       })
       .addCase(createProperty.rejected, (state, action) => {
         state.loading = false;
@@ -442,10 +370,6 @@ const propertySlice = createSlice({
 
         // Remove from items array
         state.items = state.items.filter((p) => p.id !== deletedId);
-        state.pagination.totalCount = Math.max(
-          0,
-          state.pagination.totalCount - 1
-        );
 
         // Clear selected property if it's the deleted one
         if (state.selectedProperty?.id === deletedId) {
@@ -554,9 +478,6 @@ export const {
   clearError,
   optimisticUpdate,
   resetPropertyState,
-  updatePagination,
-  updatePageSize,
-  resetPage,
 } = propertySlice.actions;
 
 // Enhanced selectors with memoization
@@ -613,11 +534,6 @@ export const selectAvailableProperties = createSelector(
 export const selectPropertyStats = createSelector(
   [selectPropertyState, (state, propertyId) => propertyId],
   (properties, propertyId) => properties.stats[propertyId]
-);
-
-export const selectPaginationInfo = createSelector(
-  [selectPropertyState],
-  (properties) => properties.pagination
 );
 
 export const selectCurrentFilters = createSelector(

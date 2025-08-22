@@ -2,8 +2,6 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
-import { FixedSizeList as List } from "react-window";
-import PaginationControls from "./paginationControls";
 import {
   Search,
   MapPin,
@@ -29,11 +27,9 @@ import {
 import {
   fetchProperties,
   updateFilters,
-  resetPage,
   updateSortBy,
   clearFilters as clearReduxFilters,
 } from "./../../redux/slices/propertySlice";
-import { selectPaginationInfo } from "./../../redux/slices/propertySlice";
 import {
   selectAllProperties,
   selectPropertiesLoading,
@@ -328,26 +324,6 @@ const PropertyCard = React.memo(
 
 PropertyCard.displayName = "PropertyCard";
 
-// Virtual list row component for large datasets
-const VirtualRow = ({ index, style, data }) => {
-  const { properties, viewMode, favorites, onToggleFavorite, onShare } = data;
-  const property = properties[index];
-
-  return (
-    <div style={style}>
-      <div className="p-2">
-        <PropertyCard
-          property={property}
-          viewMode={viewMode}
-          favorites={favorites}
-          onToggleFavorite={onToggleFavorite}
-          onShare={onShare}
-        />
-      </div>
-    </div>
-  );
-};
-
 const Properties = () => {
   const dispatch = useDispatch();
 
@@ -363,9 +339,7 @@ const Properties = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState("newest");
   const [favorites, setFavorites] = useState(new Set());
-  const [useVirtualList, setUseVirtualList] = useState(false);
 
-  const pagination = useSelector(selectPaginationInfo);
   const [filters, setFilters] = useState({
     type: "all",
     priceRange: "all",
@@ -380,9 +354,7 @@ const Properties = () => {
   // Debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Local filters state
-
-  // Fetch properties with error handling and caching
+  // Fetch properties with error handling
   useEffect(() => {
     const controller = new AbortController();
 
@@ -399,11 +371,6 @@ const Properties = () => {
       controller.abort();
     };
   }, [dispatch, debouncedSearchTerm, filters, sortBy]);
-
-  // Enable virtual scrolling for large datasets
-  useEffect(() => {
-    setUseVirtualList(properties.length > 50);
-  }, [properties.length]);
 
   // Memoized filtering and sorting
   const filteredAndSortedProperties = useMemo(() => {
@@ -532,9 +499,8 @@ const Properties = () => {
   }, [dispatch]);
 
   const handleFilterChange = useCallback((key, value) => {
-  setFilters((prev) => ({ ...prev, [key]: value }));
-  dispatch(resetPage()); // Reset to page 1
-}, [dispatch]);
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  }, []);
 
   const handleSortChange = useCallback(
     (value) => {
@@ -848,11 +814,6 @@ const Properties = () => {
                 ? "Filters applied"
                 : "No filters"}
             </div>
-            {useVirtualList && (
-              <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                Virtual scrolling enabled
-              </div>
-            )}
           </div>
         </motion.div>
       </div>
@@ -881,25 +842,6 @@ const Properties = () => {
               Reset Filters
             </motion.button>
           </motion.div>
-        ) : useVirtualList && viewMode === "list" ? (
-          // Virtual scrolling for large lists
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <List
-              height={600}
-              itemCount={filteredAndSortedProperties.length}
-              itemSize={280}
-              itemData={{
-                properties: filteredAndSortedProperties,
-                viewMode,
-                favorites,
-                onToggleFavorite: toggleFavorite,
-                onShare: handleShare,
-              }}
-              overscanCount={5}
-            >
-              {VirtualRow}
-            </List>
-          </div>
         ) : (
           // Regular grid/list display
           <div
@@ -929,7 +871,7 @@ const Properties = () => {
           <div className="flex justify-center mt-8">
             <div className="flex items-center gap-2 text-stone-500">
               <div className="w-4 h-4 border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin" />
-              Loading more properties...
+              Loading properties...
             </div>
           </div>
         )}
@@ -952,13 +894,8 @@ const Properties = () => {
         <div className="fixed bottom-4 left-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs z-50">
           <div>Properties: {properties.length}</div>
           <div>Filtered: {filteredAndSortedProperties.length}</div>
-          <div>Virtual: {useVirtualList ? "ON" : "OFF"}</div>
           <div>View: {viewMode}</div>
         </div>
-      )}
-
-      {filteredAndSortedProperties.length > 0 && !loading && (
-        <PaginationControls />
       )}
     </div>
   );

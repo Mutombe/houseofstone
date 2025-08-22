@@ -1,5 +1,6 @@
 import axios from "axios";
 import { logout } from "../redux/slices/authSlice";
+
 // Store reference for dispatching actions
 let store;
 
@@ -31,7 +32,7 @@ export const refreshTokens = async (refresh) => {
   }
 };
 
-// Enhanced API utilities with caching and pagination
+// Enhanced API utilities WITHOUT caching
 const api = axios.create({
   baseURL: "https://houseofstone-backend.onrender.com/",
   headers: {
@@ -40,12 +41,7 @@ const api = axios.create({
   },
   xsrfCookieName: "csrftoken",
   xsrfHeaderName: "X-CSRFToken",
-  timeout: 30000, // 30 second timeout
 });
-
-// Simple in-memory cache for API responses
-const apiCache = new Map();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Track if we're currently refreshing to prevent multiple refresh attempts
 let isRefreshing = false;
@@ -62,21 +58,6 @@ const processQueue = (error, token = null) => {
   });
   
   failedQueue = [];
-};
-
-// Cache helper functions
-const getCacheKey = (url, params) => {
-  const sortedParams = params
-    ? Object.keys(params)
-        .sort()
-        .map((key) => `${key}=${params[key]}`)
-        .join("&")
-    : "";
-  return `${url}?${sortedParams}`;
-};
-
-const isValidCache = (cacheEntry) => {
-  return cacheEntry && Date.now() - cacheEntry.timestamp < CACHE_DURATION;
 };
 
 // Enhanced request interceptor
@@ -98,14 +79,6 @@ api.interceptors.request.use((config) => {
 // Enhanced response interceptor with token refresh logic
 api.interceptors.response.use(
   (response) => {
-    // Cache GET requests
-    if (response.config.method === "get" && response.config.cache !== false) {
-      const cacheKey = getCacheKey(response.config.url, response.config.params);
-      apiCache.set(cacheKey, {
-        data: response.data,
-        timestamp: Date.now(),
-      });
-    }
     return response;
   },
   async (error) => {
@@ -168,9 +141,6 @@ api.interceptors.response.use(
           // Show user-friendly message
           console.error("Session expired. Please log in again.");
           
-          // You can also show a toast notification here
-          // toast.error("Your session has expired. Please log in again.");
-          
           return Promise.reject({
             ...refreshError,
             isAuthError: true,
@@ -213,75 +183,36 @@ api.interceptors.response.use(
   }
 );
 
-// Add to existing utils.js
+// API functions WITHOUT caching
 export const propertyAPI = {
-  // Get all properties with caching and pagination
-  getAll: async (params = {}, useCache = true) => {
-    const cacheKey = getCacheKey("/properties/", params);
-
-    if (useCache) {
-      const cachedData = apiCache.get(cacheKey);
-      if (isValidCache(cachedData)) {
-        return { data: cachedData.data };
-      }
-    }
-
-    // Add default pagination
-    const defaultParams = {
-      page_size: 20,
-      ...params,
-    };
-
-    return api.get("/properties/", { params: defaultParams });
-
+  // Get all properties without caching
+  getAll: async (params = {}) => {
+    return api.get("/properties/", { params });
   },
 
-  // Get property by ID with caching
-  getById: async (id, useCache = true) => {
-    const cacheKey = getCacheKey(`/properties/${id}/`);
-
-    if (useCache) {
-      const cachedData = apiCache.get(cacheKey);
-      if (isValidCache(cachedData)) {
-        return { data: cachedData.data };
-      }
-    }
-
+  // Get property by ID without caching
+  getById: async (id) => {
     return api.get(`/properties/${id}/`);
   },
 
   // Create property
   create: (data) => {
-    // Clear relevant caches after creation
-    apiCache.clear();
     return api.post("/properties/", data);
   },
 
   // Update property
   update: (id, data) => {
-    // Clear relevant caches after update
-    for (let key of apiCache.keys()) {
-      if (key.includes("/properties/") || key.includes(`/${id}/`)) {
-        apiCache.delete(key);
-      }
-    }
     return api.patch(`/properties/${id}/`, data);
   },
 
   // Delete property
   delete: (id) => {
-    // Clear relevant caches after deletion
-    for (let key of apiCache.keys()) {
-      if (key.includes("/properties/") || key.includes(`/${id}/`)) {
-        apiCache.delete(key);
-      }
-    }
     return api.delete(`/properties/${id}/`);
   },
 
-  // Get user properties with caching
-  getUserProperties: (userId, useCache = true) => {
-    return propertyAPI.getAll({ user_id: userId }, useCache);
+  // Get user properties without caching
+  getUserProperties: (userId) => {
+    return propertyAPI.getAll({ user_id: userId });
   },
 
   // Get property stats
@@ -292,17 +223,6 @@ export const propertyAPI = {
 
   // Get shared property
   getShared: (token) => api.get(`/shared-properties/${token}/`),
-
-  // Clear cache manually
-  clearCache: () => apiCache.clear(),
-
-  // Batch operations for better performance
-  batchUpdate: (updates) => {
-    const promises = updates.map(({ id, data }) =>
-      api.patch(`/properties/${id}/`, data)
-    );
-    return Promise.all(promises);
-  },
 };
 
 export const alertAPI = {

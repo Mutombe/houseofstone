@@ -126,16 +126,22 @@ class Property(models.Model):
         verbose_name_plural = 'Properties'
         ordering = ['-created_at']
         indexes = [
-            # Composite indexes for common query patterns
+            # Existing indexes
             models.Index(fields=['is_published', 'status', 'property_type']),
             models.Index(fields=['location', 'property_type', 'price']),
             models.Index(fields=['beds', 'baths', 'price']),
             models.Index(fields=['category', 'status', 'created_at']),
             models.Index(fields=['agent', 'is_published', 'status']),
-            # Price range queries
             models.Index(fields=['price', 'property_type']),
-            # Location-based queries
             models.Index(fields=['location', 'category']),
+            
+            # New indexes for better performance
+            models.Index(fields=['created_at']),
+            models.Index(fields=['price']),
+            models.Index(fields=['beds']),
+            models.Index(fields=['baths']),
+            models.Index(fields=['location']),
+            models.Index(fields=['property_type', 'category', 'status']),
         ]
 
     def __str__(self):
