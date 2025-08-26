@@ -127,6 +127,23 @@ const PropertyCard = React.memo(
       }
     }, []);
 
+    const getDescriptionPreview = (description, maxLength = 150) => {
+      if (!description) return "";
+
+      // Strip HTML tags
+      const plainText = description
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      // Truncate if too long
+      if (plainText.length > maxLength) {
+        return plainText.substring(0, maxLength) + "...";
+      }
+
+      return plainText;
+    };
+
     const formattedPrice = useMemo(() => {
       return new Intl.NumberFormat("en-US", {
         style: "currency",
@@ -291,7 +308,7 @@ const PropertyCard = React.memo(
 
             {property.description && (
               <p className="text-stone-600 text-sm line-clamp-2 mb-4">
-                {property.description}
+                {getDescriptionPreview(property.description)}
               </p>
             )}
 

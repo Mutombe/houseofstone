@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import StatisticsDashboard from "./stats";
 import {
@@ -41,6 +41,14 @@ import {
   UserPlus,
   Camera,
 } from "lucide-react";
+import { 
+  Bold,
+  Italic,
+  List,
+  AlignLeft,
+  Underline,
+  Type
+} from 'lucide-react';
 import { fetchUsers } from "../../redux/slices/userSlice";
 import { fetchAdminStats } from "../../redux/slices/adminSlice";
 import {
@@ -81,8 +89,205 @@ const COLORS = {
   },
 };
 
-// Property Type Pie Chart Component
+// Rich Text Editor Component
+const RichTextEditor = ({ 
+  value = '', 
+  onChange, 
+  placeholder = "Enter description...",
+  className = "" 
+}) => {
+  const [activeTools, setActiveTools] = useState({});
+  const [showPreview, setShowPreview] = useState(false);
+  const editorRef = useRef(null);
 
+  useEffect(() => {
+    if (editorRef.current && value && editorRef.current.innerHTML !== value) {
+      editorRef.current.innerHTML = value;
+    }
+  }, []);
+
+  const execCommand = (command, value = null) => {
+    document.execCommand(command, false, value);
+    if (editorRef.current) {
+      editorRef.current.focus();
+      updateContent();
+    }
+  };
+
+  const handleFormat = (command) => {
+    execCommand(command);
+    setActiveTools(prev => ({
+      ...prev,
+      [command]: document.queryCommandState(command)
+    }));
+  };
+
+  const updateContent = () => {
+    if (editorRef.current && onChange) {
+      const content = editorRef.current.innerHTML;
+      // Create a synthetic event object similar to input elements
+      onChange({ 
+        target: { 
+          name: 'description', 
+          value: content 
+        } 
+      });
+    }
+  };
+
+  const handleInput = () => {
+    updateContent();
+  };
+
+  const handleKeyUp = () => {
+    // Update toolbar state based on current selection
+    const commands = ['bold', 'italic', 'underline'];
+    const newActiveTools = {};
+    commands.forEach(command => {
+      try {
+        newActiveTools[command] = document.queryCommandState(command);
+      } catch (e) {
+        newActiveTools[command] = false;
+      }
+    });
+    setActiveTools(newActiveTools);
+  };
+
+  const insertParagraph = () => {
+    execCommand('formatBlock', 'p');
+  };
+
+  const insertHeading = (level) => {
+    execCommand('formatBlock', `h${level}`);
+  };
+
+  const toolbarButtons = [
+    { 
+      command: 'bold', 
+      icon: Bold, 
+      label: 'Bold',
+      shortcut: 'Ctrl+B'
+    },
+    { 
+      command: 'italic', 
+      icon: Italic, 
+      label: 'Italic',
+      shortcut: 'Ctrl+I'
+    },
+    { 
+      command: 'underline', 
+      icon: Underline, 
+      label: 'Underline',
+      shortcut: 'Ctrl+U'
+    },
+    { 
+      command: 'insertUnorderedList', 
+      icon: List, 
+      label: 'Bullet List'
+    },
+  ];
+
+  // Clean HTML for preview (remove empty tags, etc.)
+  const cleanHtml = (html) => {
+    return html.replace(/<p><br><\/p>/g, '<p>&nbsp;</p>')
+               .replace(/<div><br><\/div>/g, '<div>&nbsp;</div>');
+  };
+
+  return (
+    <div className={`border border-gray-300 rounded-lg overflow-hidden ${className}`}>
+      {/* Toolbar */}
+      <div className="flex items-center justify-between bg-gray-50 p-2 border-b">
+        <div className="flex space-x-1">
+          {toolbarButtons.map(({ command, icon: Icon, label, shortcut }) => (
+            <button
+              key={command}
+              type="button"
+              onClick={() => handleFormat(command)}
+              className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+                activeTools[command] ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+              }`}
+              title={`${label}${shortcut ? ` (${shortcut})` : ''}`}
+            >
+              <Icon size={16} />
+            </button>
+          ))}
+          
+          <div className="w-px h-6 bg-gray-300 mx-1"></div>
+          
+          <button
+            type="button"
+            onClick={() => insertHeading(2)}
+            className="px-2 py-1 text-sm rounded hover:bg-gray-200 transition-colors text-gray-600 font-semibold"
+            title="Heading 2"
+          >
+            H2
+          </button>
+          <button
+            type="button"
+            onClick={() => insertHeading(3)}
+            className="px-2 py-1 text-sm rounded hover:bg-gray-200 transition-colors text-gray-600 font-semibold"
+            title="Heading 3"
+          >
+            H3
+          </button>
+          <button
+            type="button"
+            onClick={insertParagraph}
+            className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600"
+            title="Paragraph"
+          >
+            <AlignLeft size={16} />
+          </button>
+        </div>
+        
+        <button
+          type="button"
+          onClick={() => setShowPreview(!showPreview)}
+          className={`p-2 rounded hover:bg-gray-200 transition-colors flex items-center space-x-1 ${
+            showPreview ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+          }`}
+          title="Toggle Preview"
+        >
+          <Eye size={16} />
+          <span className="text-sm hidden sm:inline">Preview</span>
+        </button>
+      </div>
+
+      {/* Editor/Preview Container */}
+      <div className="relative">
+        {showPreview ? (
+          <div className="p-4 min-h-[200px] bg-gray-50">
+            <div 
+              className="prose prose-stone max-w-none"
+              dangerouslySetInnerHTML={{ __html: cleanHtml(value) }}
+            />
+            {!value && (
+              <div className="text-gray-400 italic">No content to preview</div>
+            )}
+          </div>
+        ) : (
+          <>
+            <div
+              ref={editorRef}
+              contentEditable
+              onInput={handleInput}
+              onKeyUp={handleKeyUp}
+              onMouseUp={handleKeyUp}
+              className="p-4 min-h-[200px] focus:outline-none prose prose-stone max-w-none"
+              style={{ lineHeight: '1.6' }}
+              suppressContentEditableWarning={true}
+            />
+            {!value && (
+              <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
+                {placeholder}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 export const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
   const initialFormState = {
     title: "",
@@ -878,18 +1083,22 @@ export const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) 
                 </div>
               </div>
 
-              {/* Description Section */}
-              <div className="border-b pb-4">
-                <h3 className="font-medium text-lg mb-3">Description</h3>
-                <textarea
-                  name="description"
+            {/* Rich Text Description Section */}
+            <div className="border-b pb-4">
+              <h3 className="font-medium text-lg mb-3">Property Description*</h3>
+              <div className="space-y-2">
+                <RichTextEditor
                   value={formData.description}
                   onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  rows="4"
-                  required
-                ></textarea>
+                  placeholder="Enter a detailed description of the property. Use the formatting tools above to add emphasis, lists, and headings."
+                  className="min-h-[250px]"
+                />
+                <p className="text-xs text-gray-500">
+                  Use the toolbar to format your description with bold text, lists, headings, and more. 
+                  Click the Preview button to see how it will look to users.
+                </p>
               </div>
+            </div>
 
               {/* Images Section */}
               <div>
