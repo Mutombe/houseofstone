@@ -37,7 +37,70 @@ import {
 } from "./../../redux/slices/propertySlice";
 import { selectCurrentFilters } from "./../../redux/slices/propertySlice";
 
-// Debounce hook for search optimization
+// Harare regions and locations mapping
+const HARARE_REGIONS = {
+  "Harare North": [
+    "Northwood",
+    "Borrowdale",
+    "Borrowdale Brooke",
+    "Glen Lorne",
+    "Chishawesha",
+    "Emerald Hill",
+    "Mt Pleasant",
+    "Avondale",
+    "Belgravia",
+    "Highlands",
+    "Marlborough",
+    "Vainona",
+    "Cedrre Valley",
+    "Chisipiti",
+    "Mandara",
+  ],
+  "Harare East": [
+    "Greendale",
+    "Athlone",
+    "Eastlea",
+    "Eastgate",
+    "Ruwa",
+    "Zimre Park",
+    "Arcturus",
+    "Epworth",
+    "Machipisa",
+  ],
+  "Harare South": [
+    "Hatfield",
+    "Prospect",
+    "Waterfalls",
+    "Glen View",
+    "Mbare",
+    "Workington",
+    "Southerton",
+    "Willowvale",
+  ],
+  "Harare West": [
+    "Westgate",
+    "Mabelreign",
+    "Milton Park",
+    "Belvedere",
+    "Kuwadzana",
+    "Dzivarasekwa",
+    "Mufakose",
+    "Budiriro",
+  ],
+  "Harare Central": [
+    "City Centre",
+    "Avenues",
+    "Braeside",
+    "CBD",
+    "Kopje",
+    "Newlands",
+  ],
+};
+
+// Get all locations for autocomplete
+const ALL_LOCATIONS = Object.values(HARARE_REGIONS).flat();
+
+// Debounce hook for search optimization (keeping for other uses, but not for search)
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -52,6 +115,24 @@ const useDebounce = (value, delay) => {
   }, [value, delay]);
 
   return debouncedValue;
+};
+
+// Function to determine region from location
+const getRegionFromLocation = (location) => {
+  if (!location) return null;
+
+  const locationLower = location.toLowerCase();
+
+  for (const [region, locations] of Object.entries(HARARE_REGIONS)) {
+    const found = locations.some(
+      (loc) =>
+        locationLower.includes(loc.toLowerCase()) ||
+        loc.toLowerCase().includes(locationLower)
+    );
+    if (found) return region;
+  }
+
+  return null;
 };
 
 // Memoized skeleton component
@@ -350,12 +431,13 @@ const Properties = () => {
   const error = useSelector(selectPropertiesError);
   const reduxFilters = useSelector(selectCurrentFilters);
 
-  // Local state
+  // Local state - removed debouncing for live search
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState("newest");
   const [favorites, setFavorites] = useState(new Set());
+  const [selectedRegion, setSelectedRegion] = useState("all");
 
   const [filters, setFilters] = useState({
     type: "all",
@@ -397,14 +479,20 @@ const Properties = () => {
       // Category filter - only show sale properties
       if (property.category !== "sale") return false;
 
-      // Search term filter
-      if (debouncedSearchTerm) {
-        const searchLower = debouncedSearchTerm.toLowerCase();
+      // Live search filter - no debouncing, instant results
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
         const matchesSearch =
           property.title?.toLowerCase().includes(searchLower) ||
           property.location?.toLowerCase().includes(searchLower) ||
           property.description?.toLowerCase().includes(searchLower);
         if (!matchesSearch) return false;
+      }
+
+      // Region filter
+      if (selectedRegion !== "all") {
+        const propertyRegion = getRegionFromLocation(property.location);
+        if (propertyRegion !== selectedRegion) return false;
       }
 
       // Property type filter
@@ -470,7 +558,7 @@ const Properties = () => {
     filtered.sort(sortFunction);
 
     return filtered;
-  }, [properties, debouncedSearchTerm, filters, sortBy]);
+  }, [properties, searchTerm, selectedRegion, filters, sortBy]);
 
   // Memoized callbacks
   const toggleFavorite = useCallback((propertyId) => {
@@ -512,6 +600,7 @@ const Properties = () => {
       location: "",
     });
     setSearchTerm("");
+    setSelectedRegion("all");
     dispatch(clearReduxFilters());
   }, [dispatch]);
 
@@ -609,13 +698,45 @@ const Properties = () => {
         className="bg-white shadow-xl relative z-10 pt-16"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Region Filter Bar */}
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-2 justify-center">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setSelectedRegion("all")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedRegion === "all"
+                    ? "bg-stone-900 text-white shadow-lg"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                All Regions
+              </motion.button>
+              {Object.keys(HARARE_REGIONS).map((region) => (
+                <motion.button
+                  key={region}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedRegion(region)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    selectedRegion === region
+                      ? "bg-stone-900 text-white shadow-lg"
+                      : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                  }`}
+                >
+                  {region}
+                </motion.button>
+              ))}
+            </div>
+          </div>
           {/* Main Search Bar */}
           <div className="flex flex-col lg:flex-row gap-4 items-center mb-4">
             <div className="flex-1 w-full relative">
               <input
                 type="text"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)} // Live search!
                 placeholder="Search by title, location, or description..."
                 className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 focus:border-transparent shadow-sm text-lg"
               />
