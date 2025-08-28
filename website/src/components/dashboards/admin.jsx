@@ -41,14 +41,7 @@ import {
   UserPlus,
   Camera,
 } from "lucide-react";
-import { 
-  Bold,
-  Italic,
-  List,
-  AlignLeft,
-  Underline,
-  Type
-} from 'lucide-react';
+import { Bold, Italic, List, AlignLeft, Underline, Type } from "lucide-react";
 import { fetchUsers } from "../../redux/slices/userSlice";
 import { fetchAdminStats } from "../../redux/slices/adminSlice";
 import {
@@ -90,24 +83,26 @@ const COLORS = {
 };
 
 // Rich Text Editor Component
-const RichTextEditor = ({ 
-  value = '', 
-  onChange, 
+const RichTextEditor = ({
+  value = '',
+  onChange,
   placeholder = "Enter description...",
-  className = "" 
+  className = ""
 }) => {
   const [activeTools, setActiveTools] = useState({});
   const [showPreview, setShowPreview] = useState(false);
   const editorRef = useRef(null);
 
+  // FIX: Added 'value' to the dependency array
   useEffect(() => {
-    if (editorRef.current && value && editorRef.current.innerHTML !== value) {
+    // This check prevents an infinite loop by only updating if the DOM is out of sync with the prop
+    if (editorRef.current && editorRef.current.innerHTML !== value) {
       editorRef.current.innerHTML = value;
     }
-  }, []);
+  }, [value]); // <--- CORRECTED DEPENDENCY ARRAY
 
-  const execCommand = (command, value = null) => {
-    document.execCommand(command, false, value);
+  const execCommand = (command, val = null) => {
+    document.execCommand(command, false, val);
     if (editorRef.current) {
       editorRef.current.focus();
       updateContent();
@@ -125,12 +120,12 @@ const RichTextEditor = ({
   const updateContent = () => {
     if (editorRef.current && onChange) {
       const content = editorRef.current.innerHTML;
-      // Create a synthetic event object similar to input elements
-      onChange({ 
-        target: { 
-          name: 'description', 
-          value: content 
-        } 
+      // Create a synthetic event object to work with the parent form's handler
+      onChange({
+        target: {
+          name: 'description',
+          value: content
+        }
       });
     }
   };
@@ -139,7 +134,7 @@ const RichTextEditor = ({
     updateContent();
   };
 
-  const handleKeyUp = () => {
+  const handleSelectionChange = () => {
     // Update toolbar state based on current selection
     const commands = ['bold', 'italic', 'underline'];
     const newActiveTools = {};
@@ -162,46 +157,28 @@ const RichTextEditor = ({
   };
 
   const toolbarButtons = [
-    { 
-      command: 'bold', 
-      icon: Bold, 
-      label: 'Bold',
-      shortcut: 'Ctrl+B'
-    },
-    { 
-      command: 'italic', 
-      icon: Italic, 
-      label: 'Italic',
-      shortcut: 'Ctrl+I'
-    },
-    { 
-      command: 'underline', 
-      icon: Underline, 
-      label: 'Underline',
-      shortcut: 'Ctrl+U'
-    },
-    { 
-      command: 'insertUnorderedList', 
-      icon: List, 
-      label: 'Bullet List'
-    },
+    { command: 'bold', icon: Bold, label: 'Bold', shortcut: 'Ctrl+B' },
+    { command: 'italic', icon: Italic, label: 'Italic', shortcut: 'Ctrl+I' },
+    { command: 'underline', icon: Underline, label: 'Underline', shortcut: 'Ctrl+U' },
+    { command: 'insertUnorderedList', icon: List, label: 'Bullet List' },
   ];
 
-  // Clean HTML for preview (remove empty tags, etc.)
+  // Clean HTML for preview
   const cleanHtml = (html) => {
-    return html.replace(/<p><br><\/p>/g, '<p>&nbsp;</p>')
-               .replace(/<div><br><\/div>/g, '<div>&nbsp;</div>');
+    if (!html) return '';
+    return html.replace(/<p><br><\/p>/g, '').replace(/<div><br><\/div>/g, '');
   };
 
   return (
     <div className={`border border-gray-300 rounded-lg overflow-hidden ${className}`}>
       {/* Toolbar */}
       <div className="flex items-center justify-between bg-gray-50 p-2 border-b">
-        <div className="flex space-x-1">
+        <div className="flex items-center space-x-1">
           {toolbarButtons.map(({ command, icon: Icon, label, shortcut }) => (
             <button
               key={command}
               type="button"
+              onMouseDown={(e) => e.preventDefault()} // Prevent editor from losing focus
               onClick={() => handleFormat(command)}
               className={`p-2 rounded hover:bg-gray-200 transition-colors ${
                 activeTools[command] ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
@@ -211,11 +188,10 @@ const RichTextEditor = ({
               <Icon size={16} />
             </button>
           ))}
-          
           <div className="w-px h-6 bg-gray-300 mx-1"></div>
-          
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => insertHeading(2)}
             className="px-2 py-1 text-sm rounded hover:bg-gray-200 transition-colors text-gray-600 font-semibold"
             title="Heading 2"
@@ -224,6 +200,7 @@ const RichTextEditor = ({
           </button>
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => insertHeading(3)}
             className="px-2 py-1 text-sm rounded hover:bg-gray-200 transition-colors text-gray-600 font-semibold"
             title="Heading 3"
@@ -232,6 +209,7 @@ const RichTextEditor = ({
           </button>
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={insertParagraph}
             className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600"
             title="Paragraph"
@@ -239,7 +217,6 @@ const RichTextEditor = ({
             <AlignLeft size={16} />
           </button>
         </div>
-        
         <button
           type="button"
           onClick={() => setShowPreview(!showPreview)}
@@ -257,7 +234,7 @@ const RichTextEditor = ({
       <div className="relative">
         {showPreview ? (
           <div className="p-4 min-h-[200px] bg-gray-50">
-            <div 
+            <div
               className="prose prose-stone max-w-none"
               dangerouslySetInnerHTML={{ __html: cleanHtml(value) }}
             />
@@ -271,13 +248,15 @@ const RichTextEditor = ({
               ref={editorRef}
               contentEditable
               onInput={handleInput}
-              onKeyUp={handleKeyUp}
-              onMouseUp={handleKeyUp}
+              onKeyUp={handleSelectionChange}
+              onMouseUp={handleSelectionChange}
+              onClick={handleSelectionChange}
               className="p-4 min-h-[200px] focus:outline-none prose prose-stone max-w-none"
               style={{ lineHeight: '1.6' }}
               suppressContentEditableWarning={true}
             />
-            {!value && (
+            {/* Show placeholder only if the editor content is truly empty */}
+            {(!value || value === '<p><br></p>') && (
               <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
                 {placeholder}
               </div>
@@ -288,7 +267,13 @@ const RichTextEditor = ({
     </div>
   );
 };
-export const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) => {
+
+
+export const PropertyForm = ({
+  currentForm,
+  setCurrentForm,
+  selectedProperty,
+}) => {
   const initialFormState = {
     title: "",
     description: "",
@@ -1083,22 +1068,25 @@ export const PropertyForm = ({ currentForm, setCurrentForm, selectedProperty }) 
                 </div>
               </div>
 
-            {/* Rich Text Description Section */}
-            <div className="border-b pb-4">
-              <h3 className="font-medium text-lg mb-3">Property Description*</h3>
-              <div className="space-y-2">
-                <RichTextEditor
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Enter a detailed description of the property. Use the formatting tools above to add emphasis, lists, and headings."
-                  className="min-h-[250px]"
-                />
-                <p className="text-xs text-gray-500">
-                  Use the toolbar to format your description with bold text, lists, headings, and more. 
-                  Click the Preview button to see how it will look to users.
-                </p>
+              {/* Rich Text Description Section */}
+              <div className="border-b pb-4">
+                <h3 className="font-medium text-lg mb-3">
+                  Property Description*
+                </h3>
+                <div className="space-y-2">
+                  <RichTextEditor
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Enter a detailed description of the property. Use the formatting tools above to add emphasis, lists, and headings."
+                    className="min-h-[250px]"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Use the toolbar to format your description with bold text,
+                    lists, headings, and more. Click the Preview button to see
+                    how it will look to users.
+                  </p>
+                </div>
               </div>
-            </div>
 
               {/* Images Section */}
               <div>
