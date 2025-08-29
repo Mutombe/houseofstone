@@ -273,7 +273,7 @@ const FormsSection = () => {
       title: "Tenant Application Form",
       description: "Comprehensive tenant screening application including personal details, employment history, and references.",
       icon: Users,
-      fileName: "tenant-application.pdf",
+      fileName: "OFFER AND ACCEPTANCE FORM 2024 (1).pdf",
       fileSize: "PDF • 2.4MB",
       category: "Leasing"
     },

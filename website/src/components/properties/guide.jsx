@@ -22,6 +22,9 @@ import {
   ArrowRight,
   Download,
   ChevronDown,
+  MapPin,
+  Handshake,
+  Scale,
   ChevronUp,
   Shield,
   Lightbulb,
@@ -90,263 +93,122 @@ const SellingGuidePage = () => {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
-  const guideSteps = [
-    {
-      id: "preparation",
-      title: "1. Prepare Your Property",
-      icon: Home,
-      overview: "First impressions matter. Proper preparation can add thousands to your sale price.",
-      details: [
-        {
-          subtitle: "Declutter and Clean",
-          content: "Remove personal items and excess furniture. Deep clean every room, paying special attention to kitchens and bathrooms. Consider professional cleaning services for carpets and windows."
-        },
-        {
-          subtitle: "Minor Repairs and Touch-ups",
-          content: "Fix leaky faucets, squeaky doors, and minor wall damage. Fresh paint in neutral colors can make spaces feel larger and more appealing to buyers."
-        },
-        {
-          subtitle: "Enhance Curb Appeal",
-          content: "Maintain landscaping, clean exterior surfaces, and ensure the entrance is welcoming. Consider adding potted plants or updating exterior hardware."
-        },
-        {
-          subtitle: "Staging Tips",
-          content: "Arrange furniture to maximize space and flow. Use mirrors to create illusion of larger spaces. Ensure good lighting throughout the property."
-        }
-      ],
-      checklist: [
-        "Deep clean all rooms",
-        "Declutter and depersonalize",
-        "Complete minor repairs",
-        "Enhance curb appeal",
-        "Stage key rooms",
-        "Ensure good lighting"
-      ]
-    },
-    {
-      id: "valuation",
-      title: "2. Get Professional Valuation",
-      icon: Calculator,
-      overview: "Accurate pricing is crucial for a successful sale. Price too high and you'll sit on the market; too low and you'll leave money on the table.",
-      details: [
-        {
-          subtitle: "Market Analysis",
-          content: "Our experts analyze recent sales of similar properties in your area, current market conditions, and unique features of your property."
-        },
-        {
-          subtitle: "Pricing Strategy",
-          content: "We'll recommend a pricing strategy based on your timeline and goals. Sometimes pricing slightly below market value can generate multiple offers and higher final sale price."
-        },
-        {
-          subtitle: "Regular Reviews",
-          content: "Market conditions change. We'll regularly review and adjust pricing strategy if needed to ensure optimal results."
-        }
-      ],
-      checklist: [
-        "Request professional valuation",
-        "Review comparable sales",
-        "Understand market conditions",
-        "Set realistic price expectations",
-        "Plan pricing strategy"
-      ]
-    },
-    {
-      id: "marketing",
-      title: "3. Marketing Your Property",
-      icon: TrendingUp,
-      overview: "Effective marketing reaches the right buyers and showcases your property's best features.",
-      details: [
-        {
-          subtitle: "Professional Photography",
-          content: "High-quality photos are essential. We arrange professional photography that highlights your property's best features and maximizes online appeal."
-        },
-        {
-          subtitle: "Online Presence",
-          content: "Your property will be listed on major real estate websites, our company website, and promoted through social media channels to maximize exposure."
-        },
-        {
-          subtitle: "Traditional Marketing",
-          content: "We use proven traditional methods including signage, print advertising, and direct mail to local area to reach all potential buyers."
-        },
-        {
-          subtitle: "Virtual Tours",
-          content: "360-degree virtual tours and video walkthroughs allow remote buyers to experience your property from anywhere in the world."
-        }
-      ],
-      checklist: [
-        "Professional photos taken",
-        "Online listings active",
-        "Social media promotion",
-        "Signage installed",
-        "Virtual tour created",
-        "Marketing materials prepared"
-      ]
-    },
-    {
-      id: "showings",
-      title: "4. Showings and Open Houses",
-      icon: Eye,
-      overview: "Make every showing count with proper preparation and presentation.",
-      details: [
-        {
-          subtitle: "Scheduling Showings",
-          content: "We handle all showing requests and work around your schedule. Flexible availability often leads to more viewings and offers."
-        },
-        {
-          subtitle: "Preparing for Showings",
-          content: "Ensure the property is clean and well-lit. Remove pets if possible, play soft background music, and consider light refreshments for open houses."
-        },
-        {
-          subtitle: "Following Up",
-          content: "We follow up with every potential buyer to gather feedback and gauge interest, keeping you informed throughout the process."
-        }
-      ],
-      checklist: [
-        "Schedule convenient showing times",
-        "Prepare property before each showing",
-        "Ensure good lighting and ambiance",
-        "Collect and review feedback",
-        "Follow up with interested buyers"
-      ]
-    },
-    {
-      id: "offers",
-      title: "5. Receiving and Negotiating Offers",
-      icon: DollarSign,
-      overview: "When offers come in, skilled negotiation can make a significant difference to your final sale price.",
-      details: [
-        {
-          subtitle: "Evaluating Offers",
-          content: "We help you evaluate not just the price, but also the terms, buyer's financial qualification, and timeline to close."
-        },
-        {
-          subtitle: "Negotiation Strategy",
-          content: "Our experienced negotiators work to get you the best possible terms while keeping the deal on track to closing."
-        },
-        {
-          subtitle: "Multiple Offers",
-          content: "If you receive multiple offers, we'll help you navigate this situation to maximize your return while choosing the most reliable buyer."
-        }
-      ],
-      checklist: [
-        "Review all offer terms carefully",
-        "Verify buyer's financing pre-approval",
-        "Consider timeline and conditions",
-        "Negotiate favorable terms",
-        "Choose the best overall offer"
-      ]
-    },
-    {
-      id: "closing",
-      title: "6. Closing the Sale",
-      icon: CheckCircle,
-      overview: "The final steps to transfer ownership and complete your successful sale.",
-      details: [
-        {
-          subtitle: "Purchase Agreement",
-          content: "Once you accept an offer, we'll manage the purchase agreement process, ensuring all legal requirements are met and your interests are protected."
-        },
-        {
-          subtitle: "Inspections and Appraisals",
-          content: "We coordinate buyer's inspections and appraisals, helping resolve any issues that arise to keep the sale on track."
-        },
-        {
-          subtitle: "Final Walkthrough",
-          content: "Before closing, the buyer will do a final walkthrough. We ensure the property is in the agreed-upon condition."
-        },
-        {
-          subtitle: "Closing Day",
-          content: "We'll be with you at closing to ensure all paperwork is properly executed and you receive your proceeds promptly."
-        }
-      ],
-      checklist: [
-        "Sign purchase agreement",
-        "Coordinate inspections",
-        "Address any issues found",
-        "Prepare for final walkthrough",
-        "Complete closing paperwork",
-        "Receive your proceeds"
-      ]
-    }
+const guideSteps = [
+  {
+    id: "location",
+    title: "1. Know Your Location",
+    icon: MapPin,
+    overview: "Your location significantly impacts your asking price. Proper research ensures you price competitively.",
+    details: [
+      {
+        subtitle: "Work with Registered Professionals",
+        content: "List with a registered real estate agency regulated by the EAC. House of Stone Properties is a registered brand with experience providing accurate appraisals in your neighborhood."
+      },
+      {
+        subtitle: "Research Comparable Properties",
+        content: "Check with competing properties in your neighborhood to acquire precise insight on market rates and buyer expectations."
+      },
+      {
+        subtitle: "Professional Marketing Approach",
+        content: "House of Stone Properties utilizes online platforms, produces professional photos, and conducts open houses to reach potential buyers using expert real estate tactics."
+      }
+    ],
+    checklist: [
+      "Verify agency registration with EAC",
+      "Research neighborhood comparables",
+      "Review professional marketing plan",
+      "Understand location advantages"
+    ]
+  },
+  {
+    id: "preparation",
+    title: "2. Property Preparation",
+    icon: Home,
+    overview: "First impressions matter. Proper preparation increases perceived value and buyer interest.",
+    details: [
+      {
+        subtitle: "Repair and Clean Thoroughly",
+        content: "Dirty and damaged infrastructure demotivates potential buyers. Bathrooms, walls and floors need professional cleaning and grooming."
+      },
+      {
+        subtitle: "Create Lasting Impressions",
+        content: "Sell a property you would be happy to buy and feel safe in. This approach ensures buyer confidence and higher offers."
+      },
+      {
+        subtitle: "Depersonalize and Declutter",
+        content: "Remove personal items and additional furniture to help buyers envision themselves in the space."
+      },
+      {
+        subtitle: "Enhance Exterior Appeal",
+        content: "Improve the exterior of your property with landscaping, painting, or other enhancements to boost curb appeal."
+      }
+    ],
+    checklist: [
+      "Professional cleaning of key areas",
+      "Repair visible damages",
+      "Remove personal items",
+      "Declutter living spaces",
+      "Enhance exterior appearance"
+    ]
+  },
+  {
+    id: "closing",
+    title: "3. Close the Sale & Make Money",
+    icon: Handshake,
+    overview: "Expert negotiation and transaction management ensure you get the best possible terms and price.",
+    details: [
+      {
+        subtitle: "Comprehensive Offer Review",
+        content: "We help review offers, considering not only the price but also the buyer's financing, timeline, and contingencies."
+      },
+      {
+        subtitle: "Expert Negotiation",
+        content: "Our prowess is to negotiate favorable terms with potential buyers that protect your interests."
+      },
+      {
+        subtitle: "Transaction Finalization",
+        content: "Once we secure your interests along with the buyer's, we finalize the sale with all necessary paperwork and work with a conveyancer to complete the transaction."
+      }
+    ],
+    checklist: [
+      "Review all offer terms",
+      "Negotiate favorable conditions",
+      "Secure buyer commitments",
+      "Complete legal paperwork",
+      "Finalize transaction with conveyancer"
+    ]
+  },
+  {
+    id: "considerations",
+    title: "4. What to Consider?",
+    icon: Scale,
+    overview: "Choosing the right agency ensures your interests are protected throughout the selling process.",
+    details: [
+      {
+        subtitle: "Select a Reputable Agency",
+        content: "House of Stone is a reputable real estate agency. Choose an agency you are sure will exhaust all effort to secure your interests as we will faithfully do."
+      },
+      {
+        subtitle: "Transparency in Process",
+        content: "With our mission escorted with transparency, we commit to helping you understand the costs of selling your property and the legal aspects of selling your home."
+      }
+    ],
+    checklist: [
+      "Verify agency reputation",
+      "Understand all associated costs",
+      "Review legal requirements",
+      "Ensure transparent communication"
+    ]
+  },
   ];
 
-  const tips = [
-    {
-      icon: Star,
-      title: "Price Competitively",
-      description: "Properties priced correctly from the start sell faster and often for more money."
-    },
-    {
-      icon: Camera,
-      title: "Invest in Great Photos",
-      description: "Professional photography can increase your property's online views by up to 60%."
-    },
-    {
-      icon: Clock,
-      title: "Time Your Sale Right",
-      description: "Spring and fall typically see higher buyer activity in the Zimbabwe market."
-    },
-    {
-      icon: Shield,
-      title: "Be Transparent",
-      description: "Disclose known issues upfront to build trust and avoid delays during closing."
-    },
-    {
-      icon: Users,
-      title: "Work with Professionals",
-      description: "Experienced agents, photographers, and lawyers save time and often pay for themselves."
-    },
-    {
-      icon: Target,
-      title: "Know Your Market",
-      description: "Understanding local buyer preferences helps you present your property effectively."
-    },
-    {
-      icon: Heart,
-      title: "Stay Emotionally Detached",
-      description: "Making decisions based on market data rather than emotions leads to better outcomes."
-    },
-    {
-      icon: Zap,
-      title: "Respond Quickly",
-      description: "Fast responses to inquiries and offers show serious intent and keep momentum going."
-    }
-  ];
-
-  const commonMistakes = [
-    {
-      icon: TrendingDown,
-      title: "Overpricing Your Property",
-      description: "The most common mistake. Overpriced properties sit on the market longer and often sell for less than well-priced ones.",
-      solution: "Get a professional valuation and price competitively from day one."
-    },
-    {
-      icon: AlertCircle,
-      title: "Poor Quality Photos",
-      description: "Blurry, dark, or unflattering photos turn away potential buyers before they even consider viewing.",
-      solution: "Invest in professional photography - it's worth every penny."
-    },
-    {
-      icon: Home,
-      title: "Not Preparing the Property",
-      description: "Selling a cluttered, dirty, or damaged property significantly reduces its appeal and value.",
-      solution: "Spend time and money on preparation - the ROI is almost always positive."
-    },
-    {
-      icon: Info,
-      title: "Hiding Property Issues",
-      description: "Concealing problems leads to deal collapse, legal issues, and damaged reputation.",
-      solution: "Full disclosure builds trust and prevents costly surprises later."
-    }
-  ];
-
-  const timeline = [
-    { phase: "Preparation", duration: "2-4 weeks", description: "Clean, repair, and stage your property" },
-    { phase: "Marketing Launch", duration: "1 week", description: "Professional photos, listings go live" },
-    { phase: "Active Marketing", duration: "4-8 weeks", description: "Showings, open houses, feedback collection" },
-    { phase: "Offer & Negotiation", duration: "1-2 weeks", description: "Review offers, negotiate terms" },
-    { phase: "Closing Process", duration: "4-6 weeks", description: "Inspections, financing, legal completion" }
-  ];
+const timeline = [
+  { phase: "Location Analysis", duration: "1 week", description: "Research comparables, determine optimal pricing" },
+  { phase: "Property Preparation", duration: "2-3 weeks", description: "Cleaning, repairs, and staging" },
+  { phase: "Marketing & Showings", duration: "3-6 weeks", description: "Professional photos, listings, open houses" },
+  { phase: "Offer Negotiation", duration: "1-2 weeks", description: "Review offers, negotiate terms" },
+  { phase: "Closing Process", duration: "4-6 weeks", description: "Legal paperwork, conveyancing, finalization" }
+];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-yellow-50">
@@ -582,106 +444,6 @@ const SellingGuidePage = () => {
                 </div>
                 
                 <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-[#DCC471] rounded-full border-4 border-slate-800" />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pro Tips */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center px-4 py-2 bg-[#DCC471]/10 rounded-full mb-6"
-            >
-              <Lightbulb className="w-5 h-5 text-[#b07e28] mr-2" />
-              <span className="text-slate-700 font-medium">Expert Insights</span>
-            </motion.div>
-            
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Professional Selling Tips
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Insider knowledge from our experienced agents to help you get the best price
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {tips.map((tip, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-                className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all"
-              >
-                <div className="p-3 bg-[#DCC471]/10 rounded-xl w-fit mb-4">
-                  <tip.icon className="w-6 h-6 text-[#b07e28]" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-3">
-                  {tip.title}
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {tip.description}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Common Mistakes */}
-      <section className="py-16 bg-red-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center px-4 py-2 bg-red-100 rounded-full mb-6"
-            >
-              <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-              <span className="text-red-700 font-medium">Avoid These Pitfalls</span>
-            </motion.div>
-            
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Common Selling Mistakes
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Learn from others' mistakes and avoid costly errors that could impact your sale
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {commonMistakes.map((mistake, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.2 }}
-                className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-red-400"
-              >
-                <div className="flex items-start space-x-4">
-                  <div className="p-3 bg-red-100 rounded-xl">
-                    <mistake.icon className="w-6 h-6 text-red-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">
-                      {mistake.title}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-3">
-                      {mistake.description}
-                    </p>
-                    <div className="bg-green-50 p-3 rounded-lg border-l-2 border-green-400">
-                      <p className="text-sm text-green-800">
-                        <strong>Solution:</strong> {mistake.solution}
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </motion.div>
             ))}
           </div>
