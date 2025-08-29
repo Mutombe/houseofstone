@@ -119,6 +119,7 @@ class ProfileView(APIView):
     
 class PropertyViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
+    authentication_classes = []
     serializer_class = PropertySerializer
     filterset_fields = {
         'price': ['lte', 'gte'],
