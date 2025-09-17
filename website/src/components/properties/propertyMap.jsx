@@ -11,7 +11,7 @@ const createPropertyIcon = () => {
     className: 'custom-property-icon',
     html: `
       <div style="position: relative;">
-        <div style="background-color: #f97316; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+        <div style="background-color: #f97316; box-shadow: 0 2px 10px rgba(0,0,0,0.3); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="18" height="18">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
             <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -73,7 +73,7 @@ const PropertyMap = ({ position, title, address }) => {
       <Circle 
         center={position} 
         radius={300}
-        color="#f97316"
+        color="rgba(249, 22, 22, 1)"
         fillColor="#f97316"
         fillOpacity={0.15}
       />

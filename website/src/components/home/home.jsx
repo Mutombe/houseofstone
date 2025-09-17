@@ -623,8 +623,7 @@ const EnhancedHomepage = () => {
                   {/* Property badges */}
                   <div className="absolute top-3 sm:top-4 left-3 sm:left-4 flex gap-2">
                     <span className="px-2 sm:px-3 py-1 bg-[#DCC471] text-slate-900 rounded-full text-xs sm:text-sm font-bold">
-                      {property.category +
-                        property.category}
+                      {property.category}
                     </span>
                     <span className="px-2 sm:px-3 py-1 bg-slate-800 text-white rounded-full text-xs sm:text-sm font-bold">
                       {property.status}
