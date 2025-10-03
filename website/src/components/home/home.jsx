@@ -55,7 +55,7 @@ const COLORS = {
 const testimonials = [
   {
     id: 1,
-    name: "Joe Maramba",
+    name: "James Clarke",
     role: "Property Investor",
     content:
       "House of Stone Properties helped me find the perfect investment opportunity. Their market knowledge is exceptional.",
