@@ -8,6 +8,7 @@ ALLOWED_HOSTS = [
     os.environ.get('RENDER_EXTERNAL_HOSTNAME'),
     'houseofstone-backend.onrender.com',
     'houseofstone.onrender.com',
+    'hsp.co.zw/'
 ]
 
 DEBUG = True
@@ -15,6 +16,7 @@ SECRET_KEY = SECRET_KEY
 
 # CORS SETTINGS
 CORS_ALLOWED_ORIGINS = [
+    'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
     'https://houseofstone-backend.onrender.com',
     'http://localhost:5173',
@@ -22,6 +24,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_TRUSTED_ORIGINS = [
+    'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
     'https://houseofstone-backend.onrender.com',
     'http://localhost:5173',
@@ -57,6 +60,7 @@ CORS_EXPOSE_HEADERS = ['content-type', 'authorization']
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
+    'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
     'https://houseofstone-backend.onrender.com',
 ]

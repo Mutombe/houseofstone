@@ -17,6 +17,7 @@ SECRET_KEY = "django-insecure-5bqgh2slk^ptynj2!+b!-7q)^@^_-k*)n0h)86v@*7e67w$(cs
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    'hsp.co.zw',
     'houseofstone-backend.onrender.com',
     'houseofstone.onrender.com',
     'localhost',
@@ -24,6 +25,7 @@ ALLOWED_HOSTS = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
+    'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
     'https://houseofstone-backend.onrender.com',
     'http://localhost:5173',
@@ -31,6 +33,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_TRUSTED_ORIGINS = [
+    'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
     'https://houseofstone-backend.onrender.com',
     'http://localhost:5173',
@@ -66,6 +69,7 @@ CORS_EXPOSE_HEADERS = ['content-type', 'authorization']
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
+    'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
     'https://houseofstone-backend.onrender.com',
 ]
