@@ -35,12 +35,12 @@ class AdminProperty(admin.ModelAdmin):
         "location",
         "property_type",
         "is_published",
-        "agent",
+        "user",
     )
     search_fields = (
         "title",
         "location",
-        "agent__username",
+        "user__username",
     )
     list_filter = (
         "property_type",

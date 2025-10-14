@@ -100,7 +100,7 @@ class PropertyAgentSerializer(serializers.ModelSerializer):
 class PropertyListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for list views"""
     primary_image = serializers.SerializerMethodField()
-    agent_name = serializers.CharField(source='agent.get_full_name', read_only=True)
+    agent_name = serializers.SerializerMethodField()  # Changed to SerializerMethodField
     
     class Meta:
         model = Property
@@ -114,6 +114,23 @@ class PropertyListSerializer(serializers.ModelSerializer):
         # Get first image efficiently
         first_image = obj.images.first()
         return first_image.image.url if first_image else None
+    
+    def get_agent_name(self, obj):
+        # Get the primary agent's name if exists
+        primary_agent = obj.property_agents.filter(is_primary=True).first()
+        if primary_agent and primary_agent.agent:
+            return primary_agent.agent.full_name
+        
+        # Fallback to first agent if no primary
+        first_agent = obj.property_agents.first()
+        if first_agent and first_agent.agent:
+            return first_agent.agent.full_name
+        
+        # Fallback to user's username if no agents
+        if obj.user:
+            return obj.user.username
+        
+        return None
 
 
 class PropertyDetailSerializer(serializers.ModelSerializer):
@@ -126,14 +143,14 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Property
         fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at', 'agent']
+        read_only_fields = ['created_at', 'updated_at', 'user']
     
     def get_agent_info(self, obj):
-        if obj.agent:
+        if obj.user:
             return {
-                'id': obj.agent.id,
-                'name': obj.agent.get_full_name(),
-                'email': obj.agent.email
+                'id': obj.user.id,
+                'name': obj.user.username(),
+                'email': obj.user.email
             }
         return None
 
@@ -147,7 +164,7 @@ class PropertySerializer(serializers.ModelSerializer):
     class Meta:
         model = Property
         fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at', 'agent']
+        read_only_fields = ['created_at', 'updated_at']
 
     def create(self, validated_data):
         # Extract and process related data

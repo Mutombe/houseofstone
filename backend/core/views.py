@@ -118,9 +118,10 @@ class ProfileView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class PropertyViewSet(viewsets.ModelViewSet):
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Changed this
     serializer_class = PropertySerializer
+    pagination_class = None  # ← ADD THIS LINE
+    
     filterset_fields = {
         'price': ['lte', 'gte'],
         'property_type': ['exact'],
@@ -130,8 +131,14 @@ class PropertyViewSet(viewsets.ModelViewSet):
         'beds': ['lte', 'gte'],
         'baths': ['lte', 'gte'],
     }
+    def get_permissions(self):
+        """
+        Instantiate and return the list of permissions that this view requires.
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated()]
+        return [AllowAny()]
     
-    # REMOVED all pagination settings
     
     def get_queryset(self):
         """Optimized queryset with selective prefetching based on action"""
@@ -139,7 +146,7 @@ class PropertyViewSet(viewsets.ModelViewSet):
         
         if self.action in ['retrieve', 'stats']:
             # Full prefetch for detail views and stats
-            return base_queryset.select_related('agent').prefetch_related(
+            return base_queryset.select_related('user').prefetch_related(
                 'images',
                 'features',
                 'property_agents__agent',
@@ -148,7 +155,7 @@ class PropertyViewSet(viewsets.ModelViewSet):
             )
         elif self.action == 'list':
             # Minimal prefetch for list views
-            return base_queryset.select_related('agent').prefetch_related('images')
+            return base_queryset.select_related('user').prefetch_related('images')
         
         return base_queryset
 
@@ -161,13 +168,13 @@ class PropertyViewSet(viewsets.ModelViewSet):
         return PropertySerializer
 
     def perform_create(self, serializer):
-        serializer.save(agent=self.request.user)
+        serializer.save(user=self.request.user)
 
     def list(self, request, *args, **kwargs):
         logger.info(f"Properties list requested with params: {request.query_params}")
         
         # Start with optimized base queryset
-        base_queryset = Property.objects.filter(is_published=True).select_related('agent').prefetch_related('images')
+        base_queryset = Property.objects.filter(is_published=True).select_related('user').prefetch_related('images')
     
         # Apply filters from query parameters
         filters = {}

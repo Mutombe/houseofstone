@@ -116,7 +116,7 @@ class Property(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     is_published = models.BooleanField(default=True)
-    agent = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     virtual_tour_url = models.URLField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -131,7 +131,7 @@ class Property(models.Model):
             models.Index(fields=['location', 'property_type', 'price']),
             models.Index(fields=['beds', 'baths', 'price']),
             models.Index(fields=['category', 'status', 'created_at']),
-            models.Index(fields=['agent', 'is_published', 'status']),
+            models.Index(fields=['user', 'is_published', 'status']),
             models.Index(fields=['price', 'property_type']),
             models.Index(fields=['location', 'category']),
             

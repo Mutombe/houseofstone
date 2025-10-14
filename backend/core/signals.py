@@ -100,15 +100,15 @@ def property_created_notification(sender, instance, created, **kwargs):
             )
         
         # Notify assigned agent if exists
-        if instance.agent and instance.agent.email:
+        if instance.user and instance.user.email:
             agent_context = context.copy()
-            agent_context['agent_name'] = instance.agent.get_full_name()
+            agent_context['agent_name'] = instance.user.get_full_name()
             
             send_notification_email(
                 subject=f"Property Assigned to You: {instance.title}",
                 template_name='property_assigned_agent',
                 context=agent_context,
-                recipient_list=[instance.agent.email]
+                recipient_list=[instance.user.email]
             )
 
 @receiver(pre_save, sender=Property)
@@ -138,12 +138,12 @@ def property_status_change_notification(sender, instance, **kwargs):
                     )
                 
                 # Notify agent
-                if instance.agent and instance.agent.email:
+                if instance.user and instance.user.email:
                     send_notification_email(
                         subject=f"Your Property Status Updated: {instance.title}",
                         template_name='property_status_changed_agent',
                         context=context,
-                        recipient_list=[instance.agent.email]
+                        recipient_list=[instance.user.email]
                     )
         except Property.DoesNotExist:
             pass
