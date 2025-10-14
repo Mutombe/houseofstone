@@ -193,3 +193,7 @@ admin.site.register(Agent, AdminAgent)
 admin.site.register(PropertyAgent, AdminPropertyAgent)
 admin.site.register(PropertyInteraction)
 admin.site.register(AdminActionLog, AdminActionLogOverview)
+
+admin.site.site_header = "House of Stone Properties Admin"
+admin.site.site_title = "Properties Admin"
+admin.site.index_title = "Properties Management"
