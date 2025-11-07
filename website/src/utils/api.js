@@ -1,3 +1,5 @@
+// website/src/utils/api.js
+
 import axios from "axios";
 import { logout } from "../redux/slices/authSlice";
 
@@ -34,6 +36,16 @@ export const refreshTokens = async (refresh) => {
 
 // Enhanced API utilities WITHOUT caching
 const api = axios.create({
+  baseURL: "https://houseofstone-backend1.onrender.com/",
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+  xsrfCookieName: "csrftoken",
+  xsrfHeaderName: "X-CSRFToken",
+});
+
+const publicApi = axios.create({
   baseURL: "https://houseofstone-backend1.onrender.com/",
   headers: {
     "Content-Type": "application/json",
@@ -183,46 +195,81 @@ api.interceptors.response.use(
   }
 );
 
+const clearInvalidAuth = () => {
+  localStorage.removeItem("auth");
+  if (store) {
+    store.dispatch(logout());
+  }
+};
+
 // API functions WITHOUT caching
 export const propertyAPI = {
-  // Get all properties without caching
   getAll: async (params = {}) => {
-    return api.get("/properties/", { params });
+    try {
+      // First try without authentication for public endpoints
+      const response = await axios.get("https://houseofstone-backend1.onrender.com/properties/", {
+        params,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
+      return response;
+    } catch (error) {
+      // If we get a 403, it might be because we're sending a bad token
+      if (error.response?.status === 403) {
+        const auth = JSON.parse(localStorage.getItem("auth"));
+        if (auth?.access) {
+          // We have a token that's causing issues, clear it and retry
+          console.log("Clearing invalid token and retrying...");
+          clearInvalidAuth();
+          
+          // Retry without authentication
+          return axios.get("https://houseofstone-backend1.onrender.com/properties/", {
+            params,
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          });
+        }
+      }
+      throw error;
+    }
   },
 
-  // Get property by ID without caching
   getById: async (id) => {
-    return api.get(`/properties/${id}/`);
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/properties/${id}/`, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
+      return response;
+    } catch (error) {
+      if (error.response?.status === 403) {
+        clearInvalidAuth();
+        // Retry
+        return axios.get(`http://127.0.0.1:8000/properties/${id}/`, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        });
+      }
+      throw error;
+    }
   },
 
-  // Create property
-  create: (data) => {
-    return api.post("/properties/", data);
-  },
-
-  // Update property
-  update: (id, data) => {
-    return api.patch(`/properties/${id}/`, data);
-  },
-
-  // Delete property
-  delete: (id) => {
-    return api.delete(`/properties/${id}/`);
-  },
-
-  // Get user properties without caching
-  getUserProperties: (userId) => {
-    return propertyAPI.getAll({ user_id: userId });
-  },
-
-  // Get property stats
+  // These require authentication
+  create: (data) => api.post("/properties/", data),
+  update: (id, data) => api.patch(`/properties/${id}/`, data),
+  delete: (id) => api.delete(`/properties/${id}/`),
+  getUserProperties: (userId) => api.get("/properties/", { params: { user_id: userId } }),
   getStats: (id) => api.get(`/properties/${id}/stats/`),
-
-  // Share property
   share: (id) => api.post(`/properties/${id}/share/`),
-
-  // Get shared property
-  getShared: (token) => api.get(`/shared-properties/${token}/`),
+  getShared: (token) => publicApi.get(`/shared-properties/${token}/`),
 };
 
 export const alertAPI = {

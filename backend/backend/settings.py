@@ -1,3 +1,4 @@
+# settings.py
 from datetime import timedelta
 from pathlib import Path
 import os
@@ -32,8 +33,8 @@ CORS_ALLOWED_ORIGINS = [
      'https://houseofstone-frontend.onrender.com',
     'https://houseofstone-backend.onrender.com',
     'https://houseofstone-backend1.onrender.com',
-    'http://localhost:5177',
-    'http://127.0.0.1:5177'
+    'http://localhost:5174',
+    'http://127.0.0.1:5174'
 ]
 
 CORS_TRUSTED_ORIGINS = [
@@ -42,8 +43,8 @@ CORS_TRUSTED_ORIGINS = [
      'https://houseofstone-frontend.onrender.com',
     'https://houseofstone-backend.onrender.com',
     'https://houseofstone-backend1.onrender.com',
-    'http://localhost:5177',
-    'http://127.0.0.1:5177'
+    'http://localhost:5174',
+    'http://127.0.0.1:5174'
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -55,7 +56,11 @@ CORS_ALLOW_METHODS = [
     'PATCH',
     'POST',
     'PUT',
+    'HEAD',  # Add HEAD method
 ]
+
+# Ensure CORS preflight caching
+CORS_PREFLIGHT_MAX_AGE = 86400
 
 CORS_ALLOW_HEADERS = [
     'accept',

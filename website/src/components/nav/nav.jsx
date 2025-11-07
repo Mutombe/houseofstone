@@ -561,7 +561,7 @@ const Navbar = () => {
     <>
       {/* Top Info Bar - Enhanced with better mobile responsiveness */}
       <motion.div
-        className="w-full bg-slate-800 text-white py-2 sm:py-3 shadow-sm relative z-40"
+        className="w-full bg-slate-800 text-white py-2 sm:py-3 shadow-sm relative z-100"
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}

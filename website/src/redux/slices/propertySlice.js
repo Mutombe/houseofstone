@@ -2,25 +2,26 @@ import { createSlice, createAsyncThunk, createSelector } from "@reduxjs/toolkit"
 import { propertyAPI } from "../../utils/api";
 import api from "./../../utils/api";
 
-// Async thunks with enhanced error handling (NO pagination)
+// In propertySlice.js
 export const fetchProperties = createAsyncThunk(
   "properties/fetchAll",
-  async (filters = {}, { rejectWithValue }) => {
+  async (filters = {}, { rejectWithValue, signal }) => {  // Note: signal from thunkAPI
     try {
-      // Prepare API request parameters
-      const params = { ...filters };
+      // Clean the filters object - remove signal if it's there
+      const cleanFilters = { ...filters };
+      delete cleanFilters.signal;  // Remove signal from params
       
       // Remove undefined values
-      Object.keys(params).forEach(
-        (key) => params[key] === undefined && delete params[key]
+      Object.keys(cleanFilters).forEach(
+        (key) => cleanFilters[key] === undefined && delete cleanFilters[key]
       );
 
-      // Make API request
-      const response = await propertyAPI.getAll(params);
+      // Pass signal in the config, not as a parameter
+      const response = await propertyAPI.getAll(cleanFilters);
 
       return {
         data: response.data,
-        filters,
+        filters: cleanFilters,
         lastFetch: Date.now(),
       };
     } catch (err) {

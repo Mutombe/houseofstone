@@ -23,6 +23,8 @@ import {
   Car,
   Wifi,
   Shield,
+  Check,
+  AlertCircle,
 } from "lucide-react";
 import {
   fetchProperties,
@@ -134,6 +136,49 @@ const getRegionFromLocation = (location) => {
 
   return null;
 };
+
+// Toast Notification Component
+const Toast = React.memo(({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -50, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -20, scale: 0.9 }}
+      className="fixed top-20 right-4 z-50 max-w-sm"
+    >
+      <div
+        className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-sm ${
+          type === "success"
+            ? "bg-green-500 text-white"
+            : "bg-red-500 text-white"
+        }`}
+      >
+        {type === "success" ? (
+          <Check className="w-5 h-5 flex-shrink-0" />
+        ) : (
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+        )}
+        <p className="font-medium">{message}</p>
+        <button
+          onClick={onClose}
+          className="ml-2 hover:opacity-75 transition-opacity"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </motion.div>
+  );
+});
+
+Toast.displayName = "Toast";
 
 // Memoized skeleton component
 const PropertySkeleton = React.memo(({ viewMode }) => {
@@ -450,8 +495,25 @@ const Properties = () => {
     location: "",
   });
 
+  // Toast notification state
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success", // 'success' | 'error'
+  });
+
   // Debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  // Show toast helper
+  const showToast = useCallback((message, type = "success") => {
+    setToast({ show: true, message, type });
+  }, []);
+
+  // Hide toast helper
+  const hideToast = useCallback(() => {
+    setToast((prev) => ({ ...prev, show: false }));
+  }, []);
 
   // Fetch properties with error handling
   useEffect(() => {
@@ -462,7 +524,7 @@ const Properties = () => {
         ...filters,
         search: debouncedSearchTerm,
         ordering: sortBy,
-        signal: controller.signal,
+        //signal: controller.signal,
       })
     );
 
@@ -573,20 +635,62 @@ const Properties = () => {
     });
   }, []);
 
-  const handleShare = useCallback((property) => {
-    if (navigator.share) {
-      navigator.share({
+  // Enhanced share handler with better error handling and feedback
+  const handleShare = useCallback(
+    async (property) => {
+      const shareData = {
         title: property.title,
-        text: `Check out this property: ${property.title}`,
-        url: window.location.origin + `/properties/${property.id}`,
-      });
-    } else {
-      // Fallback to copy to clipboard
-      navigator.clipboard.writeText(
-        `${property.title} - ${window.location.origin}/properties/${property.id}`
-      );
-    }
-  }, []);
+        text: `Check out this property: ${property.title} - ${property.location}`,
+        url: `${window.location.origin}/properties/${property.id}`,
+      };
+
+      try {
+        // Check if Web Share API is available (typically on mobile)
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+          // Note: We don't show a success toast here because the share sheet
+          // provides its own feedback
+        } else {
+          // Fallback to clipboard for desktop or unsupported browsers
+          const shareText = `${property.title}\n${property.location}\n\n${shareData.url}`;
+          
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(shareText);
+            showToast("Link copied to clipboard!", "success");
+          } else {
+            // Fallback for older browsers
+            const textArea = document.createElement("textarea");
+            textArea.value = shareText;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+              document.execCommand("copy");
+              showToast("Link copied to clipboard!", "success");
+            } catch (err) {
+              showToast("Unable to copy link. Please try again.", "error");
+            } finally {
+              document.body.removeChild(textArea);
+            }
+          }
+        }
+      } catch (error) {
+        // Handle errors gracefully
+        if (error.name === "AbortError") {
+          // User cancelled the share - this is not an error
+          return;
+        }
+        
+        console.error("Error sharing:", error);
+        showToast("Unable to share. Please try again.", "error");
+      }
+    },
+    [showToast]
+  );
 
   const clearFilters = useCallback(() => {
     setFilters({
@@ -691,6 +795,17 @@ const Properties = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-white to-stone-100 pt-16">
+      {/* Toast Notifications */}
+      <AnimatePresence>
+        {toast.show && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={hideToast}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Enhanced Search and Filter Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
