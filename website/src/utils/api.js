@@ -240,7 +240,7 @@ export const propertyAPI = {
 
   getById: async (id) => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/properties/${id}/`, {
+      const response = await axios.get(`https://houseofstone-backend1.onrender.com/properties/${id}/`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -251,7 +251,7 @@ export const propertyAPI = {
       if (error.response?.status === 403) {
         clearInvalidAuth();
         // Retry
-        return axios.get(`http://127.0.0.1:8000/properties/${id}/`, {
+        return axios.get(`https://houseofstone-backend1.onrender.com/properties/${id}/`, {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
