@@ -19,6 +19,8 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'hsp.co.zw',
     'houseofstone-backend.onrender.com',
+    'houseofstone-frontend.onrender.com',
+    'houseofstone-backend1.onrender.com',
     'houseofstone.onrender.com',
     'localhost',
     '127.0.0.1'
@@ -27,7 +29,9 @@ ALLOWED_HOSTS = [
 CORS_ALLOWED_ORIGINS = [
     'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
+     'https://houseofstone-frontend.onrender.com',
     'https://houseofstone-backend.onrender.com',
+    'https://houseofstone-backend1.onrender.com',
     'http://localhost:5177',
     'http://127.0.0.1:5177'
 ]
@@ -35,7 +39,9 @@ CORS_ALLOWED_ORIGINS = [
 CORS_TRUSTED_ORIGINS = [
     'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
+     'https://houseofstone-frontend.onrender.com',
     'https://houseofstone-backend.onrender.com',
+    'https://houseofstone-backend1.onrender.com',
     'http://localhost:5177',
     'http://127.0.0.1:5177'
 ]
@@ -71,7 +77,9 @@ SESSION_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
     'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
+     'https://houseofstone-frontend.onrender.com',
     'https://houseofstone-backend.onrender.com',
+    'https://houseofstone-backend1.onrender.com',
 ]
 
 # Application definition

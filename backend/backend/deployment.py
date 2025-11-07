@@ -7,6 +7,8 @@ from .settings import BASE_DIR
 ALLOWED_HOSTS = [
     os.environ.get('RENDER_EXTERNAL_HOSTNAME'),
     'houseofstone-backend.onrender.com',
+    'houseofstone-frontend.onrender.com',
+    'houseofstone-backend1.onrender.com',
     'houseofstone.onrender.com',
     'hsp.co.zw/'
 ]
@@ -18,7 +20,9 @@ SECRET_KEY = SECRET_KEY
 CORS_ALLOWED_ORIGINS = [
     'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
+     'https://houseofstone-frontend.onrender.com',
     'https://houseofstone-backend.onrender.com',
+    'https://houseofstone-backend1.onrender.com',
     'http://localhost:5177',
     'http://127.0.0.1:5177'
 ]
@@ -26,7 +30,9 @@ CORS_ALLOWED_ORIGINS = [
 CORS_TRUSTED_ORIGINS = [
     'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
+     'https://houseofstone-frontend.onrender.com',
     'https://houseofstone-backend.onrender.com',
+    'https://houseofstone-backend1.onrender.com',
     'http://localhost:5177',
     'http://127.0.0.1:5177'
 ]

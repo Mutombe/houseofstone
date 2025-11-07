@@ -34,7 +34,7 @@ export const refreshTokens = async (refresh) => {
 
 // Enhanced API utilities WITHOUT caching
 const api = axios.create({
-  baseURL: "https://houseofstone-backend.onrender.com/",
+  baseURL: "https://houseofstone-backend1.onrender.com/",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
