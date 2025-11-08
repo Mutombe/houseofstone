@@ -119,9 +119,16 @@ class ProfileView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+from rest_framework.pagination import PageNumberPagination
+
+class PropertyPagination(PageNumberPagination):
+    page_size = 12
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 class PropertyViewSet(viewsets.ModelViewSet):
     serializer_class = PropertySerializer
-    pagination_class = None
+    pagination_class = PropertyPagination  # ADD THIS LINE
     
     filterset_fields = {
         'price': ['lte', 'gte'],
@@ -134,28 +141,15 @@ class PropertyViewSet(viewsets.ModelViewSet):
     }
     
     def get_permissions(self):
-        """
-        Instantiate and return the list of permissions that this view requires.
-        """
-        logger.info(f"Action: {self.action}, User: {self.request.user}, Auth: {self.request.user.is_authenticated}")
-        print(f"DEBUG: Action - {self.action}, User - {self.request.user}, Authenticated - {self.request.user.is_authenticated}")
-        
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            logger.info("Requiring authentication for write operation")
-            print("DEBUG: Write operation detected, requiring authentication")
             return [IsAuthenticated()]
-        
-        logger.info("Allowing any access for read operation")
-        print("DEBUG: Read operation detected, allowing any access")
         return [AllowAny()]
-
     
     def get_queryset(self):
         """Optimized queryset with selective prefetching based on action"""
         base_queryset = Property.objects.filter(is_published=True)
         
         if self.action in ['retrieve', 'stats']:
-            # Full prefetch for detail views and stats
             return base_queryset.select_related('user').prefetch_related(
                 'images',
                 'features',
@@ -164,18 +158,41 @@ class PropertyViewSet(viewsets.ModelViewSet):
                 'leads__source'
             )
         elif self.action == 'list':
-            # Minimal prefetch for list views
             return base_queryset.select_related('user').prefetch_related('images')
         
         return base_queryset
 
-    def get_serializer_class(self):
-        """Use different serializers for different actions"""
-        if self.action == 'list':
-            return PropertySerializer  # Lighter serializer for list view
-        elif self.action == 'retrieve':
-            return PropertyDetailSerializer  # Full serializer for detail view
-        return PropertySerializer
+    def list(self, request, *args, **kwargs):
+        """Override list to add custom response metadata"""
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # Apply additional filters
+        search_term = request.query_params.get('search')
+        if search_term:
+            queryset = queryset.filter(
+                Q(title__icontains=search_term) |
+                Q(location__icontains=search_term) |
+                Q(description__icontains=search_term)
+            )
+        
+        # Sorting
+        ordering = request.query_params.get('ordering', '-created_at')
+        queryset = queryset.order_by(ordering)
+        
+        # Paginate
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            response = self.get_paginated_response(serializer.data)
+            
+            # Add custom metadata
+            response.data['current_page'] = int(request.query_params.get('page', 1))
+            response.data['page_size'] = self.paginator.get_page_size(request)
+            
+            return response
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class PublicPropertyListView(PropertyViewSet):
     permission_classes = [AllowAny]
