@@ -57,6 +57,7 @@ import {
   updateProperty,
   deleteProperty,
 } from "../../redux/slices/propertySlice";
+import { fetchPropertiesWithoutPagination } from "../../redux/slices/propertySlice";
 import { Snackbar, Alert } from "@mui/material";
 
 // Brand color constants
@@ -1693,7 +1694,7 @@ const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
 
 const PropertyDashboard = () => {
   const dispatch = useDispatch();
-  const properties = useSelector((state) => state.properties?.items);
+  const properties = useSelector((state) => state.properties?.adminProperties);
   const loadingStatus = useSelector((state) => state.properties.status);
   const [analyticsProperty, setAnalyticsProperty] = useState(null);
   const error = useSelector((state) => state.properties.error);
@@ -1767,7 +1768,7 @@ const PropertyDashboard = () => {
   const [formData, setFormData] = useState(initialFormState);
 
   useEffect(() => {
-    dispatch(fetchProperties());
+    dispatch(fetchPropertiesWithoutPagination());
     dispatch(fetchAdminStats());
     dispatch(fetchAgents());
   }, [dispatch]);

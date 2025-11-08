@@ -36,6 +36,23 @@ export const fetchProperties = createAsyncThunk(
   }
 );
 
+export const fetchPropertiesWithoutPagination = createAsyncThunk(
+  "properties/fetchAllNoPagination",
+  async (filters = {}, { rejectWithValue }) => {
+    try {
+      const cleanFilters = { ...filters };
+      const response = await propertyAPI.getAllAdmin(cleanFilters);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue({
+        message: err.response?.data?.message || err.message,
+        status: err.response?.status,
+        errors: err.response?.data?.errors,
+      });
+    }
+  }
+);
+
 export const fetchProperty = createAsyncThunk(
   "properties/fetchOne",
   async (id, { rejectWithValue }) => {
@@ -216,6 +233,9 @@ const initialState = {
     pageSize: 12,
   },
 
+  // Item states
+  adminProperties: [],
+
   // Loading states
   loading: false,
   itemLoading: {},
@@ -317,6 +337,23 @@ const propertySlice = createSlice({
         state.error = action.payload;
         state.items = [];
         state.marketplace.results = [];
+      })
+      .addCase(fetchPropertiesWithoutPagination.pending, (state) => {
+        state.status = "loading";
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPropertiesWithoutPagination.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.loading = false;
+        state.error = null;
+        state.adminProperties = action.payload;
+      })
+      .addCase(fetchPropertiesWithoutPagination.rejected, (state, action) => {
+        state.status = "failed";
+        state.loading = false;
+        state.error = action.payload;
+        state.adminProperties = [];
       })
 
       // Fetch single property

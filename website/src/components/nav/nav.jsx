@@ -41,7 +41,7 @@ import {
 import { MdManageAccounts } from "react-icons/md";
 import { FaPeopleGroup } from "react-icons/fa6";
 import { IoIosPeople } from "react-icons/io";
-
+import { CgMenuRight } from "react-icons/cg";
 // Material UI
 import {
   Dialog,
@@ -1238,7 +1238,7 @@ const Navbar = () => {
                   {isOpen ? (
                     <X className="h-6 w-6" />
                   ) : (
-                    <Menu className="h-6 w-6" />
+                    <CgMenuRight className="h-6 w-6" />
                   )}
                 </motion.div>
               </motion.button>

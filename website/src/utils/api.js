@@ -238,6 +238,40 @@ export const propertyAPI = {
     }
   },
 
+    getAllAdmin: async (params = {}) => {
+    try {
+      // First try without authentication for public endpoints
+      const response = await axios.get("https://houseofstone-backend1.onrender.com/public/properties/", {
+        params,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
+      return response;
+    } catch (error) {
+      // If we get a 403, it might be because we're sending a bad token
+      if (error.response?.status === 403) {
+        const auth = JSON.parse(localStorage.getItem("auth"));
+        if (auth?.access) {
+          // We have a token that's causing issues, clear it and retry
+          console.log("Clearing invalid token and retrying...");
+          clearInvalidAuth();
+          
+          // Retry without authentication
+          return axios.get("https://houseofstone-backend1.onrender.com/public/properties/", {
+            params,
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          });
+        }
+      }
+      throw error;
+    }
+  },
+
   getById: async (id) => {
     try {
       const response = await axios.get(`https://houseofstone-backend1.onrender.com/properties/${id}/`, {

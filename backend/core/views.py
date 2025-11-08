@@ -194,7 +194,177 @@ class PropertyViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-class PublicPropertyListView(PropertyViewSet):
+class AdminPropertyViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Changed this
+    serializer_class = PropertySerializer
+    pagination_class = None  
+    
+    filterset_fields = {
+        'price': ['lte', 'gte'],
+        'property_type': ['exact'],
+        'location': ['icontains'],
+        'status': ['exact'],
+        'category': ['exact'],
+        'beds': ['lte', 'gte'],
+        'baths': ['lte', 'gte'],
+    }
+    def get_permissions(self):
+        """
+        Instantiate and return the list of permissions that this view requires.
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated()]
+        return [AllowAny()]
+    
+    
+    def get_queryset(self):
+        """Optimized queryset with selective prefetching based on action"""
+        base_queryset = Property.objects.filter(is_published=True)
+        
+        if self.action in ['retrieve', 'stats']:
+            # Full prefetch for detail views and stats
+            return base_queryset.select_related('user').prefetch_related(
+                'images',
+                'features',
+                'property_agents__agent',
+                'stats',
+                'leads__source'
+            )
+        elif self.action == 'list':
+            # Minimal prefetch for list views
+            return base_queryset.select_related('user').prefetch_related('images')
+        
+        return base_queryset
+
+    def get_serializer_class(self):
+        """Use different serializers for different actions"""
+        if self.action == 'list':
+            return PropertySerializer  # Lighter serializer for list view
+        elif self.action == 'retrieve':
+            return PropertyDetailSerializer  # Full serializer for detail view
+        return PropertySerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        logger.info(f"Properties list requested with params: {request.query_params}")
+        
+        # Start with optimized base queryset
+        base_queryset = Property.objects.filter(is_published=True).select_related('user').prefetch_related('images')
+    
+        # Apply filters from query parameters
+        filters = {}
+    
+        # Price range filter
+        price_min = request.query_params.get('price_min')
+        price_max = request.query_params.get('price_max')
+        if price_min:
+            filters['price__gte'] = price_min
+        if price_max:
+            filters['price__lte'] = price_max
+    
+        # Property type filter
+        property_type = request.query_params.get('property_type')
+        if property_type and property_type != 'all':
+            filters['property_type'] = property_type
+    
+        # Category filter
+        category = request.query_params.get('category')
+        if category and category != 'all':
+            filters['category'] = category
+    
+        # Status filter
+        status = request.query_params.get('status')
+        if status and status != 'all':
+            filters['status'] = status
+    
+        # Bedrooms filter
+        beds_min = request.query_params.get('beds_min')
+        if beds_min:
+            filters['beds__gte'] = beds_min
+    
+        # Bathrooms filter
+        baths_min = request.query_params.get('baths_min')
+        if baths_min:
+            filters['baths__gte'] = baths_min
+    
+        # Apply filters to queryset
+        if filters:
+            base_queryset = base_queryset.filter(**filters)
+    
+        # Handle search parameter
+        search_term = request.query_params.get('search')
+        if search_term:
+            base_queryset = base_queryset.filter(
+                Q(title__icontains=search_term) |
+                Q(location__icontains=search_term) |
+                Q(description__icontains=search_term)
+            )
+        
+        ordering_param = request.query_params.get('ordering', '-created_at')
+    
+        # Map frontend sorting options to actual model fields
+        ordering_map = {
+            'newest': '-created_at',
+            'price-low': 'price',
+            'price-high': '-price',
+            'beds': '-beds',
+            'sqft': '-sqft'
+        }
+    
+    
+        # Apply ordering
+        ordering = ordering_map.get(ordering_param, ordering_param)
+        valid_fields = [f.name for f in Property._meta.get_fields()]
+        valid_fields += ['-' + f for f in valid_fields]  
+        if ordering in valid_fields:
+            base_queryset = base_queryset.order_by(ordering)
+        else:
+        # Fall back to default ordering if invalid
+            base_queryset = base_queryset.order_by('-created_at')
+        logger.info(f"Final queryset has {base_queryset.count()} properties after filtering and ordering")
+        # Return all results without pagination
+        serializer = self.get_serializer(base_queryset, many=True)
+        logger.info(f"Returning {len(serializer.data)} properties")
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def stats(self, request, pk=None):
+        property = self.get_object()
+        
+        # Use aggregation and annotation for better performance
+        from django.db.models import Sum, Count, F
+        
+        # Get stats in a single query with annotations
+        stats_data = property.stats.aggregate(
+            total_views=Sum('views'),
+            avg_daily_views=Avg('views')
+        )
+        
+        # Last 7 days stats with single query
+        date_7_days_ago = timezone.now().date() - timedelta(days=7)
+        recent_stats = property.stats.filter(
+            date__gte=date_7_days_ago
+        ).values('date', 'views').order_by('date')
+        
+        # Lead sources breakdown with single query
+        lead_sources = property.leads.values('source__name').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        # Total leads count
+        total_leads = property.leads.count()
+        
+        return Response({
+            'total_views': stats_data['total_views'] or 0,
+            'avg_daily_views': stats_data['avg_daily_views'] or 0,
+            'total_leads': total_leads,
+            'recent_stats': list(recent_stats),
+            'lead_sources': list(lead_sources)
+        })
+
+class PublicPropertyListView(AdminPropertyViewSet):
     permission_classes = [AllowAny]
     
     def get_queryset(self):
