@@ -14,7 +14,7 @@ export const setStore = (storeInstance) => {
 // Centralized token refresh function
 export const refreshTokens = async (refresh) => {
   try {
-    const baseUrl = "http://127.0.0.1:8000/";
+    const baseUrl = "https://houseofstone-backend1.onrender.com/";
     const { data } = await axios.post(
       `${baseUrl}core/auth/refresh/`,
       { refresh },

@@ -581,6 +581,9 @@ const PropertyDetail = () => {
                 alt={property.title}
                 className="w-full h-full object-cover cursor-pointer"
                 onClick={() => setIsImageModalOpen(true)}
+                onError={(e) => {
+                  e.target.src = "/hsp-fallback1.png";
+                }}
               />
 
               {/* Image Navigation */}
@@ -629,7 +632,7 @@ const PropertyDetail = () => {
           )}
 
           {/* Action Buttons Overlay */}
-          <div className="absolute top-4 right-4 flex space-x-2">
+          <div className="absolute top-4 right-4 flex space-x-2 pt-10">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
