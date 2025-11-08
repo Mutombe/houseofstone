@@ -3,20 +3,22 @@ import { propertyAPI } from "../../utils/api";
 import api from "./../../utils/api";
 
 // In propertySlice.js
+// Update fetchProperties to handle pagination
 export const fetchProperties = createAsyncThunk(
   "properties/fetchAll",
-  async (filters = {}, { rejectWithValue, signal }) => {  // Note: signal from thunkAPI
+  async (filters = {}, { rejectWithValue }) => {
     try {
-      // Clean the filters object - remove signal if it's there
       const cleanFilters = { ...filters };
-      delete cleanFilters.signal;  // Remove signal from params
+      
+      // Set default pagination if missing
+      if (!cleanFilters.page) cleanFilters.page = 1;
+      if (!cleanFilters.page_size) cleanFilters.page_size = 12;
       
       // Remove undefined values
       Object.keys(cleanFilters).forEach(
         (key) => cleanFilters[key] === undefined && delete cleanFilters[key]
       );
 
-      // Pass signal in the config, not as a parameter
       const response = await propertyAPI.getAll(cleanFilters);
 
       return {
@@ -198,13 +200,21 @@ export const deleteLead = createAsyncThunk(
   }
 );
 
-// Initial state WITHOUT pagination
 const initialState = {
   items: [],
   selectedProperty: null,
   stats: {},
   leads: [],
   leadSources: [],
+
+  // Pagination state
+  marketplace: {
+    results: [],
+    count: 0,
+    currentPage: 1,
+    totalPages: 1,
+    pageSize: 12,
+  },
 
   // Loading states
   loading: false,
@@ -221,7 +231,6 @@ const initialState = {
   filters: {},
   sortBy: "-created_at",
   
-  // Keep track of last fetch for potential optimizations
   lastFetch: null,
   lastFilters: null,
 };
@@ -244,6 +253,7 @@ const propertySlice = createSlice({
 
     clearFilters: (state) => {
       state.filters = {};
+      state.marketplace.currentPage = 1;
     },
 
     updateSortBy: (state, action) => {
@@ -255,22 +265,20 @@ const propertySlice = createSlice({
       state.itemErrors = {};
     },
 
-    // Optimistic updates
     optimisticUpdate: (state, action) => {
       const { id, changes } = action.payload;
-      const index = state.items.findIndex((item) => item.id === id);
+      const index = state.marketplace.results.findIndex((item) => item.id === id);
       if (index !== -1) {
-        state.items[index] = { ...state.items[index], ...changes };
+        state.marketplace.results[index] = { ...state.marketplace.results[index], ...changes };
       }
     },
 
-    // Reset state
     resetPropertyState: () => initialState,
   },
 
   extraReducers: (builder) => {
     builder
-      // Fetch properties
+      // Fetch properties with pagination
       .addCase(fetchProperties.pending, (state) => {
         state.status = "loading";
         state.loading = true;
@@ -281,8 +289,25 @@ const propertySlice = createSlice({
         state.loading = false;
         state.error = null;
 
-        // Set items directly from response data
-        state.items = action.payload.data || [];
+        // Handle paginated response
+        const responseData = action.payload.data;
+        
+        if (responseData.results) {
+          // Paginated response
+          state.marketplace = {
+            results: responseData.results,
+            count: responseData.count,
+            currentPage: responseData.current_page || action.payload.filters.page || 1,
+            totalPages: Math.ceil(responseData.count / (responseData.page_size || 12)),
+            pageSize: responseData.page_size || 12,
+          };
+          state.items = responseData.results;
+        } else {
+          // Non-paginated response (backward compatibility)
+          state.items = responseData || [];
+          state.marketplace.results = responseData || [];
+        }
+        
         state.lastFetch = action.payload.lastFetch;
         state.lastFilters = action.payload.filters;
       })
@@ -291,6 +316,7 @@ const propertySlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.items = [];
+        state.marketplace.results = [];
       })
 
       // Fetch single property
@@ -589,6 +615,11 @@ export const selectRecentProperties = createSelector(
       .filter((property) => new Date(property.created_at) > oneWeekAgo)
       .slice(0, 5);
   }
+);
+
+export const selectMarketplace = createSelector(
+  [selectPropertyState],
+  (properties) => properties.marketplace
 );
 
 // Export reducer

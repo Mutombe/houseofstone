@@ -25,106 +25,70 @@ import {
   Shield,
   Check,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   fetchProperties,
   updateFilters,
   updateSortBy,
   clearFilters as clearReduxFilters,
-} from "./../../redux/slices/propertySlice";
-import {
-  selectAllProperties,
+  selectMarketplace,
   selectPropertiesLoading,
   selectPropertiesError,
 } from "./../../redux/slices/propertySlice";
-import { selectCurrentFilters } from "./../../redux/slices/propertySlice";
 
-// Harare regions and locations mapping
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const HARARE_REGIONS = {
   "Harare North": [
-    "Northwood",
-    "Borrowdale",
-    "Borrowdale Brooke",
-    "Glen Lorne",
-    "Chishawesha",
-    "Emerald Hill",
-    "Mt Pleasant",
-    "Avondale",
-    "Belgravia",
-    "Highlands",
-    "Marlborough",
-    "Vainona",
-    "Cedrre Valley",
-    "Chisipiti",
-    "Mandara",
+    "Northwood", "Borrowdale", "Borrowdale Brooke", "Glen Lorne",
+    "Chishawesha", "Emerald Hill", "Mt Pleasant", "Avondale",
+    "Belgravia", "Highlands", "Marlborough", "Vainona",
+    "Cedrre Valley", "Chisipiti", "Mandara",
   ],
   "Harare East": [
-    "Greendale",
-    "Athlone",
-    "Eastlea",
-    "Eastgate",
-    "Ruwa",
-    "Zimre Park",
-    "Arcturus",
-    "Epworth",
-    "Machipisa",
+    "Greendale", "Athlone", "Eastlea", "Eastgate", "Ruwa",
+    "Zimre Park", "Arcturus", "Epworth", "Machipisa",
   ],
   "Harare South": [
-    "Hatfield",
-    "Prospect",
-    "Waterfalls",
-    "Glen View",
-    "Mbare",
-    "Workington",
-    "Southerton",
-    "Willowvale",
+    "Hatfield", "Prospect", "Waterfalls", "Glen View", "Mbare",
+    "Workington", "Southerton", "Willowvale",
   ],
   "Harare West": [
-    "Westgate",
-    "Mabelreign",
-    "Milton Park",
-    "Belvedere",
-    "Kuwadzana",
-    "Dzivarasekwa",
-    "Mufakose",
-    "Budiriro",
+    "Westgate", "Mabelreign", "Milton Park", "Belvedere",
+    "Kuwadzana", "Dzivarasekwa", "Mufakose", "Budiriro",
   ],
   "Harare Central": [
-    "City Centre",
-    "Avenues",
-    "Braeside",
-    "CBD",
-    "Kopje",
-    "Newlands",
+    "City Centre", "Avenues", "Braeside", "CBD", "Kopje", "Newlands",
   ],
 };
 
-// Get all locations for autocomplete
 const ALL_LOCATIONS = Object.values(HARARE_REGIONS).flat();
 
-// Debounce hook for search optimization (keeping for other uses, but not for search)
-const useDebounce = (value, delay) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
+const INITIAL_FILTERS = {
+  type: "all",
+  priceRange: "all",
+  bedrooms: "all",
+  bathrooms: "all",
+  listingType: "sale",
+  amenities: [],
+  sqftRange: "all",
+  location: "",
+  page: 1,
+  page_size: 12,
 };
 
-// Function to determine region from location
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
 const getRegionFromLocation = (location) => {
   if (!location) return null;
-
   const locationLower = location.toLowerCase();
-
+  
   for (const [region, locations] of Object.entries(HARARE_REGIONS)) {
     const found = locations.some(
       (loc) =>
@@ -133,17 +97,47 @@ const getRegionFromLocation = (location) => {
     );
     if (found) return region;
   }
-
   return null;
 };
+
+const getPropertyTypeIcon = (type) => {
+  const icons = {
+    house: <Home className="w-4 h-4" />,
+    apartment: <Building className="w-4 h-4" />,
+    villa: <TreePine className="w-4 h-4" />,
+    commercial: <Store className="w-4 h-4" />,
+  };
+  return icons[type?.toLowerCase()] || <Home className="w-4 h-4" />;
+};
+
+const getDescriptionPreview = (description, maxLength = 150) => {
+  if (!description) return "";
+  const plainText = description
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return plainText.length > maxLength
+    ? plainText.substring(0, maxLength) + "..."
+    : plainText;
+};
+
+const formatPrice = (price) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(parseFloat(price) || 0);
+};
+
+// ============================================================================
+// SUB-COMPONENTS
+// ============================================================================
 
 // Toast Notification Component
 const Toast = React.memo(({ message, type, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, 3000);
-
+    const timer = setTimeout(onClose, 3000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
@@ -180,7 +174,7 @@ const Toast = React.memo(({ message, type, onClose }) => {
 
 Toast.displayName = "Toast";
 
-// Memoized skeleton component
+// Property Skeleton Component
 const PropertySkeleton = React.memo(({ viewMode }) => {
   const isGrid = viewMode === "grid";
 
@@ -208,19 +202,13 @@ const PropertySkeleton = React.memo(({ viewMode }) => {
 
         <div className="grid grid-cols-3 gap-4 mb-4">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-10 bg-stone-100 rounded-lg animate-pulse"
-            />
+            <div key={i} className="h-10 bg-stone-100 rounded-lg animate-pulse" />
           ))}
         </div>
 
         <div className="flex gap-2 mb-4">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-6 bg-stone-100 rounded-full w-20 animate-pulse"
-            />
+            <div key={i} className="h-6 bg-stone-100 rounded-full w-20 animate-pulse" />
           ))}
         </div>
 
@@ -235,49 +223,13 @@ const PropertySkeleton = React.memo(({ viewMode }) => {
 
 PropertySkeleton.displayName = "PropertySkeleton";
 
-// Memoized property card component
+// Property Card Component
 const PropertyCard = React.memo(
   ({ property, viewMode, favorites, onToggleFavorite, onShare }) => {
-    const getPropertyTypeIcon = useCallback((type) => {
-      switch (type?.toLowerCase()) {
-        case "house":
-          return <Home className="w-4 h-4" />;
-        case "apartment":
-          return <Building className="w-4 h-4" />;
-        case "villa":
-          return <TreePine className="w-4 h-4" />;
-        case "commercial":
-          return <Store className="w-4 h-4" />;
-        default:
-          return <Home className="w-4 h-4" />;
-      }
-    }, []);
-
-    const getDescriptionPreview = (description, maxLength = 150) => {
-      if (!description) return "";
-
-      // Strip HTML tags
-      const plainText = description
-        .replace(/<[^>]*>/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-
-      // Truncate if too long
-      if (plainText.length > maxLength) {
-        return plainText.substring(0, maxLength) + "...";
-      }
-
-      return plainText;
-    };
-
-    const formattedPrice = useMemo(() => {
-      return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(parseFloat(property.price) || 0);
-    }, [property.price]);
+    const formattedPrice = useMemo(
+      () => formatPrice(property.price),
+      [property.price]
+    );
 
     const handleFavoriteClick = useCallback(
       (e) => {
@@ -312,11 +264,8 @@ const PropertyCard = React.memo(
           to={`/properties/${property.id}`}
           className={viewMode === "list" ? "flex w-full" : "block"}
         >
-          <div
-            className={`relative ${
-              viewMode === "list" ? "w-1/3 h-48" : "h-64"
-            }`}
-          >
+          {/* Property Image */}
+          <div className={`relative ${viewMode === "list" ? "w-1/3 h-48" : "h-64"}`}>
             <div className="absolute inset-0 bg-gradient-to-r from-stone-500 to-stone-700">
               {property.images && property.images.length > 0 ? (
                 <img
@@ -325,7 +274,7 @@ const PropertyCard = React.memo(
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
                   onError={(e) => {
-                    e.target.src = "/placeholder-house.jpg";
+                    e.target.src = "/hsp-fallback2.png";
                   }}
                 />
               ) : (
@@ -335,7 +284,7 @@ const PropertyCard = React.memo(
               )}
             </div>
 
-            {/* Overlay Elements */}
+            {/* Overlay Elements - Top Left */}
             <div className="absolute top-4 left-4 flex gap-2">
               <div className="bg-white px-3 py-1 rounded-full text-stone-900 font-bold text-lg">
                 {formattedPrice}
@@ -347,6 +296,7 @@ const PropertyCard = React.memo(
               )}
             </div>
 
+            {/* Overlay Elements - Top Right */}
             <div className="absolute top-4 right-4 flex gap-2">
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -373,6 +323,7 @@ const PropertyCard = React.memo(
               </motion.button>
             </div>
 
+            {/* Overlay Elements - Bottom Left */}
             <div className="absolute bottom-4 left-4 flex gap-2">
               <div className="bg-stone-900 bg-opacity-75 px-3 py-1 rounded-full text-white text-sm flex items-center gap-1">
                 {getPropertyTypeIcon(property.property_type)}
@@ -384,6 +335,7 @@ const PropertyCard = React.memo(
             </div>
           </div>
 
+          {/* Property Details */}
           <div className={`p-6 ${viewMode === "list" ? "flex-1" : ""}`}>
             <div className="flex justify-between items-start mb-3">
               <h3 className="text-xl font-bold text-stone-900 group-hover:text-stone-700 transition-colors line-clamp-2">
@@ -467,162 +419,81 @@ const PropertyCard = React.memo(
 
 PropertyCard.displayName = "PropertyCard";
 
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 const Properties = () => {
   const dispatch = useDispatch();
 
-  // Redux selectors
-  const properties = useSelector(selectAllProperties);
+  // ========================================
+  // Redux State
+  // ========================================
+  const marketplace = useSelector(selectMarketplace);
   const loading = useSelector(selectPropertiesLoading);
   const error = useSelector(selectPropertiesError);
-  const reduxFilters = useSelector(selectCurrentFilters);
 
-  // Local state - removed debouncing for live search
+  const {
+    results: properties = [],
+    count: totalProperties = 0,
+    currentPage = 1,
+    totalPages = 1,
+    pageSize = 12,
+  } = marketplace || {};
+
+  // ========================================
+  // Local State
+  // ========================================
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState("newest");
   const [favorites, setFavorites] = useState(new Set());
   const [selectedRegion, setSelectedRegion] = useState("all");
-
-  const [filters, setFilters] = useState({
-    type: "all",
-    priceRange: "all",
-    bedrooms: "all",
-    bathrooms: "all",
-    listingType: "sale",
-    amenities: [],
-    sqftRange: "all",
-    location: "",
-  });
-
-  // Toast notification state
+  const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [toast, setToast] = useState({
     show: false,
     message: "",
-    type: "success", // 'success' | 'error'
+    type: "success",
   });
 
-  // Debounced search term
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
-  // Show toast helper
+  // ========================================
+  // Callbacks
+  // ========================================
   const showToast = useCallback((message, type = "success") => {
     setToast({ show: true, message, type });
   }, []);
 
-  // Hide toast helper
   const hideToast = useCallback(() => {
     setToast((prev) => ({ ...prev, show: false }));
   }, []);
 
-  // Fetch properties with error handling
-  useEffect(() => {
-    const controller = new AbortController();
+  const handleFilterChange = useCallback((key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
+  }, []);
 
-    dispatch(
-      fetchProperties({
-        ...filters,
-        search: debouncedSearchTerm,
-        ordering: sortBy,
-        //signal: controller.signal,
-      })
-    );
+  const handleSortChange = useCallback(
+    (value) => {
+      setSortBy(value);
+      setFilters((prev) => ({ ...prev, page: 1 }));
+      dispatch(updateSortBy(value));
+    },
+    [dispatch]
+  );
 
-    return () => {
-      controller.abort();
-    };
-  }, [dispatch, debouncedSearchTerm, filters, sortBy]);
+  const clearFilters = useCallback(() => {
+    setFilters(INITIAL_FILTERS);
+    setSearchTerm("");
+    setSelectedRegion("all");
+    setSortBy("newest");
+    dispatch(clearReduxFilters());
+  }, [dispatch]);
 
-  // Memoized filtering and sorting
-  const filteredAndSortedProperties = useMemo(() => {
-    if (!Array.isArray(properties)) return [];
+  const handlePageChange = useCallback((newPage) => {
+    setFilters((prev) => ({ ...prev, page: newPage }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
-    let filtered = properties.filter((property) => {
-      // Category filter - only show sale properties
-      if (property.category !== "sale") return false;
-
-      // Live search filter - no debouncing, instant results
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const matchesSearch =
-          property.title?.toLowerCase().includes(searchLower) ||
-          property.location?.toLowerCase().includes(searchLower) ||
-          property.description?.toLowerCase().includes(searchLower);
-        if (!matchesSearch) return false;
-      }
-
-      // Region filter
-      if (selectedRegion !== "all") {
-        const propertyRegion = getRegionFromLocation(property.location);
-        if (propertyRegion !== selectedRegion) return false;
-      }
-
-      // Property type filter
-      if (filters.type !== "all" && property.property_type !== filters.type) {
-        return false;
-      }
-
-      // Price range filter
-      if (filters.priceRange !== "all") {
-        const price = parseFloat(property.price) || 0;
-        const [min, max] = filters.priceRange.split("-").map(Number);
-        if (price < min || (max && price > max)) return false;
-      }
-
-      // Bedrooms filter
-      if (filters.bedrooms !== "all") {
-        const beds = parseInt(property.beds) || 0;
-        const minBeds = parseInt(filters.bedrooms);
-        if (beds < minBeds) return false;
-      }
-
-      // Bathrooms filter
-      if (filters.bathrooms !== "all") {
-        const baths = parseInt(property.baths) || 0;
-        const minBaths = parseInt(filters.bathrooms);
-        if (baths < minBaths) return false;
-      }
-
-      // Square footage filter
-      if (filters.sqftRange !== "all") {
-        const sqft =
-          parseInt(property.sqft) || parseInt(property.area_measurement) || 0;
-        const [min, max] = filters.sqftRange.split("-").map(Number);
-        if (sqft < min || (max && sqft > max)) return false;
-      }
-
-      // Location filter
-      if (
-        filters.location &&
-        !property.location
-          ?.toLowerCase()
-          .includes(filters.location.toLowerCase())
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-
-    // Sorting with performance optimization
-    const sortFunctions = {
-      "price-low": (a, b) =>
-        (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0),
-      "price-high": (a, b) =>
-        (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0),
-      beds: (a, b) => (parseInt(b.beds) || 0) - (parseInt(a.beds) || 0),
-      sqft: (a, b) => (parseInt(b.sqft) || 0) - (parseInt(a.sqft) || 0),
-      newest: (a, b) =>
-        new Date(b.created_at || 0) - new Date(a.created_at || 0),
-    };
-
-    const sortFunction = sortFunctions[sortBy] || sortFunctions.newest;
-    filtered.sort(sortFunction);
-
-    return filtered;
-  }, [properties, searchTerm, selectedRegion, filters, sortBy]);
-
-  // Memoized callbacks
   const toggleFavorite = useCallback((propertyId) => {
     setFavorites((prev) => {
       const newFavorites = new Set(prev);
@@ -635,7 +506,6 @@ const Properties = () => {
     });
   }, []);
 
-  // Enhanced share handler with better error handling and feedback
   const handleShare = useCallback(
     async (property) => {
       const shareData = {
@@ -645,115 +515,147 @@ const Properties = () => {
       };
 
       try {
-        // Check if Web Share API is available (typically on mobile)
         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
           await navigator.share(shareData);
-          // Note: We don't show a success toast here because the share sheet
-          // provides its own feedback
         } else {
-          // Fallback to clipboard for desktop or unsupported browsers
           const shareText = `${property.title}\n${property.location}\n\n${shareData.url}`;
-          
+
           if (navigator.clipboard && navigator.clipboard.writeText) {
             await navigator.clipboard.writeText(shareText);
             showToast("Link copied to clipboard!", "success");
           } else {
-            // Fallback for older browsers
             const textArea = document.createElement("textarea");
             textArea.value = shareText;
             textArea.style.position = "fixed";
             textArea.style.left = "-999999px";
-            textArea.style.top = "-999999px";
             document.body.appendChild(textArea);
-            textArea.focus();
             textArea.select();
-            
+
             try {
               document.execCommand("copy");
               showToast("Link copied to clipboard!", "success");
             } catch (err) {
-              showToast("Unable to copy link. Please try again.", "error");
+              showToast("Unable to copy link.", "error");
             } finally {
               document.body.removeChild(textArea);
             }
           }
         }
       } catch (error) {
-        // Handle errors gracefully
-        if (error.name === "AbortError") {
-          // User cancelled the share - this is not an error
-          return;
+        if (error.name !== "AbortError") {
+          showToast("Unable to share.", "error");
         }
-        
-        console.error("Error sharing:", error);
-        showToast("Unable to share. Please try again.", "error");
       }
     },
     [showToast]
   );
 
-  const clearFilters = useCallback(() => {
-    setFilters({
-      type: "all",
-      priceRange: "all",
-      bedrooms: "all",
-      bathrooms: "all",
-      listingType: "sale",
-      amenities: [],
-      sqftRange: "all",
-      location: "",
-    });
-    setSearchTerm("");
-    setSelectedRegion("all");
-    dispatch(clearReduxFilters());
-  }, [dispatch]);
+  const getPageRange = useCallback(() => {
+    const range = [];
+    const start = Math.max(1, currentPage - 2);
+    const end = Math.min(totalPages, start + 4);
 
-  const handleFilterChange = useCallback((key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  }, []);
+    for (let i = start; i <= end; i++) {
+      range.push(i);
+    }
+    return range;
+  }, [currentPage, totalPages]);
 
-  const handleSortChange = useCallback(
-    (value) => {
-      setSortBy(value);
-      dispatch(updateSortBy(value));
-    },
-    [dispatch]
-  );
+  // ========================================
+  // Effects
+  // ========================================
+  useEffect(() => {
+    const controller = new AbortController();
 
+    // Build backend-compatible filters
+    const backendFilters = {
+      search: searchTerm,
+      ordering:
+        sortBy === "newest" ? "-created_at" :
+        sortBy === "price-low" ? "price" :
+        sortBy === "price-high" ? "-price" :
+        sortBy === "beds" ? "-beds" :
+        sortBy === "sqft" ? "-sqft" : "-created_at",
+      page: filters.page,
+      page_size: filters.page_size,
+      category: "sale",
+    };
+
+    // Add property type filter
+    if (filters.type !== "all") {
+      backendFilters.property_type = filters.type;
+    }
+
+    // Add location filter
+    if (filters.location) {
+      backendFilters.location__icontains = filters.location;
+    }
+
+    // Add region filter
+    if (selectedRegion !== "all") {
+      const regionLocations = HARARE_REGIONS[selectedRegion];
+      if (regionLocations) {
+        backendFilters.location__icontains = regionLocations.join("|");
+      }
+    }
+
+    // Add bedrooms filter
+    if (filters.bedrooms !== "all") {
+      backendFilters.beds__gte = filters.bedrooms;
+    }
+
+    // Add bathrooms filter
+    if (filters.bathrooms !== "all") {
+      backendFilters.baths__gte = filters.bathrooms;
+    }
+
+    // Add price range filter
+    if (filters.priceRange !== "all") {
+      const [min, max] = filters.priceRange.split("-").map(Number);
+      if (min) backendFilters.price__gte = min;
+      if (max) backendFilters.price__lte = max;
+    }
+
+    // Add square footage filter
+    if (filters.sqftRange !== "all") {
+      const [min, max] = filters.sqftRange.split("-").map(Number);
+      if (min) backendFilters.sqft__gte = min;
+      if (max) backendFilters.sqft__lte = max;
+    }
+
+    dispatch(fetchProperties(backendFilters));
+
+    return () => {
+      controller.abort();
+    };
+  }, [dispatch, searchTerm, filters, sortBy, selectedRegion]);
+
+  // ========================================
+  // Computed Values
+  // ========================================
+  const activeFiltersCount = useMemo(() => {
+    return Object.entries(filters).filter(([key, value]) => {
+      return (
+        value &&
+        key !== "sortBy" &&
+        key !== "page" &&
+        key !== "page_size" &&
+        value !== "all" &&
+        value !== ""
+      );
+    }).length;
+  }, [filters]);
+
+  // ========================================
+  // Render States
+  // ========================================
+  
   // Loading state
-  if (loading && filteredAndSortedProperties.length === 0) {
+  if (loading && properties.length === 0) {
     return (
       <div className="min-h-screen pt-8 bg-gradient-to-br from-stone-50 via-white to-stone-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-16">
-          {/* Search Bar Skeleton */}
-          <div className="flex flex-col lg:flex-row gap-4 items-center mb-4">
-            <div className="flex-1 w-full relative">
-              <div className="w-full h-16 bg-stone-200 rounded-xl animate-pulse" />
-            </div>
-            <div className="flex gap-2 w-full lg:w-auto">
-              <div className="h-16 bg-stone-200 rounded-xl w-32 animate-pulse" />
-              <div className="h-16 bg-stone-200 rounded-xl w-16 animate-pulse" />
-            </div>
-          </div>
-
-          {/* Filters Skeleton */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="h-12 bg-stone-200 rounded-lg animate-pulse"
-              />
-            ))}
-          </div>
-
-          {/* Properties Grid Skeleton */}
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                : "space-y-6"
-            }
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <PropertySkeleton key={i} viewMode={viewMode} />
             ))}
@@ -793,20 +695,19 @@ const Properties = () => {
     );
   }
 
+  // ========================================
+  // Main Render
+  // ========================================
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-white to-stone-100 pt-16">
       {/* Toast Notifications */}
       <AnimatePresence>
         {toast.show && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={hideToast}
-          />
+          <Toast message={toast.message} type={toast.type} onClose={hideToast} />
         )}
       </AnimatePresence>
 
-      {/* Enhanced Search and Filter Section */}
+      {/* Search and Filter Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -819,7 +720,10 @@ const Properties = () => {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setSelectedRegion("all")}
+                onClick={() => {
+                  setSelectedRegion("all");
+                  setFilters((prev) => ({ ...prev, page: 1 }));
+                }}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   selectedRegion === "all"
                     ? "bg-stone-900 text-white shadow-lg"
@@ -833,7 +737,10 @@ const Properties = () => {
                   key={region}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => setSelectedRegion(region)}
+                  onClick={() => {
+                    setSelectedRegion(region);
+                    setFilters((prev) => ({ ...prev, page: 1 }));
+                  }}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     selectedRegion === region
                       ? "bg-stone-900 text-white shadow-lg"
@@ -845,13 +752,14 @@ const Properties = () => {
               ))}
             </div>
           </div>
+
           {/* Main Search Bar */}
           <div className="flex flex-col lg:flex-row gap-4 items-center mb-4">
             <div className="flex-1 w-full relative">
               <input
                 type="text"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)} // Live search!
+                onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by title, location, or description..."
                 className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 focus:border-transparent shadow-sm text-lg"
               />
@@ -880,6 +788,11 @@ const Properties = () => {
               >
                 <SlidersHorizontal className="w-5 h-5" />
                 Filters
+                {activeFiltersCount > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    {activeFiltersCount}
+                  </span>
+                )}
               </motion.button>
 
               <div className="flex gap-2">
@@ -993,9 +906,22 @@ const Properties = () => {
                     <option value="3000-5000">3K - 5K sq ft</option>
                     <option value="5000-999999">5K+ sq ft</option>
                   </select>
+
+                  {/* Sort By */}
+                  <select
+                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
+                    value={sortBy}
+                    onChange={(e) => handleSortChange(e.target.value)}
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="beds">Most Bedrooms</option>
+                    <option value="sqft">Largest First</option>
+                  </select>
                 </div>
 
-                {/* Location Filter & Sort */}
+                {/* Location Filter & Clear */}
                 <div className="flex flex-col sm:flex-row gap-4 items-center">
                   <div className="flex-1 w-full">
                     <input
@@ -1008,18 +934,6 @@ const Properties = () => {
                       className="w-full px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500"
                     />
                   </div>
-
-                  <select
-                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
-                    value={sortBy}
-                    onChange={(e) => handleSortChange(e.target.value)}
-                  >
-                    <option value="newest">Newest First</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="beds">Most Bedrooms</option>
-                    <option value="sqft">Largest First</option>
-                  </select>
 
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -1046,25 +960,22 @@ const Properties = () => {
           <div className="text-stone-700 mb-2 sm:mb-0">
             Showing{" "}
             <span className="font-bold text-stone-900">
-              {filteredAndSortedProperties.length}
+              {(currentPage - 1) * pageSize + 1}
+            </span>{" "}
+            to{" "}
+            <span className="font-bold text-stone-900">
+              {Math.min(currentPage * pageSize, totalProperties)}
             </span>{" "}
             of{" "}
-            <span className="font-bold text-stone-900">
-              {properties?.length || 0}
-            </span>{" "}
+            <span className="font-bold text-stone-900">{totalProperties}</span>{" "}
             properties
-            {loading && (
-              <span className="ml-2 text-stone-500">(Loading...)</span>
-            )}
+            {loading && <span className="ml-2 text-stone-500">(Loading...)</span>}
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-sm text-stone-500">
               <Filter className="w-4 h-4" />
-              {Object.values(filters).filter(
-                (v) =>
-                  v !== "all" && v !== "" && (!Array.isArray(v) || v.length > 0)
-              ).length > 0
-                ? "Filters applied"
+              {activeFiltersCount > 0
+                ? `${activeFiltersCount} filters applied`
                 : "No filters"}
             </div>
           </div>
@@ -1073,7 +984,7 @@ const Properties = () => {
 
       {/* Properties Display */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {filteredAndSortedProperties.length === 0 && !loading ? (
+        {properties.length === 0 && !loading ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1096,7 +1007,6 @@ const Properties = () => {
             </motion.button>
           </motion.div>
         ) : (
-          // Regular grid/list display
           <div
             className={
               viewMode === "grid"
@@ -1105,7 +1015,7 @@ const Properties = () => {
             }
           >
             <AnimatePresence mode="popLayout">
-              {filteredAndSortedProperties.map((property) => (
+              {properties.map((property) => (
                 <PropertyCard
                   key={property.id}
                   property={property}
@@ -1120,11 +1030,64 @@ const Properties = () => {
         )}
 
         {/* Loading more indicator */}
-        {loading && filteredAndSortedProperties.length > 0 && (
+        {loading && properties.length > 0 && (
           <div className="flex justify-center mt-8">
             <div className="flex items-center gap-2 text-stone-500">
               <div className="w-4 h-4 border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin" />
               Loading properties...
+            </div>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="mt-10 flex justify-center">
+            <div className="flex items-center space-x-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={`px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
+                  currentPage === 1
+                    ? "border-stone-200 text-stone-400 cursor-not-allowed"
+                    : "border-stone-300 text-stone-700 hover:bg-stone-50"
+                }`}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Previous
+              </motion.button>
+
+              {getPageRange().map((page) => (
+                <motion.button
+                  key={page}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handlePageChange(page)}
+                  className={`w-10 h-10 rounded-lg font-medium transition-colors ${
+                    page === currentPage
+                      ? "bg-stone-900 text-white shadow-lg"
+                      : "border border-stone-300 text-stone-700 hover:bg-stone-50"
+                  }`}
+                >
+                  {page}
+                </motion.button>
+              ))}
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={`px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
+                  currentPage === totalPages
+                    ? "border-stone-200 text-stone-400 cursor-not-allowed"
+                    : "border-stone-300 text-stone-700 hover:bg-stone-50"
+                }`}
+              >
+                Next
+                <ChevronRight className="w-4 h-4" />
+              </motion.button>
             </div>
           </div>
         )}
@@ -1141,15 +1104,6 @@ const Properties = () => {
       >
         <SlidersHorizontal className="w-6 h-6" />
       </motion.button>
-
-      {/* Performance monitoring in development */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="fixed bottom-4 left-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs z-50">
-          <div>Properties: {properties.length}</div>
-          <div>Filtered: {filteredAndSortedProperties.length}</div>
-          <div>View: {viewMode}</div>
-        </div>
-      )}
     </div>
   );
 };
