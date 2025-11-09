@@ -72,7 +72,8 @@ class ProfileSerializer(serializers.ModelSerializer):
 class PropertyImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PropertyImage
-        fields = ['image', 'caption']
+        fields = ['id', 'image', 'caption', 'order', 'created_at']
+        read_only_fields = ['created_at']
 
 class PropertyFeatureSerializer(serializers.ModelSerializer):
     class Meta:
@@ -156,7 +157,7 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
 
 
 class PropertySerializer(serializers.ModelSerializer):
-    """Standard serializer for create/update operations"""
+    """Standard serializer for create/update operations with enhanced image handling"""
     images = PropertyImageSerializer(many=True, required=False, read_only=True)
     features = PropertyFeatureSerializer(many=True, required=False, read_only=True)
     property_agents = PropertyAgentSerializer(many=True, required=False, read_only=True)
@@ -167,13 +168,11 @@ class PropertySerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
 
     def create(self, validated_data):
-        # Extract and process related data
+        from django.db import transaction
+        
         features_data = []
         agents_data = []
         request = self.context.get('request')
-        
-        # Use transaction for data consistency and performance
-        from django.db import transaction
         
         with transaction.atomic():
             if request:
@@ -196,7 +195,7 @@ class PropertySerializer(serializers.ModelSerializer):
             # Create property instance
             property_instance = Property.objects.create(**validated_data)
             
-            # Bulk create features for better performance
+            # Bulk create features
             if features_data:
                 features_to_create = []
                 for feature in features_data:
@@ -226,7 +225,7 @@ class PropertySerializer(serializers.ModelSerializer):
                 if agents_to_create:
                     PropertyAgent.objects.bulk_create(agents_to_create)
             
-            # Process images
+            # Process images with order
             self._process_images(request, property_instance)
             
         return property_instance
@@ -254,26 +253,41 @@ class PropertySerializer(serializers.ModelSerializer):
                     except json.JSONDecodeError:
                         raise serializers.ValidationError("Invalid agents format")
             
-            # Update instance
+            # Update instance fields
             for attr, value in validated_data.items():
                 setattr(instance, attr, value)
             instance.save()
             
-            # Handle deleted images
+            # Handle deleted images FIRST before processing new ones
             if request and 'deleted_images' in request.data:
                 try:
                     deleted_images = json.loads(request.data.get('deleted_images', '[]'))
                     if deleted_images:
-                        PropertyImage.objects.filter(id__in=deleted_images).delete()
+                        # Delete the actual image files and database records
+                        images_to_delete = PropertyImage.objects.filter(
+                            id__in=deleted_images,
+                            property=instance  # Ensure we're only deleting images from this property
+                        )
+                        for img in images_to_delete:
+                            # Delete the file from storage
+                            if img.image:
+                                img.image.delete(save=False)
+                        # Delete the database records
+                        images_to_delete.delete()
                 except json.JSONDecodeError:
                     pass
+                except Exception as e:
+                    print(f"Error deleting images: {e}")
             
-            # Process new images
+            # Process new images and update existing ones
             self._process_images(request, instance)
             
-            # Update features (bulk operations)
-            if features_data is not None:  # Allow empty list to clear features
+            # Update features - only if explicitly provided
+            if 'features' in request.data:  # Check if features was in the request
+                # Delete existing features
                 instance.features.all().delete()
+                
+                # Create new features
                 if features_data:
                     features_to_create = []
                     for feature in features_data:
@@ -284,9 +298,12 @@ class PropertySerializer(serializers.ModelSerializer):
                     if features_to_create:
                         PropertyFeature.objects.bulk_create(features_to_create)
             
-            # Update agents (bulk operations)
-            if agents_data is not None:
+            # Update agents - only if explicitly provided
+            if 'agents' in request.data:  # Check if agents was in the request
+                # Delete existing agents
                 instance.property_agents.all().delete()
+                
+                # Create new agents
                 if agents_data:
                     agents_to_create = []
                     for agent_data in agents_data:
@@ -305,18 +322,18 @@ class PropertySerializer(serializers.ModelSerializer):
                     if agents_to_create:
                         PropertyAgent.objects.bulk_create(agents_to_create)
         
+        # Refresh the instance to get updated related objects
+        instance.refresh_from_db()
         return instance
     
     def _process_images(self, request, property_instance):
-        """Helper method to process images efficiently"""
+        """Helper method to process images with order support"""
         if not request:
             return
             
         images_data = request.FILES.getlist('images')
-        if not images_data:
-            return
-            
-        # Get image captions
+        
+        # Get image captions and order
         image_captions = []
         if 'image_captions' in request.data:
             try:
@@ -324,46 +341,59 @@ class PropertySerializer(serializers.ModelSerializer):
             except json.JSONDecodeError:
                 pass
         
-        # Create images in bulk
-        images_to_create = []
-        for image_data in images_data:
-            caption = ""
-            # Find caption for this image
-            for caption_data in image_captions:
-                if caption_data.get('file') == image_data.name:
-                    caption = caption_data.get('caption', '')
-                    break
-            
-            images_to_create.append(
-                PropertyImage(
-                    property=property_instance,
-                    image=image_data,
-                    caption=caption
+        # Process new images
+        if images_data:
+            images_to_create = []
+            for idx, image_data in enumerate(images_data):
+                caption = ""
+                order = idx  # Default order
+                
+                # Find metadata for this image
+                for caption_data in image_captions:
+                    if caption_data.get('file') == image_data.name:
+                        caption = caption_data.get('caption', '')
+                        order = caption_data.get('order', idx)
+                        break
+                
+                images_to_create.append(
+                    PropertyImage(
+                        property=property_instance,
+                        image=image_data,
+                        caption=caption,
+                        order=order
+                    )
                 )
-            )
-        
-        if images_to_create:
+            
+            # Save new images
             for img in images_to_create:
                 img.save()
         
-        # Update existing image captions
+        # Update existing image captions and order
         for caption_data in image_captions:
             if 'id' in caption_data and caption_data['id']:
                 try:
-                    PropertyImage.objects.filter(
-                        id=caption_data['id']
-                    ).update(caption=caption_data.get('caption', ''))
-                except Exception:
-                    pass
+                    updates = {}
+                    if 'caption' in caption_data:
+                        updates['caption'] = caption_data.get('caption', '')
+                    if 'order' in caption_data:
+                        updates['order'] = caption_data.get('order', 0)
+                    
+                    if updates:
+                        PropertyImage.objects.filter(
+                            id=caption_data['id'],
+                            property=property_instance  # Ensure we're only updating images from this property
+                        ).update(**updates)
+                except Exception as e:
+                    print(f"Error updating image {caption_data['id']}: {e}")
 
     def validate_price(self, value):
         if value < 0:
             raise serializers.ValidationError("Price must be a positive number.")
         return value
     
-    def validate_area_measurement(self, value):
+    def validate_area(self, value):
         if value is not None and value < 0:
-            raise serializers.ValidationError("Area measurement must be a positive number.")
+            raise serializers.ValidationError("Area must be a positive number.")
         return value
 
 from .models import PropertyLead, LeadSource, PropertyStat

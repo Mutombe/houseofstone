@@ -3,6 +3,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User  
 from decimal import Decimal
+from django.utils import timezone
     
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
@@ -151,7 +152,11 @@ class PropertyImage(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='property_images/')
     caption = models.CharField(max_length=200, blank=True)
-
+    order = models.IntegerField(default=0) 
+    created_at = models.DateTimeField(default=timezone.now)
+    
+    class Meta:
+        ordering = ['order', 'created_at'] 
     def __str__(self):
         return f"{self.property.title} - Image {self.id}"
 

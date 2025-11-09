@@ -173,3 +173,18 @@ Email sent successfully: New Property Created: Sample to ['simbamtombe@gmail.com
 Email sent successfully: New Property Created: Sample 2 to ['simbamtombe@gmail.com', 'sales@hsp.co.zw', 'info@hsp.co.zw', 'leonita@hsp.co.zw']
 Email sent successfully: Property Assigned to You: Sample 2 to ['info@hsp.co.zw']
 Watermark process started
+Failed to send email: Property Updated: Stunning Five Bed Home In Shawasha Hills - Error: [Errno 11001] getaddrinfo failed
+Email sent successfully: Property Updated: Mount Pleasant heights 4 bed house for sale. to ['simbamtombe@gmail.com', 'sales@hsp.co.zw', 'info@hsp.co.zw', 'leonita@hsp.co.zw']
+Email sent successfully: Property Unassigned: Mount Pleasant heights 4 bed house for sale. to ['nairgel@hsp.co.zw']
+Email sent successfully: Agent Unassigned from Property: Mount Pleasant heights 4 bed house for sale. to ['simbamtombe@gmail.com', 'sales@hsp.co.zw', 'info@hsp.co.zw', 'leonita@hsp.co.zw']
+Email sent successfully: Property Unassigned: Mount Pleasant heights 4 bed house for sale. to ['leonita@hsp.co.zw']
+Email sent successfully: Agent Unassigned from Property: Mount Pleasant heights 4 bed house for sale. to ['simbamtombe@gmail.com', 'sales@hsp.co.zw', 'info@hsp.co.zw', 'leonita@hsp.co.zw']
+Email sent successfully: Property Updated: Expansive 30-hectare plot in Kwekwe offering a fantastic opportunity for agricultural and commercial ventures. to ['simbamtombe@gmail.com', 'sales@hsp.co.zw', 'info@hsp.co.zw', 'leonita@hsp.co.zw']
+Email sent successfully: Property Unassigned: Expansive 30-hectare plot in Kwekwe offering a fantastic opportunity for agricultural and commercial ventures. to ['leonita@hsp.co.zw']
+Email sent successfully: Agent Unassigned from Property: Expansive 30-hectare plot in Kwekwe offering a fantastic opportunity for agricultural and commercial ventures. to ['simbamtombe@gmail.com', 'sales@hsp.co.zw', 'info@hsp.co.zw', 'leonita@hsp.co.zw']
+Email sent successfully: Property Updated: HIGHFIELD COMMERCIAL STORE to ['simbamtombe@gmail.com', 'sales@hsp.co.zw', 'info@hsp.co.zw', 'leonita@hsp.co.zw']
+Email sent successfully: Property Unassigned: HIGHFIELD COMMERCIAL STORE to ['chomu@hsp.co.zw']
+Email sent successfully: Agent Unassigned from Property: HIGHFIELD COMMERCIAL STORE to ['simbamtombe@gmail.com', 'sales@hsp.co.zw', 'info@hsp.co.zw', 'leonita@hsp.co.zw']
+Email sent successfully: Property Updated: Commercial property on Enterprise Road : an incredible investment opportunity to ['simbamtombe@gmail.com', 'sales@hsp.co.zw', 'info@hsp.co.zw', 'leonita@hsp.co.zw']
+Email sent successfully: Property Unassigned: Commercial property on Enterprise Road : an incredible investment opportunity to ['leonita@hsp.co.zw']
+Email sent successfully: Agent Unassigned from Property: Commercial property on Enterprise Road : an incredible investment opportunity to ['simbamtombe@gmail.com', 'sales@hsp.co.zw', 'info@hsp.co.zw', 'leonita@hsp.co.zw']

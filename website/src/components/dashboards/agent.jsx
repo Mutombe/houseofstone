@@ -48,7 +48,7 @@ import {
 } from "lucide-react";
 import LeadForm from "./leadform";
 import PropertyAnalyticsModal from "./agentpropertystats";
-import { PropertyForm } from "./admin";
+import PropertyForm from "./propertyForm";
 
 const COLORS = {
   primary: "#8B7355", // Stone brown as primary brand color
