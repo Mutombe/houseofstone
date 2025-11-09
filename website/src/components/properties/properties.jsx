@@ -44,25 +44,60 @@ import {
 
 const HARARE_REGIONS = {
   "Harare North": [
-    "Northwood", "Borrowdale", "Borrowdale Brooke", "Glen Lorne",
-    "Chishawesha", "Emerald Hill", "Mt Pleasant", "Avondale",
-    "Belgravia", "Highlands", "Marlborough", "Vainona",
-    "Cedrre Valley", "Chisipiti", "Mandara",
+    "Northwood",
+    "Borrowdale",
+    "Borrowdale Brooke",
+    "Glen Lorne",
+    "Chishawesha",
+    "Emerald Hill",
+    "Mt Pleasant",
+    "Avondale",
+    "Belgravia",
+    "Highlands",
+    "Marlborough",
+    "Vainona",
+    "Cedrre Valley",
+    "Chisipiti",
+    "Mandara",
   ],
   "Harare East": [
-    "Greendale", "Athlone", "Eastlea", "Eastgate", "Ruwa",
-    "Zimre Park", "Arcturus", "Epworth", "Machipisa",
+    "Greendale",
+    "Athlone",
+    "Eastlea",
+    "Eastgate",
+    "Ruwa",
+    "Zimre Park",
+    "Arcturus",
+    "Epworth",
+    "Machipisa",
   ],
   "Harare South": [
-    "Hatfield", "Prospect", "Waterfalls", "Glen View", "Mbare",
-    "Workington", "Southerton", "Willowvale",
+    "Hatfield",
+    "Prospect",
+    "Waterfalls",
+    "Glen View",
+    "Mbare",
+    "Workington",
+    "Southerton",
+    "Willowvale",
   ],
   "Harare West": [
-    "Westgate", "Mabelreign", "Milton Park", "Belvedere",
-    "Kuwadzana", "Dzivarasekwa", "Mufakose", "Budiriro",
+    "Westgate",
+    "Mabelreign",
+    "Milton Park",
+    "Belvedere",
+    "Kuwadzana",
+    "Dzivarasekwa",
+    "Mufakose",
+    "Budiriro",
   ],
   "Harare Central": [
-    "City Centre", "Avenues", "Braeside", "CBD", "Kopje", "Newlands",
+    "City Centre",
+    "Avenues",
+    "Braeside",
+    "CBD",
+    "Kopje",
+    "Newlands",
   ],
 };
 
@@ -88,7 +123,7 @@ const INITIAL_FILTERS = {
 const getRegionFromLocation = (location) => {
   if (!location) return null;
   const locationLower = location.toLowerCase();
-  
+
   for (const [region, locations] of Object.entries(HARARE_REGIONS)) {
     const found = locations.some(
       (loc) =>
@@ -202,13 +237,19 @@ const PropertySkeleton = React.memo(({ viewMode }) => {
 
         <div className="grid grid-cols-3 gap-4 mb-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-10 bg-stone-100 rounded-lg animate-pulse" />
+            <div
+              key={i}
+              className="h-10 bg-stone-100 rounded-lg animate-pulse"
+            />
           ))}
         </div>
 
         <div className="flex gap-2 mb-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-6 bg-stone-100 rounded-full w-20 animate-pulse" />
+            <div
+              key={i}
+              className="h-6 bg-stone-100 rounded-full w-20 animate-pulse"
+            />
           ))}
         </div>
 
@@ -265,7 +306,11 @@ const PropertyCard = React.memo(
           className={viewMode === "list" ? "flex w-full" : "block"}
         >
           {/* Property Image */}
-          <div className={`relative ${viewMode === "list" ? "w-1/3 h-48" : "h-64"}`}>
+          <div
+            className={`relative ${
+              viewMode === "list" ? "w-1/3 h-48" : "h-64"
+            }`}
+          >
             <div className="absolute inset-0 bg-gradient-to-r from-stone-500 to-stone-700">
               {property.images && property.images.length > 0 ? (
                 <img
@@ -515,7 +560,11 @@ const Properties = () => {
       };
 
       try {
-        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        if (
+          navigator.share &&
+          navigator.canShare &&
+          navigator.canShare(shareData)
+        ) {
           await navigator.share(shareData);
         } else {
           const shareText = `${property.title}\n${property.location}\n\n${shareData.url}`;
@@ -571,11 +620,17 @@ const Properties = () => {
     const backendFilters = {
       search: searchTerm,
       ordering:
-        sortBy === "newest" ? "-created_at" :
-        sortBy === "price-low" ? "price" :
-        sortBy === "price-high" ? "-price" :
-        sortBy === "beds" ? "-beds" :
-        sortBy === "sqft" ? "-sqft" : "-created_at",
+        sortBy === "newest"
+          ? "-created_at"
+          : sortBy === "price-low"
+          ? "price"
+          : sortBy === "price-high"
+          ? "-price"
+          : sortBy === "beds"
+          ? "-beds"
+          : sortBy === "sqft"
+          ? "-sqft"
+          : "-created_at",
       page: filters.page,
       page_size: filters.page_size,
       category: "sale",
@@ -649,7 +704,7 @@ const Properties = () => {
   // ========================================
   // Render States
   // ========================================
-  
+
   // Loading state
   if (loading && properties.length === 0) {
     return (
@@ -703,7 +758,11 @@ const Properties = () => {
       {/* Toast Notifications */}
       <AnimatePresence>
         {toast.show && (
-          <Toast message={toast.message} type={toast.type} onClose={hideToast} />
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={hideToast}
+          />
         )}
       </AnimatePresence>
 
@@ -969,7 +1028,9 @@ const Properties = () => {
             of{" "}
             <span className="font-bold text-stone-900">{totalProperties}</span>{" "}
             properties
-            {loading && <span className="ml-2 text-stone-500">(Loading...)</span>}
+            {loading && (
+              <span className="ml-2 text-stone-500">(Loading...)</span>
+            )}
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-sm text-stone-500">
@@ -1041,51 +1102,60 @@ const Properties = () => {
 
         {/* Pagination */}
         {!loading && totalPages > 1 && (
-          <div className="mt-10 flex justify-center">
-            <div className="flex items-center space-x-2">
+          <div className="mt-10 flex justify-center px-4">
+            <div className="flex items-center gap-1 sm:gap-2">
+              {/* Previous Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 disabled={currentPage === 1}
                 onClick={() => handlePageChange(currentPage - 1)}
-                className={`px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
+                className={`px-2 sm:px-4 py-2 rounded-lg border transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
                   currentPage === 1
                     ? "border-stone-200 text-stone-400 cursor-not-allowed"
-                    : "border-stone-300 text-stone-700 hover:bg-stone-50"
+                    : "border-stone-300 text-stone-700 hover:bg-stone-50 active:bg-stone-100"
                 }`}
+                aria-label="Previous page"
               >
                 <ChevronLeft className="w-4 h-4" />
-                Previous
+                <span className="hidden sm:inline">Previous</span>
               </motion.button>
 
-              {getPageRange().map((page) => (
-                <motion.button
-                  key={page}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handlePageChange(page)}
-                  className={`w-10 h-10 rounded-lg font-medium transition-colors ${
-                    page === currentPage
-                      ? "bg-stone-900 text-white shadow-lg"
-                      : "border border-stone-300 text-stone-700 hover:bg-stone-50"
-                  }`}
-                >
-                  {page}
-                </motion.button>
-              ))}
+              {/* Page Numbers - Responsive display */}
+              <div className="flex items-center gap-1 sm:gap-2">
+                {getPageRange().map((page) => (
+                  <motion.button
+                    key={page}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handlePageChange(page)}
+                    className={`min-w-[36px] sm:min-w-[40px] h-9 sm:h-10 px-2 rounded-lg font-medium transition-colors text-sm sm:text-base ${
+                      page === currentPage
+                        ? "bg-stone-900 text-white shadow-lg"
+                        : "border border-stone-300 text-stone-700 hover:bg-stone-50 active:bg-stone-100"
+                    }`}
+                    aria-label={`Page ${page}`}
+                    aria-current={page === currentPage ? "page" : undefined}
+                  >
+                    {page}
+                  </motion.button>
+                ))}
+              </div>
 
+              {/* Next Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 disabled={currentPage === totalPages}
                 onClick={() => handlePageChange(currentPage + 1)}
-                className={`px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
+                className={`px-2 sm:px-4 py-2 rounded-lg border transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
                   currentPage === totalPages
                     ? "border-stone-200 text-stone-400 cursor-not-allowed"
-                    : "border-stone-300 text-stone-700 hover:bg-stone-50"
+                    : "border-stone-300 text-stone-700 hover:bg-stone-50 active:bg-stone-100"
                 }`}
+                aria-label="Next page"
               >
-                Next
+                <span className="hidden sm:inline">Next</span>
                 <ChevronRight className="w-4 h-4" />
               </motion.button>
             </div>
