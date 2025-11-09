@@ -971,6 +971,9 @@ const PropertyDetail = () => {
                           <img
                             src={prop.images[0].image}
                             alt={prop.title}
+                            onError={(e) => {
+                              e.target.src = "/hsp-fallback2.png";
+                            }}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
@@ -1034,6 +1037,9 @@ const PropertyDetail = () => {
             <img
               src={property.images[currentImageIndex].image}
               alt={property.title}
+              onError={(e) => {
+                e.target.src = "/hsp-fallback2.png";
+              }}
               className="max-w-full max-h-full object-contain"
             />
             <button

@@ -29,7 +29,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchProperties } from "../../redux/slices/propertySlice";
 import { Link } from "react-router-dom";
 import { selectAllProperties } from "../../redux/selectors";
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 
 // Brand colors consistent with navbar
 const COLORS = {
@@ -88,36 +88,36 @@ const testimonials = [
 const carouselImages = [
   {
     url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&h=1080&fit=crop",
-    alt: "Luxury Modern Home"
+    alt: "Luxury Modern Home",
   },
   {
     url: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&h=1080&fit=crop",
-    alt: "Contemporary Villa"
+    alt: "Contemporary Villa",
   },
   {
     url: "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1920&h=1080&fit=crop",
-    alt: "Elegant Estate"
+    alt: "Elegant Estate",
   },
   {
     url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&h=1080&fit=crop",
-    alt: "Modern Architecture"
+    alt: "Modern Architecture",
   },
   {
     url: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1920&h=1080&fit=crop",
-    alt: "Luxury Interior"
+    alt: "Luxury Interior",
   },
   {
     url: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1920&h=1080&fit=crop",
-    alt: "Premium Property"
+    alt: "Premium Property",
   },
   {
     url: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1920&h=1080&fit=crop",
-    alt: "Dream Home"
+    alt: "Dream Home",
   },
   {
     url: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=1920&h=1080&fit=crop",
-    alt: "Stunning Residence"
-  }
+    alt: "Stunning Residence",
+  },
 ];
 
 // Animated counter component
@@ -207,14 +207,14 @@ const HeroSection = () => {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useState({
-    location: '',
-    propertyType: 'Any Type'
+    location: "",
+    propertyType: "Any Type",
   });
 
   // Auto-advance carousel
   useEffect(() => {
     if (!isAutoPlaying) return;
-    
+
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % carouselImages.length);
     }, 5000); // Change image every 5 seconds
@@ -230,7 +230,7 @@ const HeroSection = () => {
   };
 
   const goToPrevious = () => {
-    setCurrentImageIndex((prev) => 
+    setCurrentImageIndex((prev) =>
       prev === 0 ? carouselImages.length - 1 : prev - 1
     );
     setIsAutoPlaying(false);
@@ -246,7 +246,7 @@ const HeroSection = () => {
   const handleSearchChange = (e) => {
     setSearchParams({
       ...searchParams,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -275,7 +275,7 @@ const HeroSection = () => {
             />
           </motion.div>
         </AnimatePresence>
-        
+
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/85 via-slate-800/75 to-yellow-900/35" />
       </div>
@@ -290,7 +290,7 @@ const HeroSection = () => {
         >
           <ChevronLeft className="w-6 h-6" />
         </motion.button>
-        
+
         <motion.button
           onClick={goToNext}
           className="hidden sm:inline-block pointer-events-auto bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 text-white hover:text-[#DCC471] group"
@@ -309,8 +309,8 @@ const HeroSection = () => {
             onClick={() => goToSlide(index)}
             className={`w-3 h-3 rounded-full transition-all duration-300 ${
               index === currentImageIndex
-                ? 'bg-[#DCC471] scale-125'
-                : 'bg-white/40 hover:bg-white/60'
+                ? "bg-[#DCC471] scale-125"
+                : "bg-white/40 hover:bg-white/60"
             }`}
             whileHover={{ scale: 1.2 }}
           />
@@ -346,7 +346,10 @@ const HeroSection = () => {
               className="inline-flex items-center px-3 sm:px-4 py-2 bg-yellow-400/20 rounded-full mb-4 sm:mb-6 backdrop-blur-sm border border-yellow-400/30"
             >
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#DCC471] mr-2" />
-              <a href="/showdays" className="text-yellow-100 font-medium text-sm sm:text-base">
+              <a
+                href="/showdays"
+                className="text-yellow-100 font-medium text-sm sm:text-base"
+              >
                 Show Days
               </a>
             </motion.div>
@@ -389,10 +392,10 @@ const HeroSection = () => {
                 <Search className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Explore Properties
               </GlowButton>
-              <GlowButton 
-                variant="secondary" 
+              <GlowButton
+                variant="secondary"
                 className="flex-1 sm:flex-none"
-                onClick={() => navigate('/contact')}
+                onClick={() => navigate("/contact")}
               >
                 <Phone className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Contact Agent
@@ -496,9 +499,8 @@ const EnhancedHomepage = () => {
   // Featured properties fetched from Redux store
   const properties = useSelector(selectAllProperties);
 
-  //Pick three vehicles from the database 
+  //Pick three vehicles from the database
   const featuredProperties = properties.slice(0, 3);
-  
 
   const handleSearchChange = (e) => {
     setSearchParams({
@@ -508,16 +510,16 @@ const EnhancedHomepage = () => {
   };
 
   const handleViewProperties = () => {
-    navigate("/sale")
+    navigate("/sale");
   };
 
   const handleSearch = () => {
     console.log("Searching with params:", searchParams);
   };
 
-    useEffect(() => {
-      dispatch(fetchProperties());
-    }, [dispatch]);
+  useEffect(() => {
+    dispatch(fetchProperties());
+  }, [dispatch]);
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
@@ -578,7 +580,7 @@ const EnhancedHomepage = () => {
       </section>
 
       {/* Featured Properties */}
-          <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
+      <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -604,97 +606,97 @@ const EnhancedHomepage = () => {
                 key={property.id}
                 className="group"
               >
-              <motion.div
-                key={property.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: i * 0.1 }}
-                viewport={{ once: true }}
-                className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
-              >
-                <div className="relative h-48 sm:h-56 lg:h-64 overflow-hidden">
-                  <img
-                    src={property.images[0].image}
-                    alt={property.title}
-                    onError={(e) => {
-                    e.target.src = "/hsp-fallback2.png";
-                  }}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <motion.div
+                  key={property.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                  className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+                >
+                  <div className="relative h-48 sm:h-56 lg:h-64 overflow-hidden">
+                    <img
+                      src={property.images[0]?.image || "/hsp-fallback2.png"}
+                      alt={property.title}
+                      onError={(e) => {
+                        e.target.src = "/hsp-fallback2.png";
+                      }}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                  {/* Property badges */}
-                  <div className="absolute top-3 sm:top-4 left-3 sm:left-4 flex gap-2">
-                    <span className="px-2 sm:px-3 py-1 bg-[#DCC471] text-slate-900 rounded-full text-xs sm:text-sm font-bold">
-                      {property.category}
-                    </span>
-                    <span className="px-2 sm:px-3 py-1 bg-slate-800 text-white rounded-full text-xs sm:text-sm font-bold">
-                      {property.status}
-                    </span>
-                  </div>
-
-                  {/* Action buttons - Larger touch targets */}
-                  <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button className="w-10 h-10 sm:w-12 sm:h-12 bg-white/90 rounded-full flex items-center justify-center hover:bg-yellow-400 transition-colors touch-manipulation">
-                      <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
-                    </button>
-                    <button className="w-10 h-10 sm:w-12 sm:h-12 bg-white/90 rounded-full flex items-center justify-center hover:bg-yellow-400 transition-colors touch-manipulation">
-                      <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
-                    </button>
-                  </div>
-
-                  {/* Price overlay */}
-                  <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 text-white">
-                    <p className="text-xs sm:text-sm font-medium flex items-center mb-1">
-                      <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                      {property.location}
-                    </p>
-                    <p className="text-lg sm:text-xl lg:text-2xl font-bold">
-                      ${property.price.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-4 sm:p-6">
-                  <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-3 group-hover:text-yellow-600 transition-colors">
-                    {property.title}
-                  </h3>
-
-                  <div className="flex items-center justify-between text-gray-600 mb-4 text-xs sm:text-sm">
-                    <div className="flex items-center">
-                      <HomeIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                      <span>{property.beds} Beds</span>
+                    {/* Property badges */}
+                    <div className="absolute top-3 sm:top-4 left-3 sm:left-4 flex gap-2">
+                      <span className="px-2 sm:px-3 py-1 bg-[#DCC471] text-slate-900 rounded-full text-xs sm:text-sm font-bold">
+                        {property.category}
+                      </span>
+                      <span className="px-2 sm:px-3 py-1 bg-slate-800 text-white rounded-full text-xs sm:text-sm font-bold">
+                        {property.status}
+                      </span>
                     </div>
-                    <div className="flex items-center">
-                      <Building2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                      <span>{property.baths} Baths</span>
+
+                    {/* Action buttons - Larger touch targets */}
+                    <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <button className="w-10 h-10 sm:w-12 sm:h-12 bg-white/90 rounded-full flex items-center justify-center hover:bg-yellow-400 transition-colors touch-manipulation">
+                        <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
+                      </button>
+                      <button className="w-10 h-10 sm:w-12 sm:h-12 bg-white/90 rounded-full flex items-center justify-center hover:bg-yellow-400 transition-colors touch-manipulation">
+                        <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
+                      </button>
                     </div>
-                    <div>{property.sqft} sqft</div>
+
+                    {/* Price overlay */}
+                    <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 text-white">
+                      <p className="text-xs sm:text-sm font-medium flex items-center mb-1">
+                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                        {property.location}
+                      </p>
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold">
+                        ${property.price.toLocaleString()}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0">
-                    <button className="flex items-center justify-center sm:justify-start text-[#DCC471] font-semibold hover:text-[#DCC471] transition-colors py-2 sm:py-0 min-h-[44px] sm:min-h-0 touch-manipulation"
-                      onClick={() => navigate(`/property/${property.id}`)}
+                  <div className="p-4 sm:p-6">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-3 group-hover:text-yellow-600 transition-colors">
+                      {property.title}
+                    </h3>
+
+                    <div className="flex items-center justify-between text-gray-600 mb-4 text-xs sm:text-sm">
+                      <div className="flex items-center">
+                        <HomeIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                        <span>{property.beds} Beds</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Building2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                        <span>{property.baths} Baths</span>
+                      </div>
+                      <div>{property.sqft} sqft</div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0">
+                      <button
+                        className="flex items-center justify-center sm:justify-start text-[#DCC471] font-semibold hover:text-[#DCC471] transition-colors py-2 sm:py-0 min-h-[44px] sm:min-h-0 touch-manipulation"
+                        onClick={() => navigate(`/property/${property.id}`)}
                       >
-                      <Eye className="w-4 h-4 mr-1" />
-                      View Details
-                    </button>
-                    <button className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-[#DCC471] hover:text-slate-900 transition-colors text-sm font-medium min-h-[44px] touch-manipulation"
-                      onClick={() => navigate(`/property/${property.id}`)}
-                    >
-                      Contact Agent
-                    </button>
+                        <Eye className="w-4 h-4 mr-1" />
+                        View Details
+                      </button>
+                      <button
+                        className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-[#DCC471] hover:text-slate-900 transition-colors text-sm font-medium min-h-[44px] touch-manipulation"
+                        onClick={() => navigate(`/property/${property.id}`)}
+                      >
+                        Contact Agent
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
               </Link>
             ))}
           </div>
 
           <div className="text-center mt-8 sm:mt-12">
-            <GlowButton
-              onClick={handleViewProperties}
-            >
+            <GlowButton onClick={handleViewProperties}>
               View All Properties
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
             </GlowButton>
