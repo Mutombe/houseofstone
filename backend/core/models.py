@@ -86,6 +86,7 @@ class Property(models.Model):
     CATEGORY_TYPES = [
         ('rental', 'Rental'),
         ('sale', 'Sale'), 
+        ('development', 'Development'),
     ]
     title = models.CharField(max_length=200)
     description = models.TextField()
