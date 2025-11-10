@@ -37,6 +37,7 @@ import AgentDashboard from "./components/dashboards/agent";
 import { setStore } from "./utils/api";
 import { useEffect } from "react";
 import Developments from "./components/about/developments";
+import Development from "./components/properties/developments";
 import { useSelector } from "react-redux";
 import { checkAuth } from "./redux/slices/authSlice";
 import SessionExpiryHandler from "./utils/sessionExpiry";
@@ -358,6 +359,7 @@ function App({ store }) {
             <Route path="/agent-dashboard" element={<AgentDashboard />} />
             <Route path="/downloads" element={<Downloads />} />
             <Route path="/developments" element={<Developments />} />
+            <Route path="/development" element={<Development />} />
           </Routes>
         </AnimatePresence>
         <Footer />

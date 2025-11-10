@@ -509,7 +509,7 @@ const Navbar = () => {
       description: "Warehouses, factories",
     },
     {
-      path: "/sale",
+      path: "/development",
       label: "Development",
       icon: TrendingUp,
       description: "Land and development projects",
