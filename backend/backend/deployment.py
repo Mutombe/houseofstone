@@ -103,7 +103,7 @@ DATABASES = {
         'PASSWORD': '1ded449b4cd79a95dc08aa352f8da2b1bb705c60',
         'HOST': '10f9ml.h.filess.io',
         'PORT': '5434',
-        'CONN_MAX_AGE': 0,
+        'CONN_MAX_AGE': 600,  # ✅ Persistent connections
         'OPTIONS': {
             'options': '-c search_path=django_schema,public',
             'connect_timeout': 5,
@@ -136,6 +136,21 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
+}
+
+# settings.py
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'PARSER_CLASS': 'redis.connection.HiredisParser',
+            'CONNECTION_POOL_CLASS_KWARGS': {
+                'max_connections': 50
+            }
+        }
+    }
 }
 
 # deployment_Settings.py

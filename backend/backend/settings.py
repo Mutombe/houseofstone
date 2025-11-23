@@ -33,8 +33,8 @@ CORS_ALLOWED_ORIGINS = [
      'https://houseofstone-frontend.onrender.com',
     'https://houseofstone-backend.onrender.com',
     'https://houseofstone-backend1.onrender.com',
-    'http://localhost:5174',
-    'http://127.0.0.1:5174'
+    'http://localhost:5173',
+    'http://127.0.0.1:5173'
 ]
 
 CORS_TRUSTED_ORIGINS = [
@@ -43,8 +43,8 @@ CORS_TRUSTED_ORIGINS = [
      'https://houseofstone-frontend.onrender.com',
     'https://houseofstone-backend.onrender.com',
     'https://houseofstone-backend1.onrender.com',
-    'http://localhost:5174',
-    'http://127.0.0.1:5174'
+    'http://localhost:5173',
+    'http://127.0.0.1:5173'
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -103,6 +103,7 @@ INSTALLED_APPS = [
     "corsheaders",
     'django_filters',
     'storages',
+    #'cachalot',
     'core'
 ]
 
@@ -118,6 +119,22 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# settings.py
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            #'PARSER_CLASS': 'redis.connection.HiredisParser',
+            'CONNECTION_POOL_CLASS_KWARGS': {
+                'max_connections': 50
+            },
+            'IGNORE_EXCEPTIONS': True,
+        }
+    }
+}
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
@@ -142,7 +159,7 @@ CELERY_TIMEZONE = 'UTC'
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://houseofstone.onrender.com')
 
 ADMIN_BASE_URL = 'hsp.co.zw'
-ADMINS = [('HSP Admin', 'simbamtombe@gmail.com'), ('HSP Admin', 'sales@hsp.co.zw'), ('HSP Admin', 'info@hsp.co.zw'),('HSP Admin', 'leonita@hsp.co.zw',)]
+ADMINS = [('HSP Admin', 'simbamtombe@gmail.com'), ] #('HSP Admin', 'sales@hsp.co.zw'), ('HSP Admin', 'info@hsp.co.zw'),('HSP Admin', 'leonita@hsp.co.zw',)
 APP_NAME = 'House of Stone Properties'
 
 # settings.py
@@ -240,7 +257,7 @@ DATABASES = {
         'PASSWORD': '1ded449b4cd79a95dc08aa352f8da2b1bb705c60',
         'HOST': '10f9ml.h.filess.io',
         'PORT': '5434',
-        'CONN_MAX_AGE': 0,
+        'CONN_MAX_AGE': 600,  # ✅ Persistent connections
         'OPTIONS': {
             'options': '-c search_path=django_schema,public',
             'connect_timeout': 5,
