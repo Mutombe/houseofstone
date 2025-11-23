@@ -11,6 +11,12 @@ export const setStore = (storeInstance) => {
   store = storeInstance;
 };
 
+import { debounce } from 'lodash';
+
+const debouncedSearch = debounce((searchTerm, callback) => {
+  propertyAPI.getAll({ search: searchTerm }).then(callback);
+}, 300);
+
 // Centralized token refresh function
 export const refreshTokens = async (refresh) => {
   try {

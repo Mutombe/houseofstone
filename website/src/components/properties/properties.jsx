@@ -492,7 +492,7 @@ const Properties = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState("oldest");
   const [favorites, setFavorites] = useState(new Set());
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [filters, setFilters] = useState(INITIAL_FILTERS);
@@ -619,18 +619,20 @@ const Properties = () => {
     // Build backend-compatible filters
     const backendFilters = {
       search: searchTerm,
-      ordering:
-        sortBy === "newest"
-          ? "-created_at"
-          : sortBy === "price-low"
-          ? "price"
-          : sortBy === "price-high"
-          ? "-price"
-          : sortBy === "beds"
-          ? "-beds"
-          : sortBy === "sqft"
-          ? "-sqft"
-          : "-created_at",
+ordering:
+  sortBy === "newest"
+    ? "-created_at"
+    : sortBy === "oldest"
+    ? "created_at"
+    : sortBy === "price-low"
+    ? "price"
+    : sortBy === "price-high"
+    ? "-price"
+    : sortBy === "beds"
+    ? "-beds"
+    : sortBy === "sqft"
+    ? "-sqft"
+    : "created_at",
       page: filters.page,
       page_size: filters.page_size,
       category: "sale",
@@ -890,18 +892,18 @@ const Properties = () => {
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-4">
                   {/* Property Type */}
-                  <select
-                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
-                    value={filters.type}
-                    onChange={(e) => handleFilterChange("type", e.target.value)}
-                  >
-                    <option value="all">All Types</option>
-                    <option value="house">House</option>
-                    <option value="apartment">Apartment</option>
-                    <option value="villa">Villa</option>
-                    <option value="land">Land</option>
-                    <option value="commercial">Commercial</option>
-                  </select>
+<select
+  className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
+  value={sortBy}
+  onChange={(e) => handleSortChange(e.target.value)}
+>
+  <option value="oldest">Oldest First</option>
+  <option value="newest">Newest First</option>
+  <option value="price-low">Price: Low to High</option>
+  <option value="price-high">Price: High to Low</option>
+  <option value="beds">Most Bedrooms</option>
+  <option value="sqft">Largest First</option>
+</select>
 
                   {/* Price Range */}
                   <select
