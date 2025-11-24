@@ -6,7 +6,10 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 import logging
+import os
+from io import BytesIO
 
+logger = logging.getLogger(__name__)
 logger = logging.getLogger(__name__)
 
 class EmailNotificationService:
@@ -69,25 +72,43 @@ class EmailNotificationService:
         
         logger.info(f"Bulk notification sent: {success_count}/{len(context_list)} successful")
         return success_count
+    
 
-def apply_watermark(image_path, watermark_path, output_path, position='center', size_ratio=0.15, opacity=0.7):
+"""
+Utility functions for image processing
+"""
+
+def apply_watermark(image_path, watermark_path, position='center', size_ratio=0.15, opacity=0.7):
     """
-    Applies a watermark to an image with specified parameters.
+    Applies a watermark to an image and returns the watermarked image as bytes.
+    
+    Args:
+        image_path (str): Path to the base image
+        watermark_path (str): Path to the watermark image
+        position (str): Position of watermark ('center', 'bottom_right', 'bottom_left', 'top_right', 'top_left')
+        size_ratio (float): Size of watermark relative to base image (0.0 to 1.0)
+        opacity (float): Opacity of watermark (0.0 to 1.0)
+    
+    Returns:
+        bytes: Watermarked image as JPEG bytes, or None if error occurs
     """
     try:
+        logger.info(f"Starting watermark process for {image_path}")
         print(f"DEBUG: Opening base image from {image_path}")
         print(f"DEBUG: Opening watermark from {watermark_path}")
         
-        # Check file existence first
+        # Check file existence
         if not os.path.exists(image_path):
             print(f"ERROR: Base image not found at {image_path}")
-            return False
+            logger.error(f"Base image not found: {image_path}")
+            return None
             
         if not os.path.exists(watermark_path):
             print(f"ERROR: Watermark not found at {watermark_path}")
-            return False
+            logger.error(f"Watermark not found: {watermark_path}")
+            return None
         
-        # Open the source image and watermark
+        # Open images
         base_image = Image.open(image_path).convert('RGBA')
         watermark = Image.open(watermark_path).convert('RGBA')
         
@@ -105,54 +126,53 @@ def apply_watermark(image_path, watermark_path, output_path, position='center', 
         img_width, img_height = base_image.size
         wm_original_width, wm_original_height = watermark.size
 
-        # Calculate new watermark width based on the ratio, and height to maintain aspect ratio
+        # Calculate new watermark dimensions
         new_wm_width = int(img_width * size_ratio)
         new_wm_height = int(wm_original_height * (new_wm_width / wm_original_width))
         
         print(f"DEBUG: Resizing watermark to {new_wm_width}x{new_wm_height}")
-        
-        # Resize the watermark
         watermark = watermark.resize((new_wm_width, new_wm_height), Image.Resampling.LANCZOS)
 
         # --- Positioning ---
-        margin = int(img_width * 0.02) # 2% margin
+        margin = int(img_width * 0.02)  # 2% margin
         
-        if position == 'bottom_right':
-            pos = (img_width - new_wm_width - margin, img_height - new_wm_height - margin)
-        elif position == 'bottom_left':
-            pos = (margin, img_height - new_wm_height - margin)
-        elif position == 'top_right':
-            pos = (img_width - new_wm_width - margin, margin)
-        elif position == 'top_left':
-            pos = (margin, margin)
-        elif position == 'center':
-            pos = (int((img_width - new_wm_width) / 2), int((img_height - new_wm_height) / 2))
-        else:
-            raise ValueError("Invalid position specified.")
+        position_map = {
+            'bottom_right': (img_width - new_wm_width - margin, img_height - new_wm_height - margin),
+            'bottom_left': (margin, img_height - new_wm_height - margin),
+            'top_right': (img_width - new_wm_width - margin, margin),
+            'top_left': (margin, margin),
+            'center': (int((img_width - new_wm_width) / 2), int((img_height - new_wm_height) / 2))
+        }
+        
+        pos = position_map.get(position)
+        if pos is None:
+            raise ValueError(f"Invalid position '{position}'. Must be one of: {list(position_map.keys())}")
             
         print(f"DEBUG: Watermark position: {pos}")
 
-        # Create a transparent layer for the watermark
+        # --- Apply Watermark ---
+        # Create transparent layer
         transparent_layer = Image.new('RGBA', base_image.size, (0, 0, 0, 0))
         transparent_layer.paste(watermark, pos)
 
-        # Composite the watermark layer onto the base image
+        # Composite the watermark
         watermarked_image = Image.alpha_composite(base_image, transparent_layer)
         
-        # Convert back to RGB for saving as JPEG
+        # Convert to RGB for JPEG
         final_image = watermarked_image.convert('RGB')
         
-        # Save the final image
-        final_image.save(output_path, 'JPEG', quality=95)
+        # Save to BytesIO
+        output = BytesIO()
+        final_image.save(output, format='JPEG', quality=95, optimize=True)
+        output.seek(0)
         
-        print(f"SUCCESS: Watermark applied and saved to {output_path}")
-        return True
+        print(f"SUCCESS: Watermark applied successfully")
+        logger.info(f"Watermark applied successfully to {image_path}")
+        return output.read()
 
-    except FileNotFoundError as e:
-        print(f"ERROR: Could not find a file. Details: {e}")
-        return False
     except Exception as e:
+        logger.exception(f"Watermark failed for {image_path}: {str(e)}")
         print(f"ERROR: An unexpected error occurred: {e}")
         import traceback
         traceback.print_exc()
-        return False
+        return None

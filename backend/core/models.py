@@ -155,6 +155,8 @@ class PropertyImage(models.Model):
     caption = models.CharField(max_length=200, blank=True)
     order = models.IntegerField(default=0) 
     created_at = models.DateTimeField(default=timezone.now)
+    is_watermarked = models.BooleanField(default=False)  # Add this field
+
     
     class Meta:
         ordering = ['order', 'created_at'] 

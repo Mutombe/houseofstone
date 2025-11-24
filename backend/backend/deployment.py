@@ -103,7 +103,7 @@ DATABASES = {
         'PASSWORD': '1ded449b4cd79a95dc08aa352f8da2b1bb705c60',
         'HOST': '10f9ml.h.filess.io',
         'PORT': '5434',
-        'CONN_MAX_AGE': 600,  # ✅ Persistent connections
+        'CONN_MAX_AGE': 0,  # ✅ Persistent connections
         'OPTIONS': {
             'options': '-c search_path=django_schema,public',
             'connect_timeout': 5,

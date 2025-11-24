@@ -82,7 +82,7 @@ SESSION_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
     'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
-     'https://houseofstone-frontend.onrender.com',
+    'https://houseofstone-frontend.onrender.com',
     'https://houseofstone-backend.onrender.com',
     'https://houseofstone-backend1.onrender.com',
 ]
@@ -103,13 +103,19 @@ INSTALLED_APPS = [
     "corsheaders",
     'django_filters',
     'storages',
-    #'cachalot',
+    'cachalot',
     'core'
 ]
+
+CACHALOT_ENABLED = True
+CACHALOT_TIMEOUT = 300  # 5 minutes
+CACHALOT_CACHE = 'default'
+CACHALOT_ONLY_CACHABLE_APPS = ['core']
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "core.middleware.DatabaseOptimizationMiddleware",
     "core.middleware.InteractionTrackingMiddleware",
     'core.middleware.AdminActionLoggingMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -151,12 +157,19 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 # For Celery
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/0')
+
+# Celery Configuration
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 
 # For sharing links
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://houseofstone.onrender.com')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://hsp.co.zw')
 
 ADMIN_BASE_URL = 'hsp.co.zw'
 ADMINS = [('HSP Admin', 'simbamtombe@gmail.com'), ] #('HSP Admin', 'sales@hsp.co.zw'), ('HSP Admin', 'info@hsp.co.zw'),('HSP Admin', 'leonita@hsp.co.zw',)
@@ -257,7 +270,7 @@ DATABASES = {
         'PASSWORD': '1ded449b4cd79a95dc08aa352f8da2b1bb705c60',
         'HOST': '10f9ml.h.filess.io',
         'PORT': '5434',
-        'CONN_MAX_AGE': 600,  # ✅ Persistent connections
+        'CONN_MAX_AGE': 0,  # ✅ Persistent connections
         'OPTIONS': {
             'options': '-c search_path=django_schema,public',
             'connect_timeout': 5,

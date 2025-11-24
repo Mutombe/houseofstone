@@ -3,7 +3,29 @@ from .models import PropertyInteraction, AdminActionLog
 import logging
 from django.utils.deprecation import MiddlewareMixin
 from django.contrib.auth.models import User
+from django.db import connection, reset_queries
+from .db_utils import close_old_connections
+
 logger = logging.getLogger(__name__)
+
+class DatabaseOptimizationMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Close old connections before processing
+        close_old_connections()
+        
+        # Reset queries to prevent memory buildup
+        reset_queries()
+        
+        response = self.get_response(request)
+        
+        # Close connection if it's not being reused
+        if hasattr(connection, 'close'):
+            connection.close()
+            
+        return response
 
 class InteractionTrackingMiddleware:
     def __init__(self, get_response):
