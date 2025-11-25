@@ -711,6 +711,248 @@ ordering:
   if (loading && properties.length === 0) {
     return (
       <div className="min-h-screen pt-8 bg-gradient-to-br from-stone-50 via-white to-stone-100">
+              {/* Search and Filter Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white shadow-xl relative z-10 pt-16"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Region Filter Bar */}
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-2 justify-center">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setSelectedRegion("all");
+                  setFilters((prev) => ({ ...prev, page: 1 }));
+                }}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedRegion === "all"
+                    ? "bg-stone-900 text-white shadow-lg"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                All Regions
+              </motion.button>
+              {Object.keys(HARARE_REGIONS).map((region) => (
+                <motion.button
+                  key={region}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setSelectedRegion(region);
+                    setFilters((prev) => ({ ...prev, page: 1 }));
+                  }}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    selectedRegion === region
+                      ? "bg-stone-900 text-white shadow-lg"
+                      : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                  }`}
+                >
+                  {region}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Search Bar */}
+          <div className="flex flex-col lg:flex-row gap-4 items-center mb-4">
+            <div className="flex-1 w-full relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by title, location, or description..."
+                className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 focus:border-transparent shadow-sm text-lg"
+              />
+              <Search className="absolute left-4 top-4 w-6 h-6 text-stone-400" />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-4 top-4 text-stone-400 hover:text-stone-600 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              )}
+            </div>
+
+            {/* Quick Filters */}
+            <div className="flex gap-2 flex-wrap lg:flex-nowrap">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-6 py-4 rounded-xl font-semibold transition-all ${
+                  showFilters
+                    ? "bg-stone-900 text-white shadow-lg"
+                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                }`}
+              >
+                <SlidersHorizontal className="w-5 h-5" />
+                Filters
+                {activeFiltersCount > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </motion.button>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`p-4 rounded-xl transition-all ${
+                    viewMode === "grid"
+                      ? "bg-stone-900 text-white"
+                      : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                  }`}
+                >
+                  <Grid className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={`hidden sm:inline-block p-4 rounded-xl transition-all ${
+                    viewMode === "list"
+                      ? "bg-stone-900 text-white"
+                      : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                  }`}
+                >
+                  <ListIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Advanced Filters Panel */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="border-t border-stone-200 pt-6 overflow-hidden"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-4">
+                  {/* Property Type */}
+<select
+  className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
+  value={sortBy}
+  onChange={(e) => handleSortChange(e.target.value)}
+>
+  <option value="oldest">Oldest First</option>
+  <option value="newest">Newest First</option>
+  <option value="price-low">Price: Low to High</option>
+  <option value="price-high">Price: High to Low</option>
+  <option value="beds">Most Bedrooms</option>
+  <option value="sqft">Largest First</option>
+</select>
+
+                  {/* Price Range */}
+                  <select
+                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
+                    value={filters.priceRange}
+                    onChange={(e) =>
+                      handleFilterChange("priceRange", e.target.value)
+                    }
+                  >
+                    <option value="all">Any Price</option>
+                    <option value="0-100000">$0 - $100K</option>
+                    <option value="100000-300000">$100K - $300K</option>
+                    <option value="300000-500000">$300K - $500K</option>
+                    <option value="500000-1000000">$500K - $1M</option>
+                    <option value="1000000-5000000">$1M+</option>
+                  </select>
+
+                  {/* Bedrooms */}
+                  <select
+                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
+                    value={filters.bedrooms}
+                    onChange={(e) =>
+                      handleFilterChange("bedrooms", e.target.value)
+                    }
+                  >
+                    <option value="all">Any Beds</option>
+                    <option value="1">1+ Bed</option>
+                    <option value="2">2+ Beds</option>
+                    <option value="3">3+ Beds</option>
+                    <option value="4">4+ Beds</option>
+                    <option value="5">5+ Beds</option>
+                  </select>
+
+                  {/* Bathrooms */}
+                  <select
+                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
+                    value={filters.bathrooms}
+                    onChange={(e) =>
+                      handleFilterChange("bathrooms", e.target.value)
+                    }
+                  >
+                    <option value="all">Any Baths</option>
+                    <option value="1">1+ Bath</option>
+                    <option value="2">2+ Baths</option>
+                    <option value="3">3+ Baths</option>
+                    <option value="4">4+ Baths</option>
+                  </select>
+
+                  {/* Square Footage */}
+                  <select
+                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
+                    value={filters.sqftRange}
+                    onChange={(e) =>
+                      handleFilterChange("sqftRange", e.target.value)
+                    }
+                  >
+                    <option value="all">Any Size</option>
+                    <option value="0-1000">Under 1K sq ft</option>
+                    <option value="1000-2000">1K - 2K sq ft</option>
+                    <option value="2000-3000">2K - 3K sq ft</option>
+                    <option value="3000-5000">3K - 5K sq ft</option>
+                    <option value="5000-999999">5K+ sq ft</option>
+                  </select>
+
+                  {/* Sort By */}
+                  <select
+                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
+                    value={sortBy}
+                    onChange={(e) => handleSortChange(e.target.value)}
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="beds">Most Bedrooms</option>
+                    <option value="sqft">Largest First</option>
+                  </select>
+                </div>
+
+                {/* Location Filter & Clear */}
+                <div className="flex flex-col sm:flex-row gap-4 items-center">
+                  <div className="flex-1 w-full">
+                    <input
+                      type="text"
+                      value={filters.location}
+                      onChange={(e) =>
+                        handleFilterChange("location", e.target.value)
+                      }
+                      placeholder="Filter by location..."
+                      className="w-full px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500"
+                    />
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={clearFilters}
+                    className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
+                  >
+                    Clear All
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3, 4, 5, 6].map((i) => (
