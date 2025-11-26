@@ -1,6 +1,5 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -23,10 +22,11 @@ from .models import (
 )
 import logging
 logger = logging.getLogger(__name__)
-from PIL import Image, ImageEnhance
+from django.core.files.base import ContentFile
+from .models import PropertyImage
+from .utils import apply_watermark
 import os
 from django.conf import settings
-from .models import PropertyImage
 
 ADMIN_EMAILS = ['admin@zim-rec.co.zw','simbamtombe@gmail.com']
 
@@ -513,36 +513,87 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
 
 
-"""
-Django signals for automatic processing
-"""
-
-print("!!! Signals module loaded !!!")
-
 @receiver(post_save, sender=PropertyImage)
 def add_watermark_to_image(sender, instance, created, **kwargs):
     """
-    Signal to queue watermark task for newly uploaded property images.
+    Signal to add watermark to property images after they're saved.
+    Uses Django's file handling to properly save the watermarked image.
     """
-    # Only process newly created images that haven't been watermarked
+    # Only process newly created images that haven't been watermarked yet
     if not created or not instance.image:
         return
     
-    # Check if already watermarked (safety check)
+    # Prevent recursive signal calls
+    if hasattr(instance, '_watermarking'):
+        return
+    
+    # Check if already watermarked (if field exists)
     if hasattr(instance, 'is_watermarked') and instance.is_watermarked:
+        print(f"DEBUG: Image {instance.id} already watermarked, skipping")
         logger.info(f"Image {instance.id} already watermarked, skipping")
         return
     
     try:
-        # Import here to avoid circular imports
-        from .tasks import apply_watermark_task
+        print(f"DEBUG: Signal triggered for PropertyImage ID: {instance.id}")
+        print(f"DEBUG: Image path: {instance.image.path}")
         
-        # Queue the watermark task
-        task = apply_watermark_task.delay(instance.id)
+        # Check if image exists
+        if not os.path.exists(instance.image.path):
+            print(f"ERROR: Image file does not exist at {instance.image.path}")
+            logger.error(f"Image file not found: {instance.image.path}")
+            return
         
-        logger.info(f"✅ Watermark task queued for PropertyImage {instance.id} (Task ID: {task.id})")
-        print(f"DEBUG: Watermark task queued for PropertyImage ID: {instance.id}")
+        watermark_path = os.path.join(settings.MEDIA_ROOT, 'logo', 'logo2.webp')
+        print(f"DEBUG: Watermark path: {watermark_path}")
         
+        # Check if watermark exists
+        if not os.path.exists(watermark_path):
+            logger.error(f"Watermark not found at: {watermark_path}")
+            print(f"ERROR: Watermark not found at {watermark_path}")
+            return
+        
+        # Get the original filename
+        original_name = instance.image.name
+        
+        # Apply watermark and get bytes
+        watermarked_bytes = apply_watermark(
+            image_path=instance.image.path,
+            watermark_path=watermark_path,
+            position='center',
+            size_ratio=0.20,
+            opacity=0.55
+        )
+        
+        if watermarked_bytes:
+            # Set flag to prevent recursive signal
+            instance._watermarking = True
+            
+            # Delete the old file
+            old_file = instance.image
+            old_file.delete(save=False)
+            
+            # Save the watermarked image through Django's file system
+            instance.image.save(
+                original_name,
+                ContentFile(watermarked_bytes),
+                save=False
+            )
+            
+            # Mark as watermarked if field exists
+            if hasattr(instance, 'is_watermarked'):
+                instance.is_watermarked = True
+                instance.save(update_fields=['image', 'is_watermarked'])
+            else:
+                instance.save(update_fields=['image'])
+            
+            print(f"SUCCESS: Watermark applied to PropertyImage ID: {instance.id}")
+            logger.info(f"Watermark applied successfully to image {instance.id}")
+        else:
+            print(f"FAILED: Could not apply watermark to PropertyImage ID: {instance.id}")
+            logger.error(f"Watermarking failed for image {instance.id}")
+            
     except Exception as e:
-        logger.error(f"Failed to queue watermark task for image {instance.id}: {str(e)}")
-        print(f"ERROR: Failed to queue watermark task: {e}")
+        logger.exception(f"Error in watermark signal for image {instance.id}: {str(e)}")
+        print(f"ERROR in signal: {e}")
+        import traceback
+        traceback.print_exc()

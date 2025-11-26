@@ -126,7 +126,7 @@ def apply_watermark(image_path, watermark_path, position='center', size_ratio=0.
         img_width, img_height = base_image.size
         wm_original_width, wm_original_height = watermark.size
 
-        # Calculate new watermark dimensions
+        # Calculate new watermark dimensions maintaining aspect ratio
         new_wm_width = int(img_width * size_ratio)
         new_wm_height = int(wm_original_height * (new_wm_width / wm_original_width))
         
@@ -155,13 +155,13 @@ def apply_watermark(image_path, watermark_path, position='center', size_ratio=0.
         transparent_layer = Image.new('RGBA', base_image.size, (0, 0, 0, 0))
         transparent_layer.paste(watermark, pos)
 
-        # Composite the watermark
+        # Composite the watermark onto the base image
         watermarked_image = Image.alpha_composite(base_image, transparent_layer)
         
-        # Convert to RGB for JPEG
+        # Convert to RGB for JPEG (removes transparency)
         final_image = watermarked_image.convert('RGB')
         
-        # Save to BytesIO
+        # Save to BytesIO instead of file
         output = BytesIO()
         final_image.save(output, format='JPEG', quality=95, optimize=True)
         output.seek(0)
