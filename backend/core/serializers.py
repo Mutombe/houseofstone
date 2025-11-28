@@ -150,7 +150,7 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
         if obj.user:
             return {
                 'id': obj.user.id,
-                'name': obj.user.username(),
+                'name': obj.user.username,
                 'email': obj.user.email
             }
         return None

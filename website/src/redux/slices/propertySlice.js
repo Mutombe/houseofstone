@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, createSelector } from "@reduxjs/toolkit";
 import { propertyAPI } from "../../utils/api";
 import api from "./../../utils/api";
+import axios from "axios";
 
 // In propertySlice.js
 // Update fetchProperties to handle pagination
@@ -36,6 +37,42 @@ export const fetchProperties = createAsyncThunk(
   }
 );
 
+export const fetchProperty = createAsyncThunk(
+  "properties/fetchOne",
+  async (id, { rejectWithValue }) => {
+    try {
+      // Try public endpoint first
+      const response = await axios.get(
+        `https://houseofstone-backend1.onrender.com/public/properties/${id}/`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+      return response.data;
+    } catch (err) {
+      // If public endpoint fails, try authenticated
+      if (err.response?.status === 404 || err.response?.status === 403) {
+        try {
+          const authResponse = await propertyAPI.getById(id);
+          return authResponse.data;
+        } catch (authErr) {
+          return rejectWithValue({
+            message: authErr.response?.data?.message || authErr.message,
+            status: authErr.response?.status,
+          });
+        }
+      }
+      return rejectWithValue({
+        message: err.response?.data?.message || err.message,
+        status: err.response?.status,
+      });
+    }
+  }
+);
+
 export const fetchPropertiesWithoutPagination = createAsyncThunk(
   "properties/fetchAllNoPagination",
   async (filters = {}, { rejectWithValue }) => {
@@ -53,7 +90,7 @@ export const fetchPropertiesWithoutPagination = createAsyncThunk(
   }
 );
 
-export const fetchProperty = createAsyncThunk(
+export const fetchPropertys = createAsyncThunk(
   "properties/fetchOne",
   async (id, { rejectWithValue }) => {
     try {

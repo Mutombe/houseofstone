@@ -32,8 +32,200 @@ import PropertyShareModal from "./shareModal";
 import PropertyMap from "./propertyMap";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { propertyAPI } from './../../utils/api';
+import { fetchProperty } from './../../redux/slices/propertySlice';
+
+// Add this component at the top of your file, before PropertyDetail component
+const PropertyDetailSkeleton = () => {
+  return (
+    <div className="min-h-screen bg-stone-50 pt-16">
+      {/* Image Gallery Skeleton */}
+      <div className="relative">
+        <div className="h-64 sm:h-80 md:h-96 bg-stone-200 animate-pulse relative overflow-hidden">
+          {/* Shimmer effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+          
+          {/* Navigation buttons skeleton */}
+          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-stone-300 rounded-full animate-pulse" />
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-stone-300 rounded-full animate-pulse" />
+          
+          {/* Image counter skeleton */}
+          <div className="absolute bottom-4 right-4 bg-stone-300 rounded-full px-4 py-2 w-20 h-8 animate-pulse" />
+          
+          {/* Action buttons skeleton */}
+          <div className="absolute top-4 right-4 flex space-x-2 pt-10">
+            <div className="w-10 h-10 bg-stone-300 rounded-full animate-pulse" />
+            <div className="w-10 h-10 bg-stone-300 rounded-full animate-pulse" />
+          </div>
+        </div>
+      </div>
+
+      {/* Property Header Skeleton */}
+      <div className="bg-white shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="space-y-4">
+            {/* Title skeleton */}
+            <div className="h-8 bg-stone-200 rounded-lg w-3/4 animate-pulse" />
+            
+            {/* Location skeleton */}
+            <div className="flex items-center space-x-2">
+              <div className="w-5 h-5 bg-stone-200 rounded animate-pulse" />
+              <div className="h-5 bg-stone-200 rounded w-1/2 animate-pulse" />
+            </div>
+
+            {/* Stats skeleton */}
+            <div className="flex items-center space-x-4">
+              <div className="h-4 bg-stone-200 rounded w-24 animate-pulse" />
+              <div className="h-4 bg-stone-200 rounded w-24 animate-pulse" />
+              <div className="h-4 bg-stone-200 rounded w-24 animate-pulse" />
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4">
+              {/* Price skeleton */}
+              <div>
+                <div className="h-10 bg-stone-200 rounded-lg w-40 mb-2 animate-pulse" />
+                <div className="h-4 bg-stone-200 rounded w-24 animate-pulse" />
+              </div>
+
+              {/* Quick stats skeleton */}
+              <div className="grid grid-cols-3 gap-4 mt-4 sm:mt-0">
+                <div className="flex items-center space-x-2">
+                  <div className="w-5 h-5 bg-stone-200 rounded animate-pulse" />
+                  <div className="h-4 bg-stone-200 rounded w-8 animate-pulse" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-5 h-5 bg-stone-200 rounded animate-pulse" />
+                  <div className="h-4 bg-stone-200 rounded w-8 animate-pulse" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-5 h-5 bg-stone-200 rounded animate-pulse" />
+                  <div className="h-4 bg-stone-200 rounded w-12 animate-pulse" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Area Skeleton */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8 lg:grid lg:grid-cols-3 lg:gap-12 lg:space-y-0">
+          {/* Sidebar Skeleton (Mobile first, desktop right) */}
+          <div className="lg:order-2 lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-lg p-6 space-y-6">
+              {/* Agent Info Skeleton */}
+              <div className="p-4 bg-stone-50 rounded-lg border border-stone-200">
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-stone-200 rounded-full animate-pulse mr-3" />
+                  <div className="h-6 bg-stone-200 rounded w-32 animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-5 bg-stone-200 rounded w-40 animate-pulse" />
+                  <div className="h-4 bg-stone-200 rounded w-48 animate-pulse" />
+                  <div className="h-4 bg-stone-200 rounded w-44 animate-pulse" />
+                </div>
+              </div>
+
+              {/* Property Stats Grid Skeleton */}
+              <div className="grid grid-cols-2 gap-4">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <div key={i} className="p-3 bg-stone-50 rounded-lg border">
+                    <div className="h-4 bg-stone-200 rounded w-20 mb-2 animate-pulse" />
+                    <div className="h-6 bg-stone-200 rounded w-16 animate-pulse" />
+                  </div>
+                ))}
+              </div>
+
+              {/* Buttons Skeleton */}
+              <div className="space-y-3">
+                <div className="h-12 bg-stone-200 rounded-lg animate-pulse" />
+                <div className="h-12 bg-stone-200 rounded-lg animate-pulse" />
+                <div className="h-12 bg-stone-200 rounded-lg animate-pulse" />
+                <div className="h-12 bg-stone-200 rounded-lg animate-pulse" />
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content Skeleton */}
+          <div className="lg:order-1 lg:col-span-2 space-y-8">
+            {/* Description Section Skeleton */}
+            <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
+              <div className="flex items-center mb-4">
+                <div className="w-6 h-6 bg-stone-200 rounded mr-3 animate-pulse" />
+                <div className="h-7 bg-stone-200 rounded w-48 animate-pulse" />
+              </div>
+              <div className="space-y-3">
+                <div className="h-4 bg-stone-200 rounded w-full animate-pulse" />
+                <div className="h-4 bg-stone-200 rounded w-full animate-pulse" />
+                <div className="h-4 bg-stone-200 rounded w-5/6 animate-pulse" />
+                <div className="h-4 bg-stone-200 rounded w-full animate-pulse" />
+                <div className="h-4 bg-stone-200 rounded w-4/5 animate-pulse" />
+              </div>
+            </div>
+
+            {/* Features Section Skeleton */}
+            <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
+              <div className="flex items-center mb-6">
+                <div className="w-6 h-6 bg-stone-200 rounded mr-3 animate-pulse" />
+                <div className="h-7 bg-stone-200 rounded w-40 animate-pulse" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="flex items-center p-3 bg-stone-50 rounded-lg">
+                    <div className="w-2 h-2 bg-stone-200 rounded-full mr-3 animate-pulse" />
+                    <div className="h-4 bg-stone-200 rounded w-32 animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Map Section Skeleton */}
+            <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
+              <div className="flex items-center mb-6">
+                <div className="w-6 h-6 bg-stone-200 rounded mr-3 animate-pulse" />
+                <div className="h-7 bg-stone-200 rounded w-56 animate-pulse" />
+              </div>
+              <div className="h-64 sm:h-80 md:h-96 bg-stone-200 rounded-xl animate-pulse" />
+            </div>
+
+            {/* Similar Properties Skeleton */}
+            <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
+              <div className="flex items-center mb-6">
+                <div className="w-6 h-6 bg-stone-200 rounded mr-3 animate-pulse" />
+                <div className="h-7 bg-stone-200 rounded w-48 animate-pulse" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-stone-50 rounded-lg overflow-hidden shadow-md">
+                    <div className="h-48 bg-stone-200 animate-pulse" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-5 bg-stone-200 rounded w-3/4 animate-pulse" />
+                      <div className="h-4 bg-stone-200 rounded w-1/2 animate-pulse" />
+                      <div className="h-6 bg-stone-200 rounded w-24 animate-pulse" />
+                      <div className="flex justify-between items-center">
+                        <div className="flex space-x-3">
+                          <div className="h-4 bg-stone-200 rounded w-12 animate-pulse" />
+                          <div className="h-4 bg-stone-200 rounded w-12 animate-pulse" />
+                        </div>
+                        <div className="w-4 h-4 bg-stone-200 rounded animate-pulse" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const PropertyDetail = () => {
   const { id } = useParams();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [similarProperties, setSimilarProperties] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -47,11 +239,31 @@ const PropertyDetail = () => {
 
   const {
     items: properties,
+    selectedProperty,
     status,
     error,
+    itemLoading,
+    itemErrors,
   } = useSelector((state) => state.properties);
-  const navigate = useNavigate();
-  const property = properties.find((p) => p.id === parseInt(id));
+
+  // Use selectedProperty from Redux if available, otherwise find in items
+  const property = selectedProperty?.id === parseInt(id) 
+    ? selectedProperty 
+    : properties.find((p) => p.id === parseInt(id));
+
+  // Check if this specific property is loading
+  const isLoadingProperty = itemLoading[id] || false;
+  const propertyError = itemErrors[id] || null;
+
+  // Fetch property if not available - SIMPLIFIED DEPENDENCIES
+  useEffect(() => {
+    console.log("PropertyDetail useEffect:", { id, hasProperty: !!property, isLoadingProperty });
+    
+    if (!property && id && !isLoadingProperty) {
+      console.log("Dispatching fetchProperty for id:", id);
+      dispatch(fetchProperty(id));
+    }
+  }, [id, dispatch]);
 
   useEffect(() => {
     if (property && properties.length > 0) {
@@ -78,15 +290,38 @@ const PropertyDetail = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  if (!property)
+  // UPDATE THE LOADING STATE CHECK
+  if (isLoadingProperty || (!property && !propertyError)) {
+    return <PropertyDetailSkeleton />;
+  }
+
+  // ADD ERROR STATE HANDLING
+  if (propertyError || (!property && !isLoadingProperty)) {
     return (
-      <div className="min-h-screen flex justify-center items-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-stone-900 mx-auto mb-4"></div>
-          <p className="text-stone-600">Loading property details...</p>
-        </div>
+      <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-red-50 to-stone-50">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center p-8 bg-white rounded-xl shadow-lg max-w-md"
+        >
+          <div className="text-red-500 text-xl mb-4">
+            ⚠️ Property Not Found
+          </div>
+          <div className="text-stone-600 mb-4">
+            {propertyError?.message || "The property you're looking for doesn't exist or has been removed."}
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate("/properties")}
+            className="px-6 py-3 bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors"
+          >
+            View All Properties
+          </motion.button>
+        </motion.div>
       </div>
     );
+  }
 
   // Get primary agent or fallback to default contact
   const getPrimaryAgent = (property) => {
@@ -301,6 +536,8 @@ const PropertyDetail = () => {
           grid-column: 1 / -1;
           height: 360px !important;
         }
+
+
         
         /* Sections */
         .section {

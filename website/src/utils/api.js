@@ -280,23 +280,25 @@ export const propertyAPI = {
 
   getById: async (id) => {
     try {
-      const response = await axios.get(`https://houseofstone-backend1.onrender.com/properties/${id}/`, {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      });
-      return response;
-    } catch (error) {
-      if (error.response?.status === 403) {
-        clearInvalidAuth();
-        // Retry
-        return axios.get(`https://houseofstone-backend1.onrender.com/properties/${id}/`, {
+      // Try public endpoint first for shared links
+      const response = await axios.get(
+        `https://houseofstone-backend1.onrender.com/public/properties/${id}/`,
+        {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-        });
+        }
+      );
+      return response;
+    } catch (error) {
+      if (error.response?.status === 404) {
+        // Property not found or not public, try authenticated endpoint
+        try {
+          return await api.get(`/properties/${id}/`);
+        } catch (authError) {
+          throw authError;
+        }
       }
       throw error;
     }

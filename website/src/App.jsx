@@ -332,6 +332,7 @@ function App({ store }) {
           <Routes>
             <Route path="/" element={<EnhancedHomepage />} />
             <Route path="/sale" element={<Properties />} />
+            <Route path="/properties" element={<Properties />} />
             <Route path="/guide" element={<SellingGuidePage />} />
             <Route path="/rent" element={<RentalProperties />} />
             <Route path="/list" element={<ListPropertyPage />} />

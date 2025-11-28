@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import PublicPropertyListView, RegisterView,UserViewSet,PropertyLeadViewSet, LeadSourceViewSet , CustomTokenObtainPairView, ProfileView, PropertyViewSet, NeighborhoodViewSet, SavedSearchViewSet, FavoritePropertyViewSet, InquiryViewSet, MortgageCalculatorView, BlogPostViewSet, PropertyShareView, PropertyShareRedirect, AdminDashboardView, UserDashboardView, PropertyStatsView, AdminUserManagementViewSet, AdminActionLogViewSet, AgentViewSet
+from .views import PublicPropertyListView, PublicPropertyDetailView, RegisterView,UserViewSet,PropertyLeadViewSet, LeadSourceViewSet , CustomTokenObtainPairView, ProfileView, PropertyViewSet, NeighborhoodViewSet, SavedSearchViewSet, FavoritePropertyViewSet, InquiryViewSet, MortgageCalculatorView, BlogPostViewSet, PropertyShareView, PropertyShareRedirect, AdminDashboardView, UserDashboardView, PropertyStatsView, AdminUserManagementViewSet, AdminActionLogViewSet, AgentViewSet
 
 router = DefaultRouter()
 router.register(r'properties', PropertyViewSet, basename='property')
@@ -28,6 +28,7 @@ urlpatterns = [
     path('mortgage/', MortgageCalculatorView.as_view(), name='mortgage-calculator'),
     path('properties/<int:pk>/share/', PropertyShareView.as_view()),
     path('public/properties/', PublicPropertyListView.as_view({'get': 'list'})),
+    path('public/properties/<int:pk>/', PublicPropertyDetailView.as_view(), name='public-property-detail'),  # ADD THIS
     path('shared-properties/<uuid:token>/', PropertyShareRedirect.as_view()),
     path('properties/<int:pk>/stats/', PropertyViewSet.as_view({'get': 'stats'}), name='property-stats'),
     path('agent-properties/', PropertyViewSet.as_view({'get': 'list'}), name='agent-properties'),

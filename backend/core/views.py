@@ -38,6 +38,7 @@ from datetime import datetime
 import logging
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import viewsets
+from rest_framework import generics
 
 
 logger = logging.getLogger(__name__)
@@ -369,6 +370,21 @@ class PublicPropertyListView(AdminPropertyViewSet):
     
     def get_queryset(self):
         return Property.objects.filter(is_published=True).select_related('user').prefetch_related('images')
+
+class PublicPropertyDetailView(generics.RetrieveAPIView):
+    """Public endpoint for property details - no authentication required"""
+    permission_classes = [AllowAny]
+    serializer_class = PropertyDetailSerializer
+    lookup_field = 'pk'
+    
+    def get_queryset(self):
+        return Property.objects.filter(is_published=True).select_related('user').prefetch_related(
+            'images',
+            'features',
+            'property_agents__agent',
+            'stats',
+            'leads__source'
+        )
 
 class LeadSourceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = LeadSource.objects.all()
