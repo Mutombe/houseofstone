@@ -645,7 +645,7 @@ const Navbar = () => {
                   }}
                 >
                   <img
-                    src="/logo2.webp"
+                    src="/clogo.png"
                     alt="House of Stone Properties"
                     className="h-8 sm:h-12 w-auto filter group-hover:brightness-110 transition-all duration-300"
                     onError={(e) => {
