@@ -497,13 +497,13 @@ const Navbar = () => {
       description: "Houses, Townhouses, Clusters, etc",
     },
     {
-      path: "/sale",
+      path: "/commercial",
       label: "Commercial",
       icon: Building2,
       description: "Office buildings, retail spaces",
     },
     {
-      path: "/sale",
+      path: "/industrial",
       label: "Industrial",
       icon: Briefcase,
       description: "Warehouses, factories",

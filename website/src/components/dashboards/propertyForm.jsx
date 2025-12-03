@@ -715,7 +715,6 @@ export const PropertyForm = ({
                       <option value="apartment">Apartment</option>
                       <option value="flat">Flat</option>
                       <option value="land">Land</option>
-                      <option value="commercial">Commercial</option>
                       <option value="villa">Villa</option>
                       <option value="cluster">Cluster</option>
                       <option value="stand">Stand</option>
@@ -736,6 +735,8 @@ export const PropertyForm = ({
                       <option value="rental">Rental</option>
                       <option value="sale">Sale</option>
                       <option value="development">Developments</option>
+                      <option value="commercial">Commercial Property</option>
+                      <option value="industrial">Industrial Property</option>
                     </select>
                   </div>
 

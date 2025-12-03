@@ -468,7 +468,7 @@ PropertyCard.displayName = "PropertyCard";
 // MAIN COMPONENT
 // ============================================================================
 
-const Properties = () => {
+const Commercial = () => {
   const dispatch = useDispatch();
 
   // ========================================
@@ -739,7 +739,7 @@ const Properties = () => {
     const backendFilters = {
       page: 1,
       page_size: 10000, // Large number to get all properties
-      category: "sale",
+      category: "commercial",
     };
 
     dispatch(fetchProperties(backendFilters));
@@ -1236,4 +1236,4 @@ const Properties = () => {
   );
 };
 
-export default Properties;
+export default Commercial;

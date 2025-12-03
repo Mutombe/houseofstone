@@ -90,6 +90,8 @@ class Property(models.Model):
         ('rental', 'Rental'),
         ('sale', 'Sale'), 
         ('development', 'Development'),
+        ('commercial', 'Commercial Property'),
+        ('industrial', 'Industrial Property'),
     ]
     title = models.CharField(max_length=200)
     description = models.TextField()
