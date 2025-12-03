@@ -82,6 +82,9 @@ class Property(models.Model):
         ('land', 'Land'),
         ('commercial', 'Commercial'),
         ('villa', 'Villa'),  
+        ('cluster', 'Cluster'),
+        ('stand', 'Stand'),
+        ('duplex', 'Duplex'),
     ]
     CATEGORY_TYPES = [
         ('rental', 'Rental'),
