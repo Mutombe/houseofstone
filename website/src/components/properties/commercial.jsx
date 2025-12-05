@@ -272,6 +272,15 @@ const PropertyCard = React.memo(
       [property.price]
     );
 
+    const daysListed = useMemo(() => {
+      if (!property.created_at) return 0;
+      const createdDate = new Date(property.created_at);
+      const today = new Date();
+      const diffTime = Math.abs(today - createdDate);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
+    }, [property.created_at]);
+
     const handleFavoriteClick = useCallback(
       (e) => {
         e.preventDefault();
@@ -437,7 +446,7 @@ const PropertyCard = React.memo(
 
             <div className="flex justify-between items-center">
               <div className="text-sm text-stone-500">
-                Listed {Math.floor(Math.random() * 30 + 1)} days ago
+                Listed {daysListed === 0 ? 'today' : `${daysListed} day${daysListed !== 1 ? 's' : ''} ago`}
               </div>
               <motion.div
                 whileHover={{ scale: 1.05 }}

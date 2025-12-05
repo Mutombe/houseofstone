@@ -210,67 +210,21 @@ const Toast = React.memo(({ message, type, onClose }) => {
 Toast.displayName = "Toast";
 
 // Property Skeleton Component
-const PropertySkeleton = React.memo(({ viewMode }) => {
-  const isGrid = viewMode === "grid";
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className={`bg-white rounded-2xl shadow-lg overflow-hidden group ${
-        isGrid ? "" : "flex flex-row"
-      }`}
-    >
-      <div className={`relative ${isGrid ? "h-64" : "w-1/3 h-48"}`}>
-        <div className="absolute inset-0 bg-stone-200 animate-pulse" />
-      </div>
-
-      <div className={`p-6 ${isGrid ? "" : "flex-1"}`}>
-        <div className="flex justify-between mb-3">
-          <div className="h-6 bg-stone-200 rounded-full w-3/4 animate-pulse" />
-          <div className="h-4 bg-stone-200 rounded-full w-1/6 animate-pulse" />
-        </div>
-
-        <div className="flex items-center mb-4">
-          <div className="h-4 bg-stone-200 rounded-full w-1/2 animate-pulse" />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-10 bg-stone-100 rounded-lg animate-pulse"
-            />
-          ))}
-        </div>
-
-        <div className="flex gap-2 mb-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-6 bg-stone-100 rounded-full w-20 animate-pulse"
-            />
-          ))}
-        </div>
-
-        <div className="flex justify-between items-center">
-          <div className="h-4 bg-stone-200 rounded-full w-1/3 animate-pulse" />
-          <div className="h-8 bg-stone-200 rounded-lg w-24 animate-pulse" />
-        </div>
-      </div>
-    </motion.div>
-  );
-});
-
-PropertySkeleton.displayName = "PropertySkeleton";
-
-// Property Card Component
 const PropertyCard = React.memo(
   ({ property, viewMode, favorites, onToggleFavorite, onShare }) => {
     const formattedPrice = useMemo(
       () => formatPrice(property.price),
       [property.price]
     );
+
+    const daysListed = useMemo(() => {
+      if (!property.created_at) return 0;
+      const createdDate = new Date(property.created_at);
+      const today = new Date();
+      const diffTime = Math.abs(today - createdDate);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
+    }, [property.created_at]);
 
     const handleFavoriteClick = useCallback(
       (e) => {
@@ -437,7 +391,7 @@ const PropertyCard = React.memo(
 
             <div className="flex justify-between items-center">
               <div className="text-sm text-stone-500">
-                Listed {Math.floor(Math.random() * 30 + 1)} days ago
+                Listed {daysListed === 0 ? 'today' : `${daysListed} day${daysListed !== 1 ? 's' : ''} ago`}
               </div>
               <motion.div
                 whileHover={{ scale: 1.05 }}
