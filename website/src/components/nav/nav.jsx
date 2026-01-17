@@ -30,6 +30,7 @@ import {
   Download,
   Calculator,
   Building,
+  Heart,
 } from "lucide-react";
 import { GiWorld } from "react-icons/gi";
 import { PiUserCircleDashedBold } from "react-icons/pi";
@@ -47,6 +48,7 @@ import { TiThMenuOutline } from "react-icons/ti";
 
 // Redux actions
 import { logout, login, register } from "../../redux/slices/authSlice";
+import { selectSavedProperties } from "../../redux/slices/localSavesSlice";
 
 // Brand Colors
 const COLORS = {
@@ -662,6 +664,8 @@ const Navbar = () => {
   const [activeDropdown, setActiveDropdown] = useState(null);
 
   const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const savedProperties = useSelector(selectSavedProperties);
+  const savedCount = savedProperties?.length || 0;
   const isAdmin = user?.is_superuser;
   const dispatch = useDispatch();
   const location = useLocation();
@@ -828,6 +832,19 @@ const Navbar = () => {
                 />
               ))}
             </nav>
+
+            {/* Saved Properties - Desktop */}
+            <Link
+              to="/saved"
+              className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/5 transition-colors relative"
+            >
+              <Heart className="w-5 h-5" />
+              {savedCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#C9A962] text-[#0A1628] text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {savedCount > 9 ? '9+' : savedCount}
+                </span>
+              )}
+            </Link>
 
             {/* Desktop Auth */}
             <div className="hidden lg:flex items-center gap-3">

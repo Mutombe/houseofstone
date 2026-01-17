@@ -192,8 +192,8 @@ const PropertyValuationPage = () => {
     return (
       <div className="min-h-screen bg-[#060D16]">
         {/* Background */}
-        <div className="fixed inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0A1628] via-[#0A1628] to-[#0F1D2F]" />
+        <div className="fixed inset-0 ">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0A1628] via-[#0A1628] to-[#0F1D2F] pt-26" />
           <GridPattern />
           <FloatingOrb className="w-[600px] h-[600px] bg-[#C9A962] -top-40 -right-40" delay={0} />
           <FloatingOrb className="w-[400px] h-[400px] bg-[#1E3A5F] bottom-0 left-20" delay={2} />
@@ -203,10 +203,10 @@ const PropertyValuationPage = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden"
+            className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden "
           >
             {/* Success Header */}
-            <div className="relative bg-gradient-to-r from-[#C9A962] to-[#B8985A] p-8 text-center">
+            <div className="relative bg-gradient-to-r from-[#C9A962] to-[#B8985A] p-8 text-center ">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}

@@ -58,11 +58,15 @@ export default {
      fontFamily: {
         serif: ['GravitaHUM', 'Georgia', 'Cambria', 'serif'],
         // You can add Quicksand here as a new utility
-        quicksand: ['Quicksand', 'sans-serif'], 
-        
+        quicksand: ['Quicksand', 'sans-serif'],
+
         sans: ['Gellix', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
         display: ['Gravesend Sans', 'Inter', 'sans-serif'],
         roboto: ['Geist', 'sans-serif'],
+        // Description font - elegant serif for property descriptions
+        description: ['Cormorant Garamond', 'Georgia', 'serif'],
+        // Price font - bold, condensed numbers
+        price: ['Oswald', 'Arial Narrow', 'sans-serif'],
       },
 
       // Custom font sizes with Swiss-style line heights

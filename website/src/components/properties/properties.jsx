@@ -263,7 +263,7 @@ const PropertyCard = ({ property, savedPropertyIds, onToggleFavorite, onShare, i
           <div className="absolute bottom-4 left-4 right-4">
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-3xl font-bold text-white mb-1">{formatPrice(property.price)}</p>
+                <p className="text-3xl font-semibold tabular-nums text-white mb-1 tracking-wide">{formatPrice(property.price)}</p>
                 <div className="flex items-center gap-2 text-white/80 text-sm">
                   <PropertyIcon className="w-4 h-4" />
                   <span className="capitalize">{property.property_type || "Property"}</span>

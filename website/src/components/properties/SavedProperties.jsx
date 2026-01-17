@@ -124,7 +124,7 @@ const SavedPropertyCard = ({ property, onRemove }) => {
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xl font-bold text-[#C9A962]">
+            <span className="text-xl font-semibold tabular-nums text-[#C9A962]">
               ${property.price?.toLocaleString()}
             </span>
             <div className="flex gap-4 text-sm text-gray-400">
@@ -170,7 +170,7 @@ const SavedProperties = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A1628] pt-20 pb-24 lg:pb-12">
+    <div className="min-h-screen bg-[#0A1628] pt-30 pb-24 lg:pb-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

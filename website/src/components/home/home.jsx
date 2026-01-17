@@ -662,7 +662,7 @@ const PropertyCard = ({ property, index, variant = "default" }) => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <p className="text-3xl sm:text-4xl font-bold text-white mb-2">
+            <p className="text-3xl sm:text-4xl font-semibold tabular-nums text-white mb-2">
               {formatPrice(property.price)}
             </p>
             <h3 className="text-xl font-semibold text-white mb-3 line-clamp-1">
@@ -742,7 +742,7 @@ const PropertyCard = ({ property, index, variant = "default" }) => {
         </div>
 
         <div className="absolute bottom-4 left-4 right-4">
-          <p className="text-2xl font-bold text-white">{formatPrice(property.price)}</p>
+          <p className="text-2xl font-semibold tabular-nums text-white">{formatPrice(property.price)}</p>
         </div>
       </div>
 

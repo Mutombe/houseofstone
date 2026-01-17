@@ -216,7 +216,7 @@ const PropertyCard = ({ property, viewMode, isFavorite, onToggleFavorite }) => {
 
           {/* Badges */}
           <div className="absolute top-4 left-4 flex flex-col gap-2">
-            <div className="px-3 py-1.5 bg-gradient-to-r from-[#C9A962] to-[#B8985A] rounded-full text-[#0A1628] font-bold text-sm">
+            <div className="px-3 py-1.5 bg-gradient-to-r from-[#C9A962] to-[#B8985A] rounded-full text-[#0A1628] font-semibold tabular-nums text-sm">
               ${parseFloat(property.price).toLocaleString()}/mo
             </div>
             <div className="px-3 py-1.5 bg-emerald-500/90 backdrop-blur-sm rounded-full text-white text-xs font-semibold flex items-center gap-1">

@@ -362,7 +362,7 @@ const PropertyCard = React.memo(
 
             {/* Price & Category Badges */}
             <div className="absolute top-4 left-4 flex gap-2">
-              <div className="bg-gradient-to-r from-[#C9A962] to-[#B8985A] px-3 py-1.5 rounded-lg text-[#0A1628] font-bold text-lg shadow-lg">
+              <div className="bg-gradient-to-r from-[#C9A962] to-[#B8985A] px-3 py-1.5 rounded-lg text-[#0A1628] font-semibold tabular-nums text-lg shadow-lg">
                 {formattedPrice}
               </div>
               {property.category && (

@@ -404,7 +404,7 @@ const About = () => {
           style={{ opacity: heroOpacity }}
           className="relative z-10 h-full flex items-center"
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-36">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
