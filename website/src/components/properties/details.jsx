@@ -1601,7 +1601,7 @@ const PropertyDetail = () => {
                         <img
                           src={getAgentImage(getPrimaryAgent(property).agent.first_name)}
                           alt={getPrimaryAgent(property).agent.first_name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover object-top "
                           onError={(e) => {
                             e.target.style.display = 'none';
                             e.target.nextSibling.style.display = 'flex';
