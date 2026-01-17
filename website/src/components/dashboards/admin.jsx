@@ -1119,6 +1119,7 @@ const PropertyDashboard = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [isPaginating, setIsPaginating] = useState(false); // Track pagination loading separately
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCriteria, setFilterCriteria] = useState({
@@ -1517,7 +1518,9 @@ const PropertyDashboard = () => {
 
   // Fetch properties with pagination
   useEffect(() => {
-    dispatch(fetchAdminProperties({ page: currentPage, page_size: pageSize }));
+    setIsPaginating(true);
+    dispatch(fetchAdminProperties({ page: currentPage, page_size: pageSize }))
+      .finally(() => setIsPaginating(false));
   }, [dispatch, currentPage, pageSize]);
 
   // Listen for property update/create events (optimistic UI notifications)
@@ -2461,8 +2464,8 @@ const PropertyDashboard = () => {
                         </td>
                       </motion.tr>
                     )}
-                    {isDataLoading && filteredProperties.length === 0
-                      ? // Show skeleton rows when loading and no data
+                    {isPaginating || (isDataLoading && filteredProperties.length === 0)
+                      ? // Show skeleton rows during pagination or initial load
                         [...Array(pageSize)].map((_, i) => (
                           <TableRowSkeleton key={i} columns={7} />
                         ))
