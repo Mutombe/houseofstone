@@ -6,8 +6,8 @@ set -o errexit
 cd backend
 pip install -r requirements.txt
 
-# Convert static asset files
-python manage.py collectstatic --no-input
+# Convert static asset files (--clear to avoid S3 404 errors on missing files)
+python manage.py collectstatic --no-input --clear
 
 # Apply any outstanding database migrations
 python manage.py migrate
