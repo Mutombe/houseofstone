@@ -622,6 +622,23 @@ const propertySlice = createSlice({
         // Remove from items array
         state.items = state.items.filter((p) => p.id !== deletedId);
 
+        // Remove from adminProperties array
+        if (state.adminProperties) {
+          state.adminProperties = state.adminProperties.filter((p) => p.id !== deletedId);
+        }
+
+        // Update adminPagination count
+        if (state.adminPagination) {
+          state.adminPagination.count = Math.max(0, (state.adminPagination.count || 0) - 1);
+          state.adminPagination.results = state.adminPagination.results?.filter((p) => p.id !== deletedId) || [];
+        }
+
+        // Remove from marketplace results
+        if (state.marketplace?.results) {
+          state.marketplace.results = state.marketplace.results.filter((p) => p.id !== deletedId);
+          state.marketplace.count = Math.max(0, (state.marketplace.count || 0) - 1);
+        }
+
         // Clear selected property if it's the deleted one
         if (state.selectedProperty?.id === deletedId) {
           state.selectedProperty = null;

@@ -31,8 +31,6 @@ import {
 } from "lucide-react";
 import { Snackbar, Alert } from "@mui/material";
 import {
-  fetchProperties,
-  fetchAdminProperties,
   createProperty,
   updateProperty,
 } from "../../redux/slices/propertySlice";
@@ -687,7 +685,7 @@ export const PropertyForm = ({
         setCurrentForm(null);
         setIsSubmitting(false);
 
-        // Dispatch update in background
+        // Dispatch update in background - Redux handles optimistic update
         dispatch(
           updateProperty({
             id: propertyId,
@@ -698,7 +696,7 @@ export const PropertyForm = ({
           window.dispatchEvent(new CustomEvent('propertyUpdateSuccess', {
             detail: { message: 'Property updated successfully!' }
           }));
-          dispatch(fetchAdminProperties({ page: 1, page_size: 10 }));
+          // No refetch needed - Redux slice handles optimistic update
         }).catch((error) => {
           window.dispatchEvent(new CustomEvent('propertyUpdateError', {
             detail: { message: error?.message || 'Failed to update property' }
@@ -719,7 +717,7 @@ export const PropertyForm = ({
             window.dispatchEvent(new CustomEvent('propertyCreateSuccess', {
               detail: { message: 'Property created successfully!' }
             }));
-            dispatch(fetchAdminProperties({ page: 1, page_size: 10 }));
+            // No refetch needed - Redux slice adds new property to the list
           })
           .catch((error) => {
             console.error("Create error:", error);

@@ -1611,7 +1611,7 @@ const PropertyDashboard = () => {
           dispatch(
             showSuccess("Property deleted successfully!", "Delete Property")
           );
-          dispatch(fetchAdminProperties({ page: currentPage, page_size: pageSize }));
+          // No refetch needed - Redux slice handles optimistic removal
         } catch (error) {
           dispatch(
             showError(
@@ -2384,17 +2384,7 @@ const PropertyDashboard = () => {
 
               {/* Properties Table */}
               <div className="overflow-x-auto relative">
-                {/* Loading overlay for pagination */}
-                {isDataLoading && filteredProperties.length > 0 && (
-                  <div className="absolute inset-0 bg-[#0A1628]/70 backdrop-blur-sm z-10 flex items-center justify-center">
-                    <div className="flex items-center gap-3 px-4 py-2 bg-[#0A1628] border border-white/10 rounded-xl">
-                      <Loader className="w-5 h-5 text-[#C9A962] animate-spin" />
-                      <span className="text-white text-sm">
-                        Loading properties...
-                      </span>
-                    </div>
-                  </div>
-                )}
+                {/* No loading overlay - individual rows handle their own loading state */}
                 <table className="w-full min-w-[800px]">
                   <thead>
                     <tr className="border-b border-white/10">
