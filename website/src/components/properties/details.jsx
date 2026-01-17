@@ -1244,6 +1244,15 @@ const PropertyDetail = () => {
     }
   };
 
+  // Compute OG image URL for social sharing
+  const getOgImageUrl = () => {
+    const imgUrl = property.images?.[0]?.image;
+    if (!imgUrl) return 'https://hsp.co.zw/logo.png';
+    if (imgUrl.startsWith('http')) return imgUrl;
+    return `https://api.hsp.co.zw${imgUrl.startsWith('/') ? '' : '/'}${imgUrl}`;
+  };
+  const ogImageUrl = getOgImageUrl();
+
   return (
     <div className="min-h-screen bg-[#0A1628]">
       <Helmet>
@@ -1255,15 +1264,19 @@ const PropertyDetail = () => {
         {/* Open Graph meta tags for social sharing */}
         <meta property="og:title" content={`${property.title} | House of Stone Properties`} />
         <meta property="og:description" content={property.description?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().substring(0, 160) || `Beautiful ${property.property_type} in ${property.location}`} />
-        <meta property="og:image" content={property.images?.[0]?.image || 'https://hsp.co.zw/logo.png'} />
+        <meta property="og:image" content={ogImageUrl} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={property.title} />
         <meta property="og:url" content={`https://hsp.co.zw/properties/${property.id}`} />
-        <meta property="og:type" content="website" />
+        <meta property="og:type" content="article" />
         <meta property="og:site_name" content="House of Stone Properties" />
         {/* Twitter Card meta tags */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${property.title} | House of Stone Properties`} />
         <meta name="twitter:description" content={property.description?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().substring(0, 160) || `Beautiful ${property.property_type} in ${property.location}`} />
-        <meta name="twitter:image" content={property.images?.[0]?.image || 'https://hsp.co.zw/logo.png'} />
+        <meta name="twitter:image" content={ogImageUrl} />
+        <meta name="twitter:image:alt" content={property.title} />
       </Helmet>
 
       {/* Hero Section */}
@@ -1454,7 +1467,7 @@ const PropertyDetail = () => {
                   position={[parseFloat(property.latitude), parseFloat(property.longitude)]}
                   title={property.title}
                   address={property.location}
-                  zoom={14}
+                  zoom={12}
                 />
               </div>
 
