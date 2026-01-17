@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+// src/components/agents/agents.jsx
+import React, { useState, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useInView } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   Phone,
   Mail,
-  MessageCircle,
   Star,
   Award,
   TrendingUp,
@@ -11,26 +13,96 @@ import {
   MapPin,
   Calendar,
   CheckCircle,
-  Filter,
   Search,
-  Globe,
   Linkedin,
   Facebook,
   Twitter,
-  ChevronDown,
+  X,
   Sparkles,
   Shield,
   Clock,
   Target,
+  ArrowRight,
+  MessageCircle,
+  ChevronDown,
+  Building,
+  Briefcase,
+  Languages,
+  Quote,
+  Filter,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { SiFsecure } from "react-icons/si";
+import { LiaAwardSolid } from "react-icons/lia";
+import { FaRegCircleUser } from "react-icons/fa6";
+import { MdStarPurple500 } from "react-icons/md";
+import { FaXTwitter } from "react-icons/fa6";
 
-// Sample agents data
+
+// Floating Orb Component
+const FloatingOrb = ({ className, delay = 0 }) => (
+  <motion.div
+    className={`absolute rounded-full blur-3xl ${className}`}
+    animate={{
+      scale: [1, 1.2, 1],
+      opacity: [0.1, 0.2, 0.1],
+    }}
+    transition={{
+      duration: 8,
+      repeat: Infinity,
+      delay,
+      ease: "easeInOut",
+    }}
+  />
+);
+
+// Grid Pattern Background
+const GridPattern = () => (
+  <div className="absolute inset-0 opacity-[0.02]">
+    <div
+      className="absolute inset-0"
+      style={{
+        backgroundImage: `linear-gradient(#C9A962 1px, transparent 1px), linear-gradient(90deg, #C9A962 1px, transparent 1px)`,
+        backgroundSize: "60px 60px",
+      }}
+    />
+  </div>
+);
+
+// Animated Counter Component
+const AnimatedCounter = ({ end, suffix = "", duration = 2 }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  const [count, setCount] = useState(0);
+
+  React.useEffect(() => {
+    if (isInView) {
+      let startTime;
+      const animate = (currentTime) => {
+        if (!startTime) startTime = currentTime;
+        const progress = Math.min((currentTime - startTime) / (duration * 1000), 1);
+        setCount(Math.floor(progress * end));
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+      requestAnimationFrame(animate);
+    }
+  }, [isInView, end, duration]);
+
+  return (
+    <span ref={ref}>
+      {count}
+      {suffix}
+    </span>
+  );
+};
+
+// Agent data
 const agents = [
   {
     id: 1,
     name: "Leonita Mhishi",
-    title: "Pincipal Registered Estate Agent",
+    title: "Principal Registered Estate Agent",
     specialization: "Luxury Properties",
     experience: "8+ Years",
     image: "leo.jpeg",
@@ -40,18 +112,10 @@ const agents = [
     languages: ["English", "French"],
     phone: "+263 77 123 4567",
     email: "leonita@hsp.co.zw",
-    bio: "Leonita is the founder of House of Stone Properties, one of the top real estate agencies in the country. She has worked for various organizations holding key positions in Zimbabwe, Australia, China and various other countries. Experienced Property Consultant with a demonstrated history of working in the Real Estate industry for over 15 years. Skilled in Commercial Property Sales, Negotiation, Real Property, Diplomatic History, and International Relations, Leonita thrives in building business relationships grounded in adherence to the principles of honesty, transparency, integrity and legality, giving an assurance to all clients that all property dealings are done in conformity with the law. Leonita oversees the running of the company.",
-    achievements: [
-      "Top Agent 2023",
-      "Million Dollar Club",
-      "Customer Choice Award",
-    ],
+    bio: "Leonita is the founder of House of Stone Properties, one of the top real estate agencies in the country. She has worked for various organizations holding key positions in Zimbabwe, Australia, China and various other countries. Experienced Property Consultant with a demonstrated history of working in the Real Estate industry for over 15 years.",
+    achievements: ["Top Agent 2023", "Million Dollar Club", "Customer Choice Award"],
     areas: ["Borrowdale", "Highlands", "Mount Pleasant", "Avondale"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
+    featured: true,
   },
   {
     id: 2,
@@ -66,18 +130,10 @@ const agents = [
     languages: ["English", "Shona", "Ndebele"],
     phone: "+263 77 234 5678",
     email: "nairgel@hsp.co.zw",
-    bio: "Nairgel Masiiwa is a seasoned sales professional and current Head of Sales at House of Stone Properties, a leading real estate firm based in Zimbabwe. With a proven track record of driving revenue growth and building high-performing sales teams, Nairgel brings a wealth of expertise to his role, including construction and architecture, having worked in South Africa and Zimbabwe real estate industries. Throughout his career, he has demonstrated a keen understanding of the property market and a talent for identifying opportunities that drive business success. Under his leadership, the sales team at House of Stone Properties has consistently exceeded targets, solidifying the company's position as a major player in the industry. Nairgel's passion for innovative sales strategies and commitment to exceptional customer service have earned him a reputation as a respected and results-driven leader in the real estate sector. Nairgel is an expert in his field, providing the highest level of service and an incredible attention to detail when it comes to buying, selling, or renting properties.",
-    achievements: [
-      "Commercial Expert 2023",
-      "Investment Advisor Award",
-      "Top Revenue Generator",
-    ],
+    bio: "Nairgel Masiiwa is a seasoned sales professional and current Head of Sales at House of Stone Properties. With a proven track record of driving revenue growth and building high-performing sales teams, Nairgel brings a wealth of expertise including construction and architecture.",
+    achievements: ["Commercial Expert 2023", "Investment Advisor Award", "Top Revenue Generator"],
     areas: ["CBD", "Msasa", "Workington", "Graniteside"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
+    featured: true,
   },
   {
     id: 3,
@@ -92,18 +148,10 @@ const agents = [
     languages: ["English", "Shona", "Ndebele"],
     phone: "+263 77 678 9012",
     email: "winnie@hsp.co.zw",
-    bio: "Winnifilda is an accomplished real estate sales CONSULTANT with over 14 years of experience in the Zimbabwean and South African markets. Known for her exceptional negotiation skills and in-depth market knowledge, Winnifilda has facilitated numerous successful transactions across residential, commercial, and industrial properties. Based in Harare, she has built an extensive network of clients and industry contacts throughout the region, enabling her to consistently deliver optimal outcomes for buyers and sellers alike. Winnifilda’s unwavering commitment to professional development and her ability to navigate complex market conditions have solidified her reputation as a trusted advisor in the field of real estate.",
-    achievements: [
-      "Property Manager of the Year",
-      "Client Satisfaction Award",
-      "Operational Excellence",
-    ],
+    bio: "Winnifilda is an accomplished real estate sales consultant with over 14 years of experience in the Zimbabwean and South African markets. Known for her exceptional negotiation skills and in-depth market knowledge.",
+    achievements: ["Property Manager of the Year", "Client Satisfaction Award", "Operational Excellence"],
     areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
+    featured: true,
   },
   {
     id: 4,
@@ -118,18 +166,9 @@ const agents = [
     languages: ["English", "Shona"],
     phone: "+263 77 456 7890",
     email: "james@hsp.co.zw",
-    bio: "James is a qualified and experienced professional with over 20 years operational, tactical and strategic experience across Business Processes, and Industry sectors, as well as Consultancy. Has vast experience in Press and Public relations and managing corporate affairs. James has held project leadership roles, across manufacturing insurance and FMCG sectors. His experience has a successful track record of executive client service engagement and management. He has sound strategic and functional expertise and versatile professional background.",
-    achievements: [
-      "Investment Specialist 2023",
-      "ROI Maximizer Award",
-      "Trusted Advisor",
-    ],
+    bio: "James is a qualified and experienced professional with over 20 years operational, tactical and strategic experience across Business Processes and Industry sectors, as well as Consultancy.",
+    achievements: ["Investment Specialist 2023", "ROI Maximizer Award", "Trusted Advisor"],
     areas: ["Eastlea", "Southerton", "Belvedere", "Greendale"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
   },
   {
     id: 5,
@@ -144,18 +183,9 @@ const agents = [
     languages: ["English", "Shona", "Ndebele"],
     phone: "+263 77 678 9012",
     email: "arthur@hsp.co.zw",
-    bio: "Arthur is not only an estate agent but also a dedicated professional who goes above and beyond to serve his clients. He combines her international business acumen, client-centric approach, negotiation skills, strong network, and market expertise to excel in the real estate industry. Whether you’re a first-time homebuyer or a seasoned investor, Arthur is the agent you can trust to guide you through the process with confidence.",
-    achievements: [
-      "Property Manager of the Year",
-      "Client Satisfaction Award",
-      "Operational Excellence",
-    ],
+    bio: "Arthur is a dedicated professional who goes above and beyond to serve his clients. He combines international business acumen, client-centric approach, negotiation skills, and market expertise to excel.",
+    achievements: ["Property Manager of the Year", "Client Satisfaction Award", "Operational Excellence"],
     areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
   },
   {
     id: 6,
@@ -170,18 +200,9 @@ const agents = [
     languages: ["English", "Shona", "Ndebele"],
     phone: "+263 77 678 9012",
     email: "info@hsp.co.zw",
-    bio: "Sarah is an invaluable member of the HSP team as the office Administrator. Her strong organizational skills and meticulous attention to detail ensure the smooth and efficient operation of the office on a daily basis. She manages a variety of tasks, including scheduling and supporting real estate agents, maintaining client records, and coordinating marketing campaigns. Sarah’s friendly and multitasking nature allows her to excel in meeting the needs of both the real estate agents and clients. Her dedication to providing top-notch service has contributed significantly to HSP’s success and growth. She has a rich background in office administration and customer service, having worked in the tertiary and real estate sectors.",
-    achievements: [
-      "Property Manager of the Year",
-      "Client Satisfaction Award",
-      "Operational Excellence",
-    ],
+    bio: "Sarah is an invaluable member of the HSP team as the office Administrator. Her strong organizational skills and meticulous attention to detail ensure the smooth and efficient operation of the office.",
+    achievements: ["Property Manager of the Year", "Client Satisfaction Award", "Operational Excellence"],
     areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
   },
   {
     id: 7,
@@ -196,18 +217,9 @@ const agents = [
     languages: ["English", "Shona"],
     phone: "+263 77 345 6789",
     email: "tsitsi@hsp.co.zw",
-    bio: "Tsitsi is an Accountant by profession, and has more than 3 decades of finance, administration and sales experience in the Private, NGO and Retail Sectors. Tsitsi joined real estate industry in 2022 but has shown she is a force to be reckoned with. She is skilled at developing the right action plan for each of her client’s unique needs and committed to helping them choose the best properties. Throughout her career, Tsitsi has earned the trust of several national and international clients and maintained strong client relationships that generate repeat business. She attributes her success to her ability to listen to customers and put their needs first.",
-    achievements: [
-      "Family Choice Award",
-      "Rising Star 2022",
-      "Community Champion",
-    ],
+    bio: "Tsitsi is an Accountant by profession with more than 3 decades of finance, administration and sales experience. She is skilled at developing the right action plan for each client's unique needs.",
+    achievements: ["Family Choice Award", "Rising Star 2022", "Community Champion"],
     areas: ["Warren Park", "Hatfield", "Marlborough", "Newlands"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
   },
   {
     id: 8,
@@ -222,18 +234,9 @@ const agents = [
     languages: ["English", "Shona", "Ndebele"],
     phone: "+263 77 678 9012",
     email: "chomu@hsp.co.zw",
-    bio: "Chomu Sithole is a mature and dynamic professional with over 25 years of experience in the interior design industry and 3 years in the real estate sector. She has a keen eye for spotting hidden gems and can help transform a “diamond in the rough” into a stunning showcase. Chomu is prepared to assist you with all your property needs, whether you are looking to buy, sell, or rent. No matter the size or scope of the property, she is eager to connect you with your dream home or investment. Chomu’s expertise and dedication make her an invaluable resource in the property market. She is excited to put her skills and experience to work for you, ensuring a smooth and successful real estate transaction.",
-    achievements: [
-      "Property Manager of the Year",
-      "Client Satisfaction Award",
-      "Operational Excellence",
-    ],
+    bio: "Chomu Sithole is a mature and dynamic professional with over 25 years of experience in the interior design industry and 3 years in the real estate sector. She has a keen eye for spotting hidden gems.",
+    achievements: ["Property Manager of the Year", "Client Satisfaction Award", "Operational Excellence"],
     areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
   },
   {
     id: 9,
@@ -248,21 +251,12 @@ const agents = [
     languages: ["English", "Shona", "Ndebele"],
     phone: "+263 77 678 9012",
     email: "emily@hsp.co.zw",
-    bio: "Emily is a dedicated real estate agent specialising in sales. She brings a unique blend of passion for real estate and a robust background in marketing to the table. Her expertise lie in the vibrant Harare West market, where she focuses on matching clients with properties that perfectly suit their needs. With a personalised approach, she strives to ensure every client finds their ideal home or investment, making the buying process as smooth and rewarding as possible. Let her help you navigate the Harare West real estate market with confidence and ease.",
-    achievements: [
-      "Property Manager of the Year",
-      "Client Satisfaction Award",
-      "Operational Excellence",
-    ],
+    bio: "Emily is a dedicated real estate agent specialising in sales. She brings a unique blend of passion for real estate and a robust background in marketing to the table.",
+    achievements: ["Property Manager of the Year", "Client Satisfaction Award", "Operational Excellence"],
     areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
   },
   {
-    id: 5,
+    id: 10,
     name: "Tanaka Maforimbo",
     title: "Letting Agent",
     specialization: "Rentals & Letting",
@@ -274,21 +268,12 @@ const agents = [
     languages: ["English", "Ndebele", "Shona"],
     phone: "+263 77 567 8901",
     email: "tanaka@hsp.co.zw",
-    bio: "Tanaka, Head of Rentals and Letting at HSP, brings five years of dedicated experience in the real estate sector to his role. Holding a BSc with Honours in Real Estate Management from the University of Zimbabwe, Tanaka specializes in rentals and property management. His passion for the industry is evident in his commitment to providing exceptional client care. Tanaka’s strong communication and customer service skills allow him to connect with clients in a clear and concise manner, ensuring their needs are understood and met. He leverages his organizational talents and market expertise to guide clients through the complexities of the housing market, helping them make informed decisions that align with their needs and goals. Passionate about elevating the real estate industry, Tanaka is committed to going above and beyond for his clients. By providing personalized attention and tailored solutions, he consistently exceeds their expectations and helps them achieve their real estate aspirations.",
-    achievements: [
-      "New Development Expert",
-      "Future Vision Award",
-      "Innovation Leader",
-    ],
+    bio: "Tanaka, Head of Rentals and Letting at HSP, brings five years of dedicated experience in the real estate sector. He specializes in rentals and property management.",
+    achievements: ["New Development Expert", "Future Vision Award", "Innovation Leader"],
     areas: ["Norton", "Ruwa", "Chitungwiza", "Epworth"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
   },
   {
-    id: 7,
+    id: 11,
     name: "Prince Sanidoka",
     title: "Sales Negotiator",
     specialization: "Negotiation",
@@ -300,21 +285,12 @@ const agents = [
     languages: ["English", "Shona", "Ndebele"],
     phone: "+263 77 678 9012",
     email: "prince@hsp.co.zw",
-    bio: "Prince is a dedicated and results-driven sales consultant at HSP, bringing three years of experience in real estate and a passion for driving sales growth. Prince honed his skills in the industry, developing a keen understanding of the market and a talent for negotiation. With his enthusiasm and expertise, he aims to leverage his knowledge to deliver exceptional sales performance for HSP, consistently exceeding targets and contributing to the company’s success.",
-    achievements: [
-      "Property Manager of the Year",
-      "Client Satisfaction Award",
-      "Operational Excellence",
-    ],
+    bio: "Prince is a dedicated and results-driven sales consultant bringing three years of experience in real estate and a passion for driving sales growth.",
+    achievements: ["Property Manager of the Year", "Client Satisfaction Award", "Operational Excellence"],
     areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
   },
   {
-    id: 8,
+    id: 12,
     name: "Heather Mushori",
     title: "Sales Negotiator",
     specialization: "Negotiation",
@@ -326,21 +302,12 @@ const agents = [
     languages: ["English", "Shona", "Ndebele"],
     phone: "+263 77 678 9012",
     email: "heather@hsp.co.zw",
-    bio: "Heather is not only an estate agent but also a dedicated professional who goes above and beyond to serve her clients. She combines her international business acumen, client-centric approach, negotiation skills, strong network, and market expertise to excel in the real estate industry. Whether you’re a first-time homebuyer or a seasoned investor, Heather is the agent you can trust to guide you through the process with confidence.",
-    achievements: [
-      "Property Manager of the Year",
-      "Client Satisfaction Award",
-      "Operational Excellence",
-    ],
+    bio: "Heather is a dedicated professional who goes above and beyond to serve her clients. She combines international business acumen and negotiation skills to excel in real estate.",
+    achievements: ["Property Manager of the Year", "Client Satisfaction Award", "Operational Excellence"],
     areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
   },
   {
-    id: 10,
+    id: 13,
     name: "Michael Madanha",
     title: "Sales Negotiator",
     specialization: "Negotiation",
@@ -351,22 +318,13 @@ const agents = [
     propertiesSold: 45,
     languages: ["English", "Shona", "Ndebele"],
     phone: "+263 77 678 9012",
-    email: "prince@hsp.co.zw",
-    bio: "Micheal is hardworking Sales Negotiator",
-    achievements: [
-      "Property Manager of the Year",
-      "Client Satisfaction Award",
-      "Operational Excellence",
-    ],
+    email: "michael@hsp.co.zw",
+    bio: "Michael is a hardworking Sales Negotiator with dedication to helping clients find their perfect properties.",
+    achievements: ["Property Manager of the Year", "Client Satisfaction Award", "Operational Excellence"],
     areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
   },
   {
-    id: 11,
+    id: 14,
     name: "Tatenda Dzumbunu",
     title: "Sales Negotiator",
     specialization: "Negotiation",
@@ -378,21 +336,12 @@ const agents = [
     languages: ["Shona"],
     phone: "+263 784 532 812",
     email: "tatenda@hsp.co.zw",
-    bio: "Tatenda is hardworking Sales Negotiator",
-    achievements: [
-      "Property Manager of the Year",
-      "Client Satisfaction Award",
-      "Operational Excellence",
-    ],
+    bio: "Tatenda is a hardworking Sales Negotiator passionate about real estate.",
+    achievements: ["Rising Star", "Client Satisfaction Award"],
     areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
   },
   {
-    id: 12,
+    id: 15,
     name: "Lloyd Chitsowe",
     title: "Maintenance Supervisor",
     specialization: "Maintenance",
@@ -404,134 +353,297 @@ const agents = [
     languages: ["Shona"],
     phone: "N/A",
     email: "N/A",
-    bio: "Lloyd is hardworking Care Taker",
-    achievements: [
-      "Property Manager of the Year",
-      "Client Satisfaction Award",
-      "Operational Excellence",
-    ],
-    areas: ["Harare Central", "Waterfalls", "Glen View", "Budiriro"],
-    social: {
-      linkedin: "#",
-      facebook: "#",
-      twitter: "#",
-    },
+    bio: "Lloyd is a hardworking Maintenance Supervisor ensuring all properties are well maintained.",
+    achievements: ["Operational Excellence"],
+    areas: ["Harare Central"],
   },
 ];
 
 const specializations = [
   "All",
   "Luxury Properties",
-  "Commercial Real Estate",
-  "Family Homes",
-  "Investment Properties",
-  "New Developments",
-  "Property Management",
+  "Sales",
+  "Negotiation",
+  "Rentals & Letting",
+  "Administration",
+  "Media & Marketing",
+  "Maintenance",
 ];
 
-// Agent Details Modal Component
-const AgentDetailsModal = ({ agent, isOpen, onClose }) => {
+// Featured Agent Card Component
+const FeaturedAgentCard = ({ agent, onClick }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6 }}
+      className="group relative cursor-pointer"
+      onClick={() => onClick(agent)}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-[#C9A962]/20 to-transparent rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="relative bg-[#0A1628] border border-white/10 rounded-3xl overflow-hidden hover:border-[#C9A962]/30 transition-all duration-500">
+        {/* Image */}
+        <div className="relative h-80 overflow-hidden">
+          <img
+            src={agent.image}
+            alt={agent.name}
+            className="w-full h-full object-cover object-top transform group-hover:scale-110 transition-transform duration-700"
+            style={{ objectPosition: "center 20%" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-transparent to-transparent" />
+
+          {/* Featured Badge */}
+          <div className="absolute top-4 left-4">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-[#C9A962] to-[#B8985A] rounded-full">
+              <MdStarPurple500 className="w-4 h-4 text-[#0A1628] fill-current" />
+              <span className="text-[#0A1628] font-semibold text-sm">Featured</span>
+            </div>
+          </div>
+
+          {/* Quick Stats Overlay */}
+          <div className="absolute bottom-4 left-4 right-4 flex justify-between">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-xl rounded-full">
+              <Building className="w-4 h-4 text-[#C9A962]" />
+              <span className="text-white text-sm font-medium">{agent.propertiesSold} Sold</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-xl rounded-full">
+              <MdStarPurple500 className="w-4 h-4 text-[#C9A962] fill-current" />
+              <span className="text-white text-sm font-medium">{agent.rating}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          <h3 className="text-xl font-bold text-white mb-1 group-hover:text-[#C9A962] transition-colors">
+            {agent.name}
+          </h3>
+          <p className="text-[#C9A962] font-medium text-sm mb-2">{agent.title}</p>
+          <p className="text-gray-400 text-sm mb-4">{agent.specialization}</p>
+
+          {/* Languages */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {agent.languages.slice(0, 3).map((lang, idx) => (
+              <span
+                key={idx}
+                className="px-2 py-1 bg-white/5 border border-white/10 rounded-full text-gray-400 text-xs"
+              >
+                {lang}
+              </span>
+            ))}
+          </div>
+
+          {/* Contact Buttons */}
+          <div className="flex gap-2">
+            <a
+              href={`tel:${agent.phone}`}
+              onClick={(e) => e.stopPropagation()}
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-[#C9A962] hover:border-[#C9A962] hover:text-[#0A1628] transition-all"
+            >
+              <Phone className="w-4 h-4" />
+              <span className="text-sm font-medium">Call</span>
+            </a>
+            <a
+              href={`mailto:${agent.email}`}
+              onClick={(e) => e.stopPropagation()}
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] rounded-xl text-[#0A1628] font-medium text-sm hover:shadow-lg hover:shadow-[#C9A962]/20 transition-all"
+            >
+              <Mail className="w-4 h-4" />
+              <span>Email</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Regular Agent Card Component
+const AgentCard = ({ agent, index, onClick }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay: index * 0.05 }}
+      className="group relative cursor-pointer"
+      onClick={() => onClick(agent)}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-[#C9A962]/10 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden hover:border-[#C9A962]/30 transition-all duration-500 h-full">
+        {/* Image */}
+        <div className="relative h-56 overflow-hidden">
+          <img
+            src={agent.image}
+            alt={agent.name}
+            className="w-full h-full object-cover object-top transform group-hover:scale-110 transition-transform duration-700"
+            style={{ objectPosition: "center 20%" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-transparent to-transparent" />
+
+          {/* Rating Badge */}
+          <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 bg-white/10 backdrop-blur-xl rounded-full">
+            <MdStarPurple500 className="w-3 h-3 text-[#C9A962] fill-current" />
+            <span className="text-white text-xs font-medium">{agent.rating}</span>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-5">
+          <h3 className="text-lg font-bold text-white mb-1 group-hover:text-[#C9A962] transition-colors">
+            {agent.name}
+          </h3>
+          <p className="text-[#C9A962] font-medium text-sm mb-2">{agent.title}</p>
+
+          {/* Stats Row */}
+          <div className="flex items-center gap-4 text-gray-400 text-xs mb-4">
+            <div className="flex items-center gap-1">
+              <Building className="w-3 h-3" />
+              <span>{agent.propertiesSold} sold</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <MessageCircle className="w-3 h-3" />
+              <span>{agent.reviews} reviews</span>
+            </div>
+          </div>
+
+          {/* View Profile Button */}
+          <button className="w-full py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm font-medium group-hover:bg-[#C9A962] group-hover:border-[#C9A962] group-hover:text-[#0A1628] transition-all flex items-center justify-center gap-2">
+            View Profile
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Agent Detail Modal Component
+const AgentDetailModal = ({ agent, isOpen, onClose }) => {
   if (!isOpen || !agent) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-2xl font-bold text-slate-800">Agent Details</h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <span className="text-2xl text-gray-500">×</span>
-          </button>
-        </div>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-[#0A1628]/90 backdrop-blur-xl" />
 
         {/* Modal Content */}
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Agent Photo - Optimized for face visibility */}
-            <div className="space-y-4">
-              <div className="relative">
-                <img
-                  src={agent.image}
-                  alt={agent.name}
-                  className="w-full h-80 object-cover object-top rounded-2xl shadow-lg"
-                  style={{ objectPosition: "center 20%" }}
-                />
-                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-full px-3 py-2 flex items-center">
-                  <Star className="w-4 h-4 text-[#DCC471] fill-current mr-1" />
-                </div>
-              </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ duration: 0.3 }}
+          className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-[#0A1628] to-[#060D16] border border-white/10 rounded-3xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/10 backdrop-blur-xl rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
 
-              {/* Social Media Links */}
-              <div className="flex justify-center gap-4">
+          <div className="grid md:grid-cols-2 gap-0">
+            {/* Image Section */}
+            <div className="relative h-80 md:h-full md:min-h-[600px]">
+              <img
+                src={agent.image}
+                alt={agent.name}
+                className="w-full h-full object-cover"
+                style={{ objectPosition: "center 20%" }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#0A1628]/80 hidden md:block" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] to-transparent md:hidden" />
+
+              {/* Social Links - Mobile */}
+              <div className="absolute bottom-4 left-4 right-4 flex justify-center gap-3 md:hidden">
                 <a
-                  href={agent.social.linkedin}
-                  className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                  href="#"
+                  className="w-10 h-10 bg-blue-600/80 backdrop-blur-xl rounded-full flex items-center justify-center"
                 >
-                  <Linkedin className="w-6 h-6 text-white" />
+                  <Linkedin className="w-5 h-5 text-white" />
                 </a>
                 <a
-                  href={agent.social.facebook}
-                  className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+                  href="#"
+                  className="w-10 h-10 bg-blue-500/80 backdrop-blur-xl rounded-full flex items-center justify-center"
                 >
-                  <Facebook className="w-6 h-6 text-white" />
+                  <Facebook className="w-5 h-5 text-white" />
                 </a>
                 <a
-                  href={agent.social.twitter}
-                  className="w-12 h-12 bg-sky-500 rounded-full flex items-center justify-center hover:bg-sky-600 transition-colors"
+                  href="#"
+                  className="w-10 h-10 bg-sky-500/80 backdrop-blur-xl rounded-full flex items-center justify-center"
                 >
-                  <Twitter className="w-6 h-6 text-white" />
+                  <FaXTwitter className="w-5 h-5 text-white" />
                 </a>
               </div>
             </div>
 
-            {/* Agent Information */}
-            <div className="space-y-6">
-              {/* Basic Info */}
-              <div>
-                <h3 className="text-3xl font-bold text-slate-800 mb-2">
-                  {agent.name}
-                </h3>
-                <p className="text-[#DCC471] font-semibold text-lg mb-1">
-                  {agent.title}
-                </p>
-                <p className="text-gray-600 mb-2">{agent.specialization}</p>
+            {/* Content Section */}
+            <div className="p-8 md:p-10">
+              {/* Header */}
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-1 px-2 py-1 bg-[#C9A962]/10 rounded-full">
+                    <MdStarPurple500 className="w-4 h-4 text-[#C9A962] fill-current" />
+                    <span className="text-[#C9A962] text-sm font-medium">{agent.rating}</span>
+                  </div>
+                  <span className="text-gray-400 text-sm">{agent.reviews} reviews</span>
+                </div>
+                <h2 className="text-3xl font-bold text-white mb-1">{agent.name}</h2>
+                <p className="text-[#C9A962] font-medium">{agent.title}</p>
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-xl">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-slate-800">
-                    {agent.propertiesSold}
-                  </div>
-                  <div className="text-xs text-gray-600">Properties Sold</div>
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-white mb-1">{agent.propertiesSold}</div>
+                  <div className="text-gray-400 text-xs">Properties Sold</div>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-white mb-1">{agent.experience}</div>
+                  <div className="text-gray-400 text-xs">Experience</div>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-white mb-1">{agent.reviews}</div>
+                  <div className="text-gray-400 text-xs">Reviews</div>
                 </div>
               </div>
 
-              {/* Contact Information */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-[#DCC471]" />
-                  <span className="text-gray-700">{agent.phone}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-[#DCC471]" />
-                  <span className="text-gray-700">{agent.email}</span>
-                </div>
+              {/* Bio */}
+              <div className="mb-6">
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                  <Quote className="w-4 h-4 text-[#C9A962]" />
+                  About
+                </h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{agent.bio}</p>
               </div>
 
               {/* Languages */}
-              <div>
-                <h4 className="text-sm font-semibold text-slate-700 mb-2">
+              <div className="mb-6">
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                  <Languages className="w-4 h-4 text-[#C9A962]" />
                   Languages
-                </h4>
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {agent.languages.map((lang, idx) => (
                     <span
                       key={idx}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                      className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-gray-300 text-sm"
                     >
                       {lang}
                     </span>
@@ -539,93 +651,139 @@ const AgentDetailsModal = ({ agent, isOpen, onClose }) => {
                 </div>
               </div>
 
+              {/* Achievements */}
+              <div className="mb-6">
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                  <LiaAwardSolid className="w-4 h-4 text-[#C9A962]" />
+                  Achievements
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {agent.achievements.map((achievement, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1.5 bg-[#C9A962]/10 border border-[#C9A962]/20 rounded-full text-[#C9A962] text-sm"
+                    >
+                      {achievement}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Social Links - Desktop */}
+              <div className="hidden md:flex gap-3 mb-6">
+                <a
+                  href="#"
+                  className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                >
+                  <Linkedin className="w-5 h-5 text-white" />
+                </a>
+                <a
+                  href="#"
+                  className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+                >
+                  <Facebook className="w-5 h-5 text-white" />
+                </a>
+                <a
+                  href="#"
+                  className="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center hover:bg-sky-600 transition-colors"
+                >
+                  <FaXTwitter className="w-5 h-5 text-white" />
+                </a>
+              </div>
+
               {/* Contact Buttons */}
               <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => handleCallAgent(agent.phone)}
-                  className="flex items-center justify-center px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+                <a
+                  href={`tel:${agent.phone}`}
+                  className="flex items-center justify-center gap-2 py-4 bg-emerald-500 rounded-xl text-white font-semibold hover:bg-emerald-600 transition-colors"
                 >
-                  <Phone className="w-5 h-5 mr-2" />
+                  <Phone className="w-5 h-5" />
                   Call Now
-                </button>
-                <button
-                  onClick={() => handleEmailAgent(agent.email)}
-                  className="flex items-center justify-center px-4 py-3 bg-slate-800 text-[#DCC471] rounded-lg hover:bg-slate-700 transition-colors font-medium"
+                </a>
+                <a
+                  href={`mailto:${agent.email}`}
+                  className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-[#C9A962] to-[#B8985A] rounded-xl text-[#0A1628] font-semibold hover:shadow-lg hover:shadow-[#C9A962]/20 transition-all"
                 >
-                  <Mail className="w-5 h-5 mr-2" />
-                  Email
-                </button>
+                  <Mail className="w-5 h-5" />
+                  Send Email
+                </a>
               </div>
             </div>
           </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
 
-          {/* Full Bio */}
-          <div className="mt-8 pt-6 border-t">
-            <h4 className="text-lg font-semibold text-slate-800 mb-3">
-              Biography
-            </h4>
-            <p className="text-gray-600 leading-relaxed">{agent.bio}</p>
-          </div>
-
-          {/* Achievements */}
-          <div className="mt-6">
-            <h4 className="text-lg font-semibold text-slate-800 mb-3">
-              Achievements
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {agent.achievements.map((achievement, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg"
-                >
-                  <Award className="w-5 h-5 text-[#DCC471]" />
-                  <span className="text-sm text-gray-700">{achievement}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Areas Served */}
-        </div>
+// Stat Card Component
+const StatCard = ({ value, suffix, label, icon: Icon }) => (
+  <div className="relative group">
+    <div className="absolute inset-0 bg-gradient-to-br from-[#C9A962]/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+    <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 text-center hover:border-[#C9A962]/30 transition-all">
+      <Icon className="w-8 h-8 text-[#C9A962] mx-auto mb-3" />
+      <div className="text-3xl md:text-4xl font-bold text-white mb-1">
+        <AnimatedCounter end={value} suffix={suffix} />
       </div>
+      <p className="text-gray-400 text-sm">{label}</p>
     </div>
+  </div>
+);
+
+// Feature Card Component
+const FeatureCard = ({ icon: Icon, title, description, index }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="text-center group"
+    >
+      <div className="w-16 h-16 bg-gradient-to-br from-[#C9A962] to-[#B8985A] rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+        <Icon className="w-8 h-8 text-[#0A1628]" />
+      </div>
+      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[#C9A962] transition-colors">
+        {title}
+      </h3>
+      <p className="text-gray-400 text-sm">{description}</p>
+    </motion.div>
   );
 };
 
 const AgentsPage = () => {
-  const [selectedSpecialization, setSelectedSpecialization] = useState("All");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSpecialization, setSelectedSpecialization] = useState("All");
+  const [showFilters, setShowFilters] = useState(false);
 
-  const filteredAgents = agents.filter((agent) => {
+  const featuredAgents = agents.filter((agent) => agent.featured);
+  const regularAgents = agents.filter((agent) => !agent.featured);
+
+  const filteredAgents = regularAgents.filter((agent) => {
     const matchesSpecialization =
-      selectedSpecialization === "All" ||
-      agent.specialization === selectedSpecialization;
+      selectedSpecialization === "All" || agent.specialization === selectedSpecialization;
     const matchesSearch =
       agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       agent.specialization.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      agent.areas.some((area) =>
-        area.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      agent.title.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSpecialization && matchesSearch;
   });
 
-  const handleContactAgent = (agent) => {
-    console.log("Contacting agent:", agent.name);
-  };
-
-  const handleCallAgent = (phone) => {
-    window.open(`tel:${phone}`, "_self");
-  };
-
-  const handleEmailAgent = (email) => {
-    window.open(`mailto:${email}`, "_self");
-  };
-
-  const handleViewAgentDetails = (agent) => {
+  const handleViewDetails = (agent) => {
     setSelectedAgent(agent);
     setIsModalOpen(true);
   };
@@ -635,94 +793,138 @@ const AgentsPage = () => {
     setSelectedAgent(null);
   };
 
+  const features = [
+    {
+      icon: SiFsecure,
+      title: "Licensed & Certified",
+      description: "All our agents are fully licensed and continuously trained",
+    },
+    {
+      icon: Target,
+      title: "Market Experts",
+      description: "Deep knowledge of local markets and property values",
+    },
+    {
+      icon: Clock,
+      title: "24/7 Availability",
+      description: "Always available when you need us most",
+    },
+    {
+      icon: CheckCircle,
+      title: "Proven Results",
+      description: "Track record of successful transactions and satisfied clients",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#060D16]">
       {/* Hero Section */}
-      <section className="relative py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#DCC471] rounded-full blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-[#DCC471] rounded-full blur-3xl" />
-        </div>
+      <section ref={heroRef} className="relative min-h-[70vh] overflow-hidden">
+        <motion.div style={{ y: heroY }} className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0A1628] via-[#0A1628] to-[#1a2a3a]" />
+        </motion.div>
+
+        <FloatingOrb className="w-[600px] h-[600px] bg-[#C9A962] -top-40 -right-40" />
+        <FloatingOrb className="w-[400px] h-[400px] bg-blue-500 bottom-20 -left-20" delay={2} />
+        <GridPattern />
+
+        <motion.div
+          style={{ opacity: heroOpacity }}
+          className="relative z-10 h-full flex items-center pt-32 pb-20"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div className="text-center">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6 }}
+                className="inline-flex items-center px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full mb-8"
+              >
+                <Sparkles className="w-4 h-4 text-[#C9A962] mr-2" />
+                <span className="text-gray-300 text-sm">Meet Our Expert Team</span>
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.1 }}
+                className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
+              >
+                <span className="text-white">Our Professional</span>
+                <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C9A962] via-[#DCC471] to-[#C9A962]">
+                  Real Estate Agents
+                </span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-xl text-gray-300 max-w-3xl mx-auto mb-12"
+              >
+                Dedicated professionals who make your real estate dreams come true. Our experienced
+                team guides you through every step of your property journey.
+              </motion.p>
+
+              {/* Stats Grid */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto"
+              >
+                <StatCard value={15} suffix="+" label="Expert Agents" icon={Users} />
+                <StatCard value={1000} suffix="+" label="Properties Sold" icon={Building} />
+                <StatCard value={4.8} suffix="" label="Average Rating" icon={Star} />
+                <StatCard value={95} suffix="%" label="Client Satisfaction" icon={LiaAwardSolid} />
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Featured Agents Section */}
+      <section className="relative py-24 overflow-hidden">
+        <FloatingOrb className="w-[500px] h-[500px] bg-purple-500 -top-40 -left-40" delay={1} />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
           >
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center px-4 py-2 bg-[#DCC471] rounded-full mb-6 backdrop-blur-sm border border-yellow-400/30"
-            >
-              <Sparkles className="w-5 h-5 text-white mr-2" />
-              <span className="text-yellow-100 font-medium">Meet Our Team</span>
-            </motion.div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 text-white"
-            >
-              Our Expert{" "}
-              <span className="text-transparent bg-clip-text bg-[#DCC471]">
-                Agents
-              </span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto mb-8"
-            >
-              Meet the dedicated professionals who make your real estate dreams
-              come true. Our experienced team is here to guide you through every
-              step of your property journey.
-            </motion.p>
-
-            {/* Quick Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
-              className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 max-w-4xl mx-auto"
-            >
-              {[
-                { number: "20+", label: "Expert Agents" },
-                { number: "1000+", label: "Properties Sold" },
-                { number: "4.8", label: "Average Rating" },
-                { number: "95%", label: "Client Satisfaction" },
-              ].map((stat, i) => (
-                <div key={i} className="text-center">
-                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#DCC471] mb-1">
-                    {stat.number}
-                  </div>
-                  <div className="text-xs sm:text-sm text-gray-300">
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
-            </motion.div>
+            <span className="inline-block px-4 py-2 bg-[#C9A962]/10 text-[#C9A962] text-sm font-semibold rounded-full mb-6">
+              Top Performers
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Featured <span className="text-[#C9A962]">Agents</span>
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Our top-performing agents with exceptional track records and client satisfaction
+            </p>
           </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {featuredAgents.map((agent) => (
+              <FeaturedAgentCard key={agent.id} agent={agent} onClick={handleViewDetails} />
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Search and Filter Section */}
-      <section className="py-8 bg-gray-50 border-b">
+      <section className="relative py-8 bg-[#0A1628]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row gap-4 items-center">
             {/* Search */}
             <div className="relative flex-1 w-full lg:max-w-md">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
                 type="text"
-                placeholder="Search agents, specializations, or areas..."
-                className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#DCC471] focus:outline-none transition-colors"
+                placeholder="Search agents..."
+                className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962] focus:ring-2 focus:ring-[#C9A962]/20 transition-all"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -731,29 +933,25 @@ const AgentsPage = () => {
             {/* Filter Toggle - Mobile */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="lg:hidden flex items-center px-4 py-3 bg-slate-800 text-white rounded-xl"
+              className="lg:hidden flex items-center px-6 py-4 bg-white/5 border border-white/10 text-white rounded-xl"
             >
               <Filter className="w-5 h-5 mr-2" />
               Filters
               <ChevronDown
-                className={`w-4 h-4 ml-2 transition-transform ${
-                  showFilters ? "rotate-180" : ""
-                }`}
+                className={`w-4 h-4 ml-2 transition-transform ${showFilters ? "rotate-180" : ""}`}
               />
             </button>
 
-            {/* Specialization Filter - Desktop */}
-            <div className="hidden lg:flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">
-                Filter by:
-              </span>
+            {/* Filter - Desktop */}
+            <div className="hidden lg:flex items-center gap-3">
+              <span className="text-gray-400 text-sm">Filter:</span>
               <select
                 value={selectedSpecialization}
                 onChange={(e) => setSelectedSpecialization(e.target.value)}
-                className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none bg-white"
+                className="px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#C9A962] appearance-none cursor-pointer"
               >
                 {specializations.map((spec) => (
-                  <option key={spec} value={spec}>
+                  <option key={spec} value={spec} className="bg-[#0A1628]">
                     {spec}
                   </option>
                 ))}
@@ -762,327 +960,161 @@ const AgentsPage = () => {
           </div>
 
           {/* Mobile Filters */}
-          {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="lg:hidden mt-4 p-4 bg-white rounded-xl border"
-            >
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Specialization
-                </label>
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="lg:hidden mt-4"
+              >
                 <select
                   value={selectedSpecialization}
                   onChange={(e) => setSelectedSpecialization(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-yellow-400 focus:outline-none bg-white"
+                  className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#C9A962]"
                 >
                   {specializations.map((spec) => (
-                    <option key={spec} value={spec}>
+                    <option key={spec} value={spec} className="bg-[#0A1628]">
                       {spec}
                     </option>
                   ))}
                 </select>
-              </div>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
 
-      {/* Agents Grid */}
-      <section className="py-12 sm:py-16 lg:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* All Agents Section */}
+      <section className="relative py-24 overflow-hidden">
+        <GridPattern />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className="inline-block px-4 py-2 bg-[#C9A962]/10 text-[#C9A962] text-sm font-semibold rounded-full mb-6">
+              Our Team
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              All <span className="text-[#C9A962]">Agents</span>
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Browse our complete team of dedicated real estate professionals
+            </p>
+          </motion.div>
+
           {filteredAgents.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-12 h-12 text-gray-400" />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16"
+            >
+              <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-12 h-12 text-gray-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                No agents found
-              </h3>
-              <p className="text-gray-500">
-                Try adjusting your search criteria
-              </p>
-            </div>
+              <h3 className="text-xl font-semibold text-white mb-2">No agents found</h3>
+              <p className="text-gray-400">Try adjusting your search criteria</p>
+            </motion.div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {filteredAgents.map((agent, i) => (
-                <motion.div
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredAgents.map((agent, index) => (
+                <AgentCard
                   key={agent.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: i * 0.1 }}
-                  viewport={{ once: true }}
-                  className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group transform hover:-translate-y-2"
-                >
-                  {/* Agent Photo */}
-                  <div className="relative h-64 sm:h-72 overflow-hidden">
-                    <img
-                      src={agent.image}
-                      alt={agent.name}
-                      className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-700"
-                      style={{ objectPosition: "center 25%" }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                    {/* Liking button */}
-                    <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-full px-3 py-1 flex items-center">
-                      <Star className="w-4 h-4 text-[#DCC471] fill-current mr-1" />
-                    </div>
-
-                    {/* Experience Badge 
-                    <div className="absolute top-4 right-4 bg-[#DCC471] text-slate-900 rounded-full px-3 py-1">
-                      <span className="text-sm font-bold">
-                        {agent.experience}
-                      </span>
-                    </div>*/}
-
-                    {/* Quick Contact - Mobile Optimized */}
-                    <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <button
-                        onClick={() => handleCallAgent(agent.phone)}
-                        className="w-10 h-10 sm:w-12 sm:h-12 bg-[#DCC471] rounded-full flex items-center justify-center hover:bg-[#DCC471] transition-colors touch-manipulation"
-                      >
-                        <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                      </button>
-                      <button
-                        onClick={() => handleEmailAgent(agent.email)}
-                        className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-800 rounded-full flex items-center justify-center hover:bg-slate-600 transition-colors touch-manipulation"
-                      >
-                        <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-[#DCC471]" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Agent Info */}
-                  <div className="p-6">
-                    <div className="mb-4">
-                      <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-1 group-hover:text-[#DCC471] transition-colors">
-                        {agent.name}
-                      </h3>
-                      <p className="text-[#DCC471] font-semibold mb-1">
-                        {agent.title}
-                      </p>
-                      <p className="text-gray-600 text-sm">
-                        {agent.specialization}
-                      </p>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 rounded-xl">
-                      <div className="text-center">
-                        <div className="text-lg sm:text-xl font-bold text-slate-800">
-                          {agent.propertiesSold}
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          Properties Sold
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg sm:text-xl font-bold text-slate-800">
-                          {agent.reviews}
-                        </div>
-                        <div className="text-xs text-gray-600">Reviews</div>
-                      </div>
-                    </div>
-
-                    {/* Bio */}
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                      {agent.bio}
-                    </p>
-
-                    {/* Languages */}
-                    <div className="mb-4">
-                      <div className="flex flex-wrap gap-1">
-                        {agent.languages.map((lang, idx) => (
-                          <span
-                            key={idx}
-                            className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
-                          >
-                            {lang}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Areas Served 
-                    <div className="mb-6">
-                      <h4 className="text-sm font-semibold text-slate-700 mb-2">
-                        Areas Served
-                      </h4>
-                      <div className="flex flex-wrap gap-1">
-                        {agent.areas.slice(0, 3).map((area, idx) => (
-                          <span
-                            key={idx}
-                            className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs"
-                          >
-                            {area}
-                          </span>
-                        ))}
-                        {agent.areas.length > 3 && (
-                          <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                            +{agent.areas.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </div>*/}
-
-                    {/* Contact Buttons - Mobile Optimized */}
-                    {/* Contact Buttons - Mobile Optimized */}
-                    <div className="space-y-3">
-                      <motion.button
-                        onClick={() => handleViewAgentDetails(agent)}
-                        className="w-full text-white bg-[#DCC471] py-3 rounded-xl font-semibold hover:bg-yellow-500 transition-all duration-300 min-h-[48px] touch-manipulation"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        View Details
-                      </motion.button>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => handleCallAgent(agent.phone)}
-                          className="flex items-center justify-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium min-h-[44px] touch-manipulation"
-                        >
-                          <Phone className="w-4 h-4 mr-1" />
-                          Call
-                        </button>
-                        <button
-                          onClick={() => handleEmailAgent(agent.email)}
-                          className="flex items-center justify-center px-4 py-2 bg-slate-800 text-[#DCC471] rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium min-h-[44px] touch-manipulation"
-                        >
-                          <Mail className="w-4 h-4 mr-1" />
-                          Email
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
+                  agent={agent}
+                  index={index}
+                  onClick={handleViewDetails}
+                />
               ))}
-            </div>
-          )}
-
-          {/* Load More Button */}
-          {filteredAgents.length > 0 && (
-            <div className="text-center mt-12">
-              <motion.button
-                className="px-8 py-4 bg-slate-800 text-[#DCC471] rounded-xl font-semibold hover:bg-yellow-500 hover:text-slate-900 transition-all duration-300 transform hover:scale-105"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Load More Agents
-              </motion.button>
             </div>
           )}
         </div>
       </section>
 
       {/* Why Choose Our Agents Section */}
-      <section className="py-16 sm:py-20 bg-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-24 bg-[#0A1628]">
+        <FloatingOrb className="w-[400px] h-[400px] bg-[#C9A962] -bottom-20 -right-20" delay={0.5} />
+        <GridPattern />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-              Why Choose Our <span className="text-[#DCC471]">Agents</span>
+            <span className="inline-block px-4 py-2 bg-[#C9A962]/10 text-[#C9A962] text-sm font-semibold rounded-full mb-6">
+              Why Choose Us
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Why Our <span className="text-[#C9A962]">Agents Stand Out</span>
             </h2>
-            <div className="w-24 h-1 bg-[#DCC471] mx-auto mb-6" />
-            <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-              Our agents are more than just salespeople – they're your trusted
-              advisors and advocates
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Our agents are more than just salespeople – they're your trusted advisors and
+              advocates
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                icon: Shield,
-                title: "Licensed & Certified",
-                description:
-                  "All our agents are fully licensed and continuously trained",
-              },
-              {
-                icon: Target,
-                title: "Market Experts",
-                description:
-                  "Deep knowledge of local markets and property values",
-              },
-              {
-                icon: Clock,
-                title: "24/7 Availability",
-                description: "Always available when you need us most",
-              },
-              {
-                icon: CheckCircle,
-                title: "Proven Results",
-                description:
-                  "Track record of successful transactions and satisfied clients",
-              },
-            ].map((feature, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: i * 0.1 }}
-                viewport={{ once: true }}
-                className="text-center group"
-              >
-                <div className="w-16 h-16 bg-[#DCC471] rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <feature.icon className="w-8 h-8 text-slate-900" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2 group-hover:text-yellow-400 transition-colors">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-300 text-sm">{feature.description}</p>
-              </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <FeatureCard key={index} {...feature} index={index} />
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-[#DCC471]">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+      <section className="relative py-24 bg-gradient-to-br from-[#C9A962] to-[#B8985A]">
+        <div className="absolute inset-0 opacity-10">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `linear-gradient(#0A1628 1px, transparent 1px), linear-gradient(90deg, #0A1628 1px, transparent 1px)`,
+              backgroundSize: "40px 40px",
+            }}
+          />
+        </div>
+
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold text-[#0A1628] mb-6">
               Ready to Work with Our Expert Team?
             </h2>
-            <p className="text-lg text-slate-800 mb-8 opacity-90">
-              Contact us today and let our experienced agents help you find your
-              perfect property
+            <p className="text-xl text-[#0A1628]/80 mb-10 max-w-2xl mx-auto">
+              Contact us today and let our experienced agents help you find your perfect property
             </p>
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.button
-                className="px-8 py-4 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-colors transform hover:scale-105 min-h-[48px] touch-manipulation"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Link
+                to="/contact"
+                className="group inline-flex items-center justify-center px-8 py-4 bg-[#0A1628] text-white font-semibold rounded-xl hover:bg-[#1a2a3a] transition-all"
               >
-                <Phone className="w-5 h-5 mr-2 inline" />
-                Call Us Now
-              </motion.button>
-              <motion.button
-                className="px-8 py-4 bg-white text-slate-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors transform hover:scale-105 min-h-[48px] touch-manipulation"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                <Phone className="mr-2 w-5 h-5" />
+                Contact Us Today
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                to="/sale"
+                className="group inline-flex items-center justify-center px-8 py-4 bg-white text-[#0A1628] font-semibold rounded-xl hover:bg-gray-100 transition-all"
               >
-                <Mail className="w-5 h-5 mr-2 inline" />
-                Send Message
-              </motion.button>
+                <Building className="mr-2 w-5 h-5" />
+                Browse Properties
+              </Link>
             </div>
           </motion.div>
         </div>
       </section>
 
-      <AgentDetailsModal
+      {/* Agent Detail Modal */}
+      <AgentDetailModal
         agent={selectedAgent}
         isOpen={isModalOpen}
         onClose={handleCloseModal}

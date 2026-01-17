@@ -1,12 +1,16 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { clearError, setSessionExpired } from '../redux/slices/authSlice';
+import { Clock, LogIn, Home, X, AlertCircle } from 'lucide-react';
 
-const SessionExpiryHandler = ({ dispatch, sessionExpired, isAuthenticated, onNavigate }) => {
+const SessionExpiryHandler = ({ dispatch, sessionExpired, isAuthenticated }) => {
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Listen for auth errors globally
     const handleAuthError = (event) => {
-      if (event.detail?.isAuthError) {
+      if (event.detail?.isAuthError || event.detail?.isSessionExpired) {
         dispatch(setSessionExpired(true));
       }
     };
@@ -15,73 +19,114 @@ const SessionExpiryHandler = ({ dispatch, sessionExpired, isAuthenticated, onNav
     return () => window.removeEventListener('authError', handleAuthError);
   }, [dispatch]);
 
-  useEffect(() => {
-    if (sessionExpired && !isAuthenticated) {
-      // Show notification and redirect to login
-      const timer = setTimeout(() => {
-        onNavigate('/login', { 
-          message: 'Your session has expired. Please log in again.',
-          from: window.location.pathname 
-        });
-        dispatch(setSessionExpired(false));
-      }, 100);
+  const handleLogin = () => {
+    dispatch(setSessionExpired(false));
+    dispatch(clearError());
+    navigate('/login', {
+      state: {
+        message: 'Please log in to continue.',
+        from: window.location.pathname
+      }
+    });
+  };
 
-      return () => clearTimeout(timer);
-    }
-  }, [sessionExpired, isAuthenticated, onNavigate, dispatch]);
+  const handleDismiss = () => {
+    dispatch(setSessionExpired(false));
+    dispatch(clearError());
+  };
+
+  const handleGoHome = () => {
+    dispatch(setSessionExpired(false));
+    dispatch(clearError());
+    navigate('/');
+  };
 
   // Show session expired modal/notification
-  if (sessionExpired && !isAuthenticated) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
-          <div className="flex items-center mb-4">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 18.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Session Expired</h3>
-              <p className="text-sm text-gray-600">Your login session has expired</p>
-            </div>
-          </div>
-          
-          <p className="text-gray-700 mb-6">
-            For your security, you`ve been logged out. Please log in again to continue.
-          </p>
-          
-          <div className="flex gap-3">
-            <button
-              onClick={() => {
-                dispatch(setSessionExpired(false));
-                dispatch(clearError());
-                onNavigate('/login', { 
-                  message: 'Please log in to continue.',
-                  from: window.location.pathname 
-                });
-              }}
-              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Log In Again
-            </button>
-            <button
-              onClick={() => {
-                dispatch(setSessionExpired(false));
-                dispatch(clearError());
-                onNavigate('/');
-              }}
-              className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
-            >
-              Go Home
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  if (!sessionExpired || isAuthenticated) {
+    return null;
   }
 
-  return null;
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="bg-[#0A1628] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
+        >
+          {/* Header with icon */}
+          <div className="relative p-8 pb-0">
+            <div className="w-16 h-16 mx-auto rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
+              <Clock className="w-8 h-8 text-amber-500" />
+            </div>
+
+            {/* Close button */}
+            <button
+              onClick={handleDismiss}
+              className="absolute top-4 right-4 w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-8 pt-4 text-center">
+            <h2 className="text-xl font-bold text-white mb-2">
+              Session Expired
+            </h2>
+            <p className="text-gray-400 mb-6">
+              For your security, your session has expired. Please log in again to
+              continue accessing your account.
+            </p>
+
+            {/* Security reminder */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-[#C9A962] flex-shrink-0 mt-0.5" />
+                <div className="text-left">
+                  <p className="text-sm font-medium text-white mb-1">
+                    Why did this happen?
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Sessions expire automatically after a period of inactivity to
+                    protect your account. This is a standard security measure.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-3">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleLogin}
+                className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all"
+              >
+                <LogIn className="w-4 h-4" />
+                Log In Again
+              </motion.button>
+
+              <button
+                onClick={handleGoHome}
+                className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-white/5 border border-white/10 text-gray-300 font-medium rounded-xl hover:bg-white/10 transition-all"
+              >
+                <Home className="w-4 h-4" />
+                Continue Browsing
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
 };
 
 export default SessionExpiryHandler;

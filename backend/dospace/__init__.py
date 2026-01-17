@@ -1,0 +1,1 @@
+# DigitalOcean Spaces storage backend

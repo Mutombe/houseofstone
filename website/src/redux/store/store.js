@@ -7,15 +7,21 @@ import propertyReducer from '../slices/propertySlice';
 import adminReducer from '../slices/adminSlice';
 import agentReducer from '../slices/agentSlice';
 import userReducer from '../slices/userSlice';
+import localSavesReducer from '../slices/localSavesSlice';
+import notificationReducer from '../slices/notificationSlice';
+import toastReducer from '../slices/toastSlice';
 
 export default configureStore({
   reducer: {
     auth: authReducer,
     profile: profileReducer,
-    interactions: interactionsReducer, 
+    interactions: interactionsReducer,
     properties: propertyReducer,
     admin: adminReducer,
     agent: agentReducer,
     user: userReducer,
+    localSaves: localSavesReducer,
+    notifications: notificationReducer,
+    toast: toastReducer,
   },
 });

@@ -14,6 +14,8 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
+import { SiFsecure } from "react-icons/si";
+import { FaRegCircleUser } from "react-icons/fa6";
 
 // Brand colors consistent with existing pages
 const COLORS = {

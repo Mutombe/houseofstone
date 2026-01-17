@@ -361,3 +361,247 @@ Email sent successfully: Agent Unassigned from Property: Industrial Property For
 Email sent successfully: Property Updated: Commercial property on Enterprise Road : an incredible investment opportunity to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
 Email sent successfully: Property Unassigned: Commercial property on Enterprise Road : an incredible investment opportunity to ['leonita@hsp.co.zw']
 Email sent successfully: Agent Unassigned from Property: Commercial property on Enterprise Road : an incredible investment opportunity to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Failed to send email: Property Shared: Spitzkop Medium Density Stands for Sale - Error: Failed lookup for key [username] in None
+Email sent successfully: Property Shared: Stunning Five Bed Home In Shawasha Hills to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Email sent successfully: Property Updated: Spitzkop Medium Density Stands for Sale to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Error in watermark signal for image 1985: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Error in watermark signal for image 1986: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Error in watermark signal for image 1987: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Error in watermark signal for image 1988: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Email sent successfully: Property Updated: Spitzkop Medium Density Stands for Sale to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Error in watermark signal for image 1989: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Error in watermark signal for image 1990: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Error in watermark signal for image 1991: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Error in watermark signal for image 1992: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Error in watermark signal for image 1993: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Email sent successfully: Property Updated: Mazowe Residential Stand for Sale to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Error in watermark signal for image 1994: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Error in watermark signal for image 1995: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Error in watermark signal for image 1996: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Error in watermark signal for image 1997: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Error in watermark signal for image 1998: This backend doesn't support absolute paths.
+Traceback (most recent call last):
+  File "C:\Users\PC\documents\houseofstone\backend\core\signals.py", line 538, in add_watermark_to_image
+    print(f"DEBUG: Image path: {instance.image.path}")
+                                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\db\models\fields\files.py", line 65, in path
+    return self.storage.path(self.name)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\django\core\files\storage\base.py", line 137, in path
+    raise NotImplementedError("This backend doesn't support absolute paths.")
+NotImplementedError: This backend doesn't support absolute paths.
+Email sent successfully: Property Updated: Spitzkop Medium Density Stands for Sale to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Skipping watermark for image 1999 - cloud storage detected
+Skipping watermark for image 2000 - cloud storage detected
+Skipping watermark for image 2001 - cloud storage detected
+Skipping watermark for image 2002 - cloud storage detected
+Skipping watermark for image 2003 - cloud storage detected
+Email sent successfully: Property Updated: Arable Farm in Hatfield to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Skipping watermark for image 2004 - cloud storage detected
+Skipping watermark for image 2005 - cloud storage detected
+Skipping watermark for image 2006 - cloud storage detected
+Skipping watermark for image 2007 - cloud storage detected
+Skipping watermark for image 2008 - cloud storage detected
+Skipping watermark for image 2009 - cloud storage detected
+Skipping watermark for image 2010 - cloud storage detected
+Skipping watermark for image 2011 - cloud storage detected
+Email sent successfully: Property Updated: Rainham Park Stand for Sale to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Skipping watermark for image 2012 - cloud storage detected
+Skipping watermark for image 2013 - cloud storage detected
+Skipping watermark for image 2014 - cloud storage detected
+Skipping watermark for image 2015 - cloud storage detected
+Skipping watermark for image 2016 - cloud storage detected
+Email sent successfully: Property Updated: 2 Agro Residential Plots for Sale to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Skipping watermark for image 2017 - cloud storage detected
+Skipping watermark for image 2018 - cloud storage detected
+Skipping watermark for image 2019 - cloud storage detected
+Skipping watermark for image 2020 - cloud storage detected
+Skipping watermark for image 2021 - cloud storage detected
+Email sent successfully: Property Updated: Residential Stand for Slae to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Skipping watermark for image 2022 - cloud storage detected
+Skipping watermark for image 2023 - cloud storage detected
+Skipping watermark for image 2024 - cloud storage detected
+Skipping watermark for image 2025 - cloud storage detected
+Skipping watermark for image 2026 - cloud storage detected
+Skipping watermark for image 2027 - cloud storage detected
+Skipping watermark for image 2028 - cloud storage detected
+Skipping watermark for image 2029 - cloud storage detected
+Skipping watermark for image 2030 - cloud storage detected
+Email sent successfully: Property Updated: Stand for Sale to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Skipping watermark for image 2031 - cloud storage detected
+Skipping watermark for image 2032 - cloud storage detected
+Skipping watermark for image 2033 - cloud storage detected
+Skipping watermark for image 2034 - cloud storage detected
+Email sent successfully: Property Updated: Agro Residential Plot for Sale to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Skipping watermark for image 2035 - cloud storage detected
+Skipping watermark for image 2036 - cloud storage detected
+Skipping watermark for image 2037 - cloud storage detected
+Skipping watermark for image 2038 - cloud storage detected
+Skipping watermark for image 2039 - cloud storage detected
+Skipping watermark for image 2040 - cloud storage detected
+Skipping watermark for image 2041 - cloud storage detected
+Email sent successfully: Property Updated: Stand for Sale in Luna Estate to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Skipping watermark for image 2042 - cloud storage detected
+Skipping watermark for image 2043 - cloud storage detected
+Skipping watermark for image 2044 - cloud storage detected
+Skipping watermark for image 2045 - cloud storage detected
+Email sent successfully: Property Updated: Farm for Sale to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Skipping watermark for image 2046 - cloud storage detected
+Skipping watermark for image 2047 - cloud storage detected
+Skipping watermark for image 2048 - cloud storage detected
+Skipping watermark for image 2049 - cloud storage detected
+Skipping watermark for image 2050 - cloud storage detected
+Skipping watermark for image 2051 - cloud storage detected
+Skipping watermark for image 2052 - cloud storage detected
+Skipping watermark for image 2053 - cloud storage detected
+Skipping watermark for image 2054 - cloud storage detected
+Skipping watermark for image 2055 - cloud storage detected
+Skipping watermark for image 2056 - cloud storage detected
+Skipping watermark for image 2057 - cloud storage detected
+Skipping watermark for image 2058 - cloud storage detected
+Skipping watermark for image 2059 - cloud storage detected
+Skipping watermark for image 2060 - cloud storage detected
+Skipping watermark for image 2061 - cloud storage detected
+Skipping watermark for image 2062 - cloud storage detected
+Email sent successfully: New Property Created: Test Property - Claude Debug to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Email sent successfully: New Property Created: Flat Type Test to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Email sent successfully: New Property Created: Townhouse Test to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Email sent successfully: New Property Created: Full Test Property to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Email sent successfully: New Property Created: Demo to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Skipping watermark for image 2063 - cloud storage detected
+Email sent successfully: Property Unassigned: Full Test Property to ['leonita@hsp.co.zw']
+Email sent successfully: Agent Unassigned from Property: Full Test Property to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Email sent successfully: Property Updated: Demo to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Email sent successfully: New Property Created: Demo to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Skipping watermark for image 2064 - cloud storage detected
+Email sent successfully: Property Updated: Demo to ['simbamtombe@gmail.com', 'info@hsp.co.zw']

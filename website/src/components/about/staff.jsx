@@ -13,6 +13,9 @@ import {
   GraduationCap,
   Shield,
 } from "lucide-react";
+import { LiaAwardSolid } from "react-icons/lia";
+import { SiFsecure } from "react-icons/si";
+import { FaRegCircleUser } from "react-icons/fa6";
 
 const OurStaff = () => {
   const staffMembers = [
@@ -92,7 +95,7 @@ const OurStaff = () => {
                   
                   {member.experience && (
                     <div className="flex items-start">
-                      <Award className="w-4 h-4 text-[#DCC471] mr-2 mt-1 flex-shrink-0" />
+                      <LiaAwardSolid className="w-4 h-4 text-[#DCC471] mr-2 mt-1 flex-shrink-0" />
                       <p className="text-slate-700 text-sm"><strong>Experience:</strong> {member.experience}</p>
                     </div>
                   )}
@@ -106,7 +109,7 @@ const OurStaff = () => {
                   
                   {member.strengths && (
                     <div className="flex items-start">
-                      <Shield className="w-4 h-4 text-[#DCC471] mr-2 mt-1 flex-shrink-0" />
+                      <SiFsecure className="w-4 h-4 text-[#DCC471] mr-2 mt-1 flex-shrink-0" />
                       <p className="text-slate-700 text-sm"><strong>Strengths:</strong> {member.strengths}</p>
                     </div>
                   )}
@@ -134,7 +137,7 @@ const OurStaff = () => {
                   
                   {member.goal && (
                     <div className="flex items-start">
-                      <Award className="w-4 h-4 text-[#DCC471] mr-2 mt-1 flex-shrink-0" />
+                      <LiaAwardSolid className="w-4 h-4 text-[#DCC471] mr-2 mt-1 flex-shrink-0" />
                       <p className="text-slate-700 text-sm"><strong>Goal:</strong> {member.goal}</p>
                     </div>
                   )}
@@ -158,7 +161,7 @@ const OurStaff = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-[#DCC471] rounded-full mx-auto mb-4 flex items-center justify-center">
-                <Shield className="w-8 h-8 text-slate-900" />
+                <SiFsecure className="w-8 h-8 text-slate-900" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Administrative Support</h3>
               <p className="text-slate-300">

@@ -13,6 +13,8 @@ import {
   Heart,
   Calendar,
 } from "lucide-react";
+import { LiaAwardSolid } from "react-icons/lia";
+import { FaRegCircleUser } from "react-icons/fa6";
 
 const Management = () => {
   const managementTeam = [
@@ -93,7 +95,7 @@ const Management = () => {
                 <div className="space-y-4">
                   {member.qualifications && (
                     <div className="flex items-start">
-                      <Award className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                      <LiaAwardSolid className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
                       <p className="text-slate-700">{member.qualifications}</p>
                     </div>
                   )}
@@ -112,7 +114,7 @@ const Management = () => {
                   
                   {member.achievements && (
                     <div className="flex items-start">
-                      <Award className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
+                      <LiaAwardSolid className="w-5 h-5 text-[#DCC471] mr-3 mt-1 flex-shrink-0" />
                       <p className="text-slate-700"><strong>Achievements:</strong> {member.achievements}</p>
                     </div>
                   )}

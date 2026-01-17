@@ -26,6 +26,9 @@ import {
   Home,
 } from "lucide-react";
 import { useInView } from "framer-motion";
+import { SiFsecure } from "react-icons/si";
+import { LiaAwardSolid } from "react-icons/lia";
+import { FaRegCircleUser } from "react-icons/fa6";
 
 // Brand colors consistent with homepage
 const COLORS = {
@@ -231,7 +234,7 @@ const FounderProfile = () => {
     { icon: Home, title: "New Construction", description: "Extensive experience in new development projects" },
     { icon: Target, title: "Resales", description: "Strategic approach to property resales and market positioning" },
     { icon: Globe, title: "International Relations", description: "Diplomatic experience across multiple countries" },
-    { icon: Shield, title: "Legal Compliance", description: "Ensures all transactions comply with legal requirements" },
+    { icon: SiFsecure, title: "Legal Compliance", description: "Ensures all transactions comply with legal requirements" },
   ];
 
   return (

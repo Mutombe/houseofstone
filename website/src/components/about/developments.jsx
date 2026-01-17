@@ -22,6 +22,9 @@ import {
   PlusCircle,
   MinusCircle
 } from "lucide-react";
+import { LiaAwardSolid } from "react-icons/lia";
+import { FaRegCircleUser } from "react-icons/fa6";
+import { MdStarPurple500 } from "react-icons/md";
 
 // Brand colors consistent with existing pages
 const COLORS = {
@@ -258,7 +261,7 @@ const GuideCard = ({ title, description, icon: Icon, questions, tips }) => {
               <ul className="space-y-1">
                 {tips.map((tip, index) => (
                   <li key={index} className="flex items-start text-sm text-gray-600">
-                    <Star className="w-4 h-4 text-[#DCC471] mr-2 mt-0.5 flex-shrink-0" />
+                    <MdStarPurple500 className="w-4 h-4 text-[#DCC471] mr-2 mt-0.5 flex-shrink-0" />
                     {tip}
                   </li>
                 ))}
@@ -480,22 +483,22 @@ const MarketInsightsSection = () => {
             viewport={{ once: true }}
             className="bg-[#DCC471] rounded-xl p-6 text-slate-900"
           >
-            <Award className="w-8 h-8 text-slate-800 mb-4" />
+            <LiaAwardSolid className="w-8 h-8 text-slate-800 mb-4" />
             <h3 className="text-xl font-bold mb-3">HSP Advantage</h3>
             <p className="text-slate-800 text-sm mb-4">
               Why sellers choose House of Stone Properties for their property transactions and development guidance.
             </p>
             <ul className="space-y-2 text-sm text-slate-800">
               <li className="flex items-center">
-                <Star className="w-4 h-4 text-slate-800 mr-2" />
+                <MdStarPurple500 className="w-4 h-4 text-slate-800 mr-2" />
                 35+ years combined experience
               </li>
               <li className="flex items-center">
-                <Star className="w-4 h-4 text-slate-800 mr-2" />
+                <MdStarPurple500 className="w-4 h-4 text-slate-800 mr-2" />
                 Comprehensive marketing platform
               </li>
               <li className="flex items-center">
-                <Star className="w-4 h-4 text-slate-800 mr-2" />
+                <MdStarPurple500 className="w-4 h-4 text-slate-800 mr-2" />
                 Legal expertise and compliance
               </li>
             </ul>
@@ -646,7 +649,7 @@ const CTASection = () => {
                 <p className="text-gray-400 text-sm">35+ years of combined experience</p>
               </div>
               <div>
-                <Award className="w-8 h-8 text-[#DCC471] mx-auto mb-2" />
+                <LiaAwardSolid className="w-8 h-8 text-[#DCC471] mx-auto mb-2" />
                 <h3 className="text-lg font-semibold text-white mb-1">Proven Results</h3>
                 <p className="text-gray-400 text-sm">Track record of successful sales</p>
               </div>
