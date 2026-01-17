@@ -90,6 +90,39 @@ export const fetchPropertiesWithoutPagination = createAsyncThunk(
   }
 );
 
+// Fetch admin properties with pagination
+export const fetchAdminProperties = createAsyncThunk(
+  "properties/fetchAdminPaginated",
+  async (filters = {}, { rejectWithValue }) => {
+    try {
+      const cleanFilters = { ...filters };
+
+      // Set default pagination
+      if (!cleanFilters.page) cleanFilters.page = 1;
+      if (!cleanFilters.page_size) cleanFilters.page_size = 10;
+
+      // Remove undefined values
+      Object.keys(cleanFilters).forEach(
+        (key) => cleanFilters[key] === undefined && delete cleanFilters[key]
+      );
+
+      const response = await propertyAPI.getAllAdmin(cleanFilters);
+
+      return {
+        data: response.data,
+        filters: cleanFilters,
+        lastFetch: Date.now(),
+      };
+    } catch (err) {
+      return rejectWithValue({
+        message: err.response?.data?.message || err.message,
+        status: err.response?.status,
+        errors: err.response?.data?.errors,
+      });
+    }
+  }
+);
+
 export const fetchPropertys = createAsyncThunk(
   "properties/fetchOne",
   async (id, { rejectWithValue }) => {
@@ -273,9 +306,19 @@ const initialState = {
   // Item states
   adminProperties: [],
 
+  // Admin pagination state
+  adminPagination: {
+    results: [],
+    count: 0,
+    currentPage: 1,
+    totalPages: 1,
+    pageSize: 10,
+  },
+
   // Loading states
   loading: false,
   itemLoading: {},
+  isCreating: false, // Separate flag for property creation
 
   // Status tracking
   status: "idle",
@@ -283,6 +326,7 @@ const initialState = {
   // Error handling
   error: null,
   itemErrors: {},
+  createError: null, // Separate error for creation
 
   // UI state
   filters: {},
@@ -393,6 +437,65 @@ const propertySlice = createSlice({
         state.adminProperties = [];
       })
 
+      // Fetch admin properties with pagination
+      .addCase(fetchAdminProperties.pending, (state) => {
+        state.status = "loading";
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAdminProperties.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.loading = false;
+        state.error = null;
+
+        const responseData = action.payload.data;
+
+        if (responseData && responseData.results) {
+          // Paginated response from backend
+          state.adminPagination = {
+            results: responseData.results,
+            count: responseData.count || 0,
+            currentPage: responseData.current_page || action.payload.filters.page || 1,
+            totalPages: responseData.total_pages || Math.ceil((responseData.count || 0) / (responseData.page_size || 10)),
+            pageSize: responseData.page_size || 10,
+          };
+          state.adminProperties = responseData.results;
+        } else if (Array.isArray(responseData)) {
+          // Non-paginated response - wrap it
+          state.adminProperties = responseData;
+          state.adminPagination = {
+            results: responseData,
+            count: responseData.length,
+            currentPage: 1,
+            totalPages: 1,
+            pageSize: responseData.length,
+          };
+        } else {
+          // Fallback for unexpected response
+          state.adminProperties = [];
+          state.adminPagination = {
+            results: [],
+            count: 0,
+            currentPage: 1,
+            totalPages: 1,
+            pageSize: 10,
+          };
+        }
+      })
+      .addCase(fetchAdminProperties.rejected, (state, action) => {
+        state.status = "failed";
+        state.loading = false;
+        state.error = action.payload;
+        state.adminProperties = [];
+        state.adminPagination = {
+          results: [],
+          count: 0,
+          currentPage: 1,
+          totalPages: 1,
+          pageSize: 10,
+        };
+      })
+
       // Fetch single property
       .addCase(fetchProperty.pending, (state, action) => {
         const id = action.meta.arg;
@@ -419,25 +522,56 @@ const propertySlice = createSlice({
 
       // Create property
       .addCase(createProperty.pending, (state) => {
-        state.loading = true;
-        state.status = "loading";
-        state.error = null;
+        state.isCreating = true;
+        state.createError = null;
+        // Don't set global status/loading to avoid blocking UI
       })
       .addCase(createProperty.fulfilled, (state, action) => {
-        state.loading = false;
-        state.status = "succeeded";
+        state.isCreating = false;
+        state.createError = null;
         state.items.unshift(action.payload); // Add to beginning
+        // Also add to marketplace results if it exists
+        if (state.marketplace.results) {
+          state.marketplace.results.unshift(action.payload);
+          state.marketplace.count = (state.marketplace.count || 0) + 1;
+        }
+        // Also add to admin properties if it exists
+        if (state.adminProperties) {
+          state.adminProperties.unshift(action.payload);
+        }
       })
       .addCase(createProperty.rejected, (state, action) => {
-        state.loading = false;
-        state.status = "failed";
-        state.error = action.payload;
+        state.isCreating = false;
+        state.createError = action.payload;
+        // Don't set global error to avoid showing error page
       })
 
       // Update property
       .addCase(updateProperty.pending, (state, action) => {
-        const id = action.meta.arg.id;
+        const { id, data } = action.meta.arg;
         state.itemLoading[id] = true;
+
+        // Optimistic update - immediately apply changes to UI
+        if (data && typeof data === 'object' && !(data instanceof FormData)) {
+          // Update in adminProperties for instant UI feedback
+          if (state.adminProperties) {
+            const adminIndex = state.adminProperties.findIndex((p) => p.id === id);
+            if (adminIndex !== -1) {
+              state.adminProperties[adminIndex] = {
+                ...state.adminProperties[adminIndex],
+                ...data,
+              };
+            }
+          }
+          // Update in items array
+          const itemIndex = state.items.findIndex((p) => p.id === id);
+          if (itemIndex !== -1) {
+            state.items[itemIndex] = {
+              ...state.items[itemIndex],
+              ...data,
+            };
+          }
+        }
       })
       .addCase(updateProperty.fulfilled, (state, action) => {
         const updatedProperty = action.payload;
@@ -447,6 +581,22 @@ const propertySlice = createSlice({
         const index = state.items.findIndex((p) => p.id === updatedProperty.id);
         if (index !== -1) {
           state.items[index] = updatedProperty;
+        }
+
+        // Update in adminProperties array
+        if (state.adminProperties) {
+          const adminIndex = state.adminProperties.findIndex((p) => p.id === updatedProperty.id);
+          if (adminIndex !== -1) {
+            state.adminProperties[adminIndex] = updatedProperty;
+          }
+        }
+
+        // Update in marketplace results
+        if (state.marketplace?.results) {
+          const marketIndex = state.marketplace.results.findIndex((p) => p.id === updatedProperty.id);
+          if (marketIndex !== -1) {
+            state.marketplace.results[marketIndex] = updatedProperty;
+          }
         }
 
         // Update selected property if it's the same
@@ -694,6 +844,26 @@ export const selectRecentProperties = createSelector(
 export const selectMarketplace = createSelector(
   [selectPropertyState],
   (properties) => properties.marketplace
+);
+
+export const selectAdminPagination = createSelector(
+  [selectPropertyState],
+  (properties) => properties.adminPagination
+);
+
+export const selectItemLoading = createSelector(
+  [selectPropertyState],
+  (properties) => properties.itemLoading || {}
+);
+
+export const selectIsCreating = createSelector(
+  [selectPropertyState],
+  (properties) => properties.isCreating
+);
+
+export const selectCreateError = createSelector(
+  [selectPropertyState],
+  (properties) => properties.createError
 );
 
 // Export reducer

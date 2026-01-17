@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
   AlertCircle,
@@ -18,16 +19,31 @@ import {
   AlignLeft,
   GripVertical,
   Image as ImageIcon,
+  MapPin,
+  DollarSign,
+  Home,
+  Bed,
+  Bath,
+  Square,
+  Calendar,
+  Link2,
+  Check,
 } from "lucide-react";
 import { Snackbar, Alert } from "@mui/material";
 import {
   fetchProperties,
+  fetchAdminProperties,
   createProperty,
   updateProperty,
 } from "../../redux/slices/propertySlice";
 import { fetchAgents } from "../../redux/slices/agentSlice";
+import { FaRegCircleUser } from "react-icons/fa6";
+import { MdHouseSiding } from "react-icons/md";
+import { IoCheckmarkDoneCircleOutline } from "react-icons/io5";
+import CoordinateMapPicker from "../ui/CoordinateMapPicker";
+import { MdStarPurple500 } from "react-icons/md";
 
-// Rich Text Editor Component
+// Rich Text Editor Component with Navy/Gold Theme
 const RichTextEditor = ({
   value = '',
   onChange,
@@ -110,8 +126,8 @@ const RichTextEditor = ({
   };
 
   return (
-    <div className={`border border-gray-300 rounded-lg overflow-hidden ${className}`}>
-      <div className="flex items-center justify-between bg-gray-50 p-2 border-b">
+    <div className={`border border-white/10 rounded-xl overflow-hidden bg-white/5 ${className}`}>
+      <div className="flex items-center justify-between bg-[#0A1628] p-3 border-b border-white/10">
         <div className="flex items-center space-x-1">
           {toolbarButtons.map(({ command, icon: Icon, label, shortcut }) => (
             <button
@@ -119,20 +135,22 @@ const RichTextEditor = ({
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => handleFormat(command)}
-              className={`p-2 rounded hover:bg-gray-200 transition-colors ${
-                activeTools[command] ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+              className={`p-2 rounded-lg transition-colors ${
+                activeTools[command]
+                  ? 'bg-[#C9A962]/20 text-[#C9A962]'
+                  : 'text-gray-400 hover:bg-white/10 hover:text-white'
               }`}
               title={`${label}${shortcut ? ` (${shortcut})` : ''}`}
             >
               <Icon size={16} />
             </button>
           ))}
-          <div className="w-px h-6 bg-gray-300 mx-1"></div>
+          <div className="w-px h-6 bg-white/10 mx-1"></div>
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => insertHeading(2)}
-            className="px-2 py-1 text-sm rounded hover:bg-gray-200 transition-colors text-gray-600 font-semibold"
+            className="px-2 py-1 text-sm rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white font-semibold"
             title="Heading 2"
           >
             H2
@@ -141,7 +159,7 @@ const RichTextEditor = ({
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => insertHeading(3)}
-            className="px-2 py-1 text-sm rounded hover:bg-gray-200 transition-colors text-gray-600 font-semibold"
+            className="px-2 py-1 text-sm rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white font-semibold"
             title="Heading 3"
           >
             H3
@@ -150,7 +168,7 @@ const RichTextEditor = ({
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={insertParagraph}
-            className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
             title="Paragraph"
           >
             <AlignLeft size={16} />
@@ -159,8 +177,10 @@ const RichTextEditor = ({
         <button
           type="button"
           onClick={() => setShowPreview(!showPreview)}
-          className={`p-2 rounded hover:bg-gray-200 transition-colors flex items-center space-x-1 ${
-            showPreview ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+          className={`p-2 rounded-lg transition-colors flex items-center space-x-1 ${
+            showPreview
+              ? 'bg-[#C9A962]/20 text-[#C9A962]'
+              : 'text-gray-400 hover:bg-white/10 hover:text-white'
           }`}
           title="Toggle Preview"
         >
@@ -171,13 +191,13 @@ const RichTextEditor = ({
 
       <div className="relative">
         {showPreview ? (
-          <div className="p-4 min-h-[200px] bg-gray-50">
+          <div className="p-4 min-h-[200px] bg-[#060D16]">
             <div
-              className="prose prose-stone max-w-none"
+              className="prose prose-invert max-w-none text-gray-300"
               dangerouslySetInnerHTML={{ __html: cleanHtml(value) }}
             />
             {!value && (
-              <div className="text-gray-400 italic">No content to preview</div>
+              <div className="text-gray-500 italic">No content to preview</div>
             )}
           </div>
         ) : (
@@ -189,12 +209,12 @@ const RichTextEditor = ({
               onKeyUp={handleSelectionChange}
               onMouseUp={handleSelectionChange}
               onClick={handleSelectionChange}
-              className="p-4 min-h-[200px] focus:outline-none prose prose-stone max-w-none"
+              className="p-4 min-h-[200px] focus:outline-none prose prose-invert max-w-none text-white bg-[#060D16]"
               style={{ lineHeight: '1.6' }}
               suppressContentEditableWarning={true}
             />
             {(!value || value === '<p><br></p>') && (
-              <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
+              <div className="absolute top-4 left-4 text-gray-500 pointer-events-none">
                 {placeholder}
               </div>
             )}
@@ -205,14 +225,60 @@ const RichTextEditor = ({
   );
 };
 
-const COLORS = {
-  primary: "#8B7355",
-  secondary: "#D2B48C",
-  accent: "#5D4037",
-  light: "#F5F5DC",
-  dark: "#3E2723",
-  white: "#FFFFFF",
-};
+// Form Input Component - defined outside to prevent re-creation on each render
+const FormInput = ({ label, icon: Icon, required, error, ...props }) => (
+  <div>
+    <label className="block text-sm text-gray-400 mb-2">
+      {label}{required && <span className="text-[#C9A962]">*</span>}
+    </label>
+    <div className="relative">
+      {Icon && (
+        <Icon className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${error ? 'text-red-400' : 'text-gray-500'}`} />
+      )}
+      <input
+        {...props}
+        className={`w-full ${Icon ? 'pl-12' : 'pl-4'} pr-4 py-3 bg-white/5 border ${error ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-[#C9A962]/50'} rounded-xl text-white placeholder-gray-500 focus:outline-none transition-colors`}
+      />
+    </div>
+    {error && (
+      <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+        <AlertCircle className="w-4 h-4" />
+        {error}
+      </p>
+    )}
+  </div>
+);
+
+// Form Select Component - defined outside to prevent re-creation on each render
+const FormSelect = ({ label, icon: Icon, children, error, ...props }) => (
+  <div>
+    <label className="block text-sm text-gray-400 mb-2">{label}</label>
+    <div className="relative">
+      {Icon && (
+        <Icon className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${error ? 'text-red-400' : 'text-gray-500'}`} />
+      )}
+      <select
+        {...props}
+        className={`w-full ${Icon ? 'pl-12' : 'pl-4'} pr-10 py-3 bg-[#1a2942] border ${error ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-[#C9A962]/50'} rounded-xl text-white focus:outline-none transition-colors appearance-none cursor-pointer`}
+        style={{ colorScheme: 'dark' }}
+      >
+        {children}
+      </select>
+      {/* Custom dropdown arrow */}
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+    </div>
+    {error && (
+      <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+        <AlertCircle className="w-4 h-4" />
+        {error}
+      </p>
+    )}
+  </div>
+);
 
 export const PropertyForm = ({
   currentForm,
@@ -233,7 +299,7 @@ export const PropertyForm = ({
     dining_rooms: "",
     baths: "",
     area_unit: "sqm",
-    area: "",
+    area_measurement: "",
     sqft: "",
     year_built: "",
     floor_size: "",
@@ -246,7 +312,7 @@ export const PropertyForm = ({
     features: [],
     agents: [],
   };
-  
+
   const dispatch = useDispatch();
   const [formData, setFormData] = useState(initialFormState);
   const [imageFiles, setImageFiles] = useState([]);
@@ -255,7 +321,8 @@ export const PropertyForm = ({
   const [isDragging, setIsDragging] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
-  const loading = useSelector((state) => state.properties.loading);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Local loading state
+  const loading = isSubmitting; // Use local state instead of global
   const agents = useSelector((state) => state.agent.agents);
   const [selectedAgent, setSelectedAgent] = useState("");
   const [feature, setFeature] = useState("");
@@ -264,6 +331,38 @@ export const PropertyForm = ({
     message: "",
     severity: "info",
   });
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  // User-friendly error messages for each field
+  const fieldErrorMessages = {
+    title: "Please enter a property title",
+    description: "Please add a property description",
+    price: "Please enter a valid price",
+    location: "Please enter the property location",
+    property_type: "Please select a property type",
+    category: "Please select a category",
+    status: "Please select a status",
+    beds: "Please enter a valid number of bedrooms",
+    baths: "Please enter a valid number of bathrooms",
+    area_measurement: "Please enter a valid area measurement",
+    latitude: "Please enter a valid latitude",
+    longitude: "Please enter a valid longitude",
+    images: "Please upload at least one property image",
+  };
+
+  // Convert API errors to user-friendly messages
+  const parseApiErrors = (errors) => {
+    const friendlyErrors = {};
+    for (const [field, messages] of Object.entries(errors)) {
+      if (Array.isArray(messages)) {
+        // Use custom message or fallback to API message
+        friendlyErrors[field] = fieldErrorMessages[field] || messages[0];
+      } else if (typeof messages === 'string') {
+        friendlyErrors[field] = fieldErrorMessages[field] || messages;
+      }
+    }
+    return friendlyErrors;
+  };
 
   const areaUnits = [
     { value: "sqm", label: "Square Meters" },
@@ -276,18 +375,16 @@ export const PropertyForm = ({
     dispatch(fetchAgents());
   }, [dispatch]);
 
-  // Populate form when editing an existing property
   useEffect(() => {
     if (currentForm === "edit" && selectedProperty) {
-      // Reset deleted images when switching properties
       setDeletedImageIds([]);
-      
+
       const propertyForForm = {
         ...selectedProperty,
         price: selectedProperty.price?.toString() || "",
         beds: selectedProperty.beds?.toString() || "",
         baths: selectedProperty.baths?.toString() || "",
-        area: selectedProperty.area?.toString() || "",
+        area_measurement: selectedProperty.area_measurement?.toString() || "",
         floor_size: selectedProperty.floor_size?.toString() || "",
         lounges: selectedProperty.lounges?.toString() || "",
         kitchens: selectedProperty.kitchens?.toString() || "",
@@ -306,10 +403,9 @@ export const PropertyForm = ({
           is_primary: pa.is_primary || false,
         })) || [],
       };
-      
+
       setFormData(propertyForForm);
 
-      // Load existing images with proper structure
       if (selectedProperty.images && selectedProperty.images.length > 0) {
         const existingImages = selectedProperty.images.map((img) => ({
           url: img.image,
@@ -318,17 +414,14 @@ export const PropertyForm = ({
           isExisting: true,
           order: img.order || 0
         }));
-        // Sort images by order if available
         existingImages.sort((a, b) => (a.order || 0) - (b.order || 0));
         setImagePreviewUrls(existingImages);
       } else {
         setImagePreviewUrls([]);
       }
-      
-      // Clear new image files
+
       setImageFiles([]);
     } else if (currentForm === "add") {
-      // Reset form for new property
       setFormData(initialFormState);
       setImagePreviewUrls([]);
       setImageFiles([]);
@@ -342,22 +435,37 @@ export const PropertyForm = ({
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     });
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  // Handler for coordinate changes from map picker
+  const handleCoordinateChange = ({ latitude, longitude }) => {
+    setFormData(prev => ({
+      ...prev,
+      latitude,
+      longitude,
+    }));
   };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    
-    // Store the actual files for upload
+
     const newFiles = [...imageFiles, ...files];
     setImageFiles(newFiles);
 
-    // Create preview URLs for display
     const newPreviewUrls = files.map((file, index) => ({
       url: URL.createObjectURL(file),
       file: file,
       caption: "",
       isExisting: false,
-      tempId: `new-${Date.now()}-${index}`, // Temporary ID for new images
+      tempId: `new-${Date.now()}-${index}`,
       order: imagePreviewUrls.length + index
     }));
 
@@ -366,17 +474,14 @@ export const PropertyForm = ({
 
   const handleRemoveImage = (index) => {
     const imageToRemove = imagePreviewUrls[index];
-    
+
     if (imageToRemove.isExisting && imageToRemove.id) {
-      // Track deletion of existing image
       setDeletedImageIds([...deletedImageIds, imageToRemove.id]);
     } else if (imageToRemove.file) {
-      // Remove from new files
       const updatedFiles = imageFiles.filter(f => f !== imageToRemove.file);
       setImageFiles(updatedFiles);
     }
-    
-    // Remove from preview
+
     const updatedPreviews = imagePreviewUrls.filter((_, i) => i !== index);
     setImagePreviewUrls(updatedPreviews);
   };
@@ -387,13 +492,11 @@ export const PropertyForm = ({
     setImagePreviewUrls(updatedPreviews);
   };
 
-  // Drag and Drop handlers
   const handleDragStart = (e, index) => {
     setDraggedIndex(index);
     setIsDragging(true);
     e.dataTransfer.effectAllowed = 'move';
-    
-    // Add a drag image
+
     const dragImage = e.target.cloneNode(true);
     dragImage.style.opacity = '0.5';
     document.body.appendChild(dragImage);
@@ -413,7 +516,7 @@ export const PropertyForm = ({
 
   const handleDrop = (e, dropIndex) => {
     e.preventDefault();
-    
+
     if (draggedIndex === null || draggedIndex === dropIndex) {
       setDraggedIndex(null);
       setDragOverIndex(null);
@@ -423,20 +526,17 @@ export const PropertyForm = ({
 
     const draggedItem = imagePreviewUrls[draggedIndex];
     const newPreviews = [...imagePreviewUrls];
-    
-    // Remove dragged item
+
     newPreviews.splice(draggedIndex, 1);
-    
-    // Insert at new position
+
     const adjustedDropIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
     newPreviews.splice(adjustedDropIndex, 0, draggedItem);
-    
-    // Update order property
+
     const reorderedPreviews = newPreviews.map((preview, index) => ({
       ...preview,
       order: index
     }));
-    
+
     setImagePreviewUrls(reorderedPreviews);
     setDraggedIndex(null);
     setDragOverIndex(null);
@@ -473,12 +573,11 @@ export const PropertyForm = ({
     const updatedAgents = [...formData.agents];
     const wasPrimary = updatedAgents[index].is_primary;
     updatedAgents.splice(index, 1);
-    
-    // If we removed the primary agent and there are others, make the first one primary
+
     if (wasPrimary && updatedAgents.length > 0) {
       updatedAgents[0].is_primary = true;
     }
-    
+
     setFormData({
       ...formData,
       agents: updatedAgents,
@@ -517,16 +616,17 @@ export const PropertyForm = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setIsSubmitting(true);
+    setFieldErrors({}); // Clear previous errors
+
     const propertyFormData = new FormData();
-    
-    // Process all form fields
+
     const fieldsToProcess = {
       ...formData,
       price: parseFloat(formData.price),
       beds: formData.beds ? parseInt(formData.beds) : null,
       baths: formData.baths ? parseInt(formData.baths) : null,
-      area: formData.area ? parseFloat(formData.area) : null,
+      area_measurement: formData.area_measurement ? parseFloat(formData.area_measurement) : null,
       floor_size: formData.floor_size || null,
       sqft: formData.sqft ? parseInt(formData.sqft) : null,
       year_built: formData.year_built ? parseInt(formData.year_built) : null,
@@ -537,7 +637,6 @@ export const PropertyForm = ({
       dining_rooms: formData.dining_rooms ? parseInt(formData.dining_rooms) : null,
     };
 
-    // Add standard fields to FormData
     Object.keys(fieldsToProcess).forEach((key) => {
       if (
         key !== "images" &&
@@ -551,7 +650,6 @@ export const PropertyForm = ({
       }
     });
 
-    // Process features
     if (formData.features && formData.features.length > 0) {
       const featuresToSend = formData.features.map((feature) => ({ feature }));
       propertyFormData.append("features", JSON.stringify(featuresToSend));
@@ -559,64 +657,98 @@ export const PropertyForm = ({
       propertyFormData.append("features", JSON.stringify([]));
     }
 
-    // Process agents
     const agentsToSend = formData.agents.map((agent) => ({
       agent_id: agent.agent_id,
       is_primary: agent.is_primary,
     }));
     propertyFormData.append("agents", JSON.stringify(agentsToSend));
 
-    // Add new image files with order
     imageFiles.forEach((file) => {
       propertyFormData.append("images", file);
     });
 
-    // Prepare image captions and order
     const imageCaptions = imagePreviewUrls.map((preview, index) => ({
       id: preview.id || null,
       caption: preview.caption || "",
       file: preview.file ? preview.file.name : null,
-      order: index, // Include order for sorting
+      order: index,
     }));
 
     propertyFormData.append("image_captions", JSON.stringify(imageCaptions));
 
-    // Handle deleted images for edit mode
     if (currentForm === "edit" && deletedImageIds.length > 0) {
       propertyFormData.append("deleted_images", JSON.stringify(deletedImageIds));
     }
 
     try {
       if (currentForm === "edit" && selectedProperty) {
-        await dispatch(
+        // Close modal immediately for optimistic UI
+        const propertyId = selectedProperty.id;
+        setCurrentForm(null);
+        setIsSubmitting(false);
+
+        // Dispatch update in background
+        dispatch(
           updateProperty({
-            id: selectedProperty.id,
+            id: propertyId,
             data: propertyFormData,
           })
-        ).unwrap();
-
-        setSnackbar({
-          open: true,
-          message: "Property updated successfully!",
-          severity: "success",
+        ).unwrap().then(() => {
+          // Show success notification via custom event
+          window.dispatchEvent(new CustomEvent('propertyUpdateSuccess', {
+            detail: { message: 'Property updated successfully!' }
+          }));
+          dispatch(fetchAdminProperties({ page: 1, page_size: 10 }));
+        }).catch((error) => {
+          window.dispatchEvent(new CustomEvent('propertyUpdateError', {
+            detail: { message: error?.message || 'Failed to update property' }
+          }));
         });
+
+        return; // Exit early - modal already closed
       } else {
-        await dispatch(createProperty(propertyFormData)).unwrap();
+        // For create - use optimistic UI
+        // Close modal immediately so admin can continue working
+        setCurrentForm(null);
+        setIsSubmitting(false);
 
-        setSnackbar({
-          open: true,
-          message: "Property created successfully!",
-          severity: "success",
-        });
+        // Dispatch create in background - Redux will set isCreating=true for skeleton loading
+        dispatch(createProperty(propertyFormData))
+          .unwrap()
+          .then(() => {
+            window.dispatchEvent(new CustomEvent('propertyCreateSuccess', {
+              detail: { message: 'Property created successfully!' }
+            }));
+            dispatch(fetchAdminProperties({ page: 1, page_size: 10 }));
+          })
+          .catch((error) => {
+            console.error("Create error:", error);
+            // Build error message from field errors if available
+            let errorMessage = 'Failed to create property.';
+            if (error?.errors || (typeof error === 'object' && !error.message)) {
+              const apiErrors = error?.errors || error;
+              const errorFields = Object.keys(apiErrors);
+              if (errorFields.length > 0) {
+                const fieldNames = errorFields.map(f => f.replace(/_/g, ' ')).join(', ');
+                errorMessage = `Please check: ${fieldNames}`;
+              }
+            } else if (error?.message) {
+              errorMessage = error.message;
+            }
+
+            window.dispatchEvent(new CustomEvent('propertyCreateError', {
+              detail: { message: errorMessage }
+            }));
+          });
+
+        return; // Exit early - modal already closed
       }
-
-      setCurrentForm(null);
-      dispatch(fetchProperties());
     } catch (error) {
       console.error("Submission error:", error);
+      setIsSubmitting(false);
       setSnackbar({
         open: true,
-        message: error.message || "Submission failed!",
+        message: error?.message || "Submission failed!",
         severity: "error",
       });
     }
@@ -624,301 +756,356 @@ export const PropertyForm = ({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold" style={{ color: COLORS.dark }}>
-                {currentForm === "edit" ? "Edit Property" : "Add New Property"}
-              </h2>
-              <button
-                onClick={() => setCurrentForm(null)}
-                className="p-2 rounded-full hover:bg-gray-100"
-                disabled={loading}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {loading && (
-              <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
-                <div className="flex flex-col items-center">
-                  <Loader className="animate-spin h-10 w-10 mb-2" style={{ color: COLORS.primary }} />
-                  <p className="text-gray-600 font-medium">
-                    {currentForm === "edit" ? "Updating property..." : "Creating property..."}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Information Section */}
-              <div className="border-b pb-4">
-                <h3 className="font-medium text-lg mb-3">Basic Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setCurrentForm(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="bg-[#0A1628] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-[#C9A962]/10 rounded-xl flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-[#C9A962]" />
+                  </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Title*
-                    </label>
-                    <input
+                    <h2 className="text-2xl font-bold text-white">
+                      {currentForm === "edit" ? "Edit Property" : "Add New Property"}
+                    </h2>
+                    <p className="text-gray-400 text-sm">
+                      {currentForm === "edit" ? "Update property details" : "Create a new listing"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setCurrentForm(null)}
+                  className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-300"
+                  disabled={loading}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Loading Overlay */}
+              {loading && (
+                <div className="absolute inset-0 bg-[#0A1628]/90 flex items-center justify-center z-10 rounded-2xl">
+                  <div className="flex flex-col items-center">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-12 h-12 border-3 border-[#C9A962] border-t-transparent rounded-full mb-4"
+                    />
+                    <p className="text-white font-medium">
+                      {currentForm === "edit" ? "Updating property..." : "Creating property..."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Basic Information Section */}
+                <div className="border-b border-white/10 pb-6">
+                  <h3 className="font-semibold text-lg text-white mb-4 flex items-center gap-2">
+                    <Home className="w-5 h-5 text-[#C9A962]" />
+                    Basic Information
+                  </h3>
+                  {/* Error Summary Banner */}
+                {Object.keys(fieldErrors).length > 0 && (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h4 className="text-red-400 font-medium">Please fix the following errors:</h4>
+                        <ul className="mt-2 space-y-1">
+                          {Object.entries(fieldErrors).map(([field, error]) => (
+                            <li key={field} className="text-red-300 text-sm">• {error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormInput
+                      label="Title"
+                      required
                       type="text"
                       name="title"
                       value={formData.title}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
+                      placeholder="Property title"
+                      error={fieldErrors.title}
                     />
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Price ($)*
-                    </label>
-                    <input
+                    <FormInput
+                      label="Price ($)"
+                      required
+                      icon={DollarSign}
                       type="number"
                       name="price"
                       value={formData.price}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       min="0"
                       step="0.01"
-                      required
+                      placeholder="0.00"
+                      error={fieldErrors.price}
                     />
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Location*
-                    </label>
-                    <input
+                    <FormInput
+                      label="Location"
+                      required
+                      icon={MapPin}
                       type="text"
                       name="location"
                       value={formData.location}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
+                      placeholder="Property location"
+                      error={fieldErrors.location}
                     />
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Property Type*
-                    </label>
-                    <select
+                    {/* Coordinates Section with Map Picker */}
+                    <div className="md:col-span-2">
+                      <div className="border border-white/10 rounded-xl p-4 bg-white/[0.02]">
+                        <h4 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-[#C9A962]" />
+                          Property Coordinates
+                        </h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          {/* Coordinate Inputs */}
+                          <div className="space-y-3">
+                            <FormInput
+                              label="Latitude"
+                              icon={MapPin}
+                              type="number"
+                              name="latitude"
+                              value={formData.latitude}
+                              onChange={handleInputChange}
+                              step="any"
+                              placeholder="-17.8292 (e.g. Harare)"
+                            />
+                            <FormInput
+                              label="Longitude"
+                              icon={MapPin}
+                              type="number"
+                              name="longitude"
+                              value={formData.longitude}
+                              onChange={handleInputChange}
+                              step="any"
+                              placeholder="31.0522 (e.g. Harare)"
+                            />
+                          </div>
+                          {/* Map Picker */}
+                          <CoordinateMapPicker
+                            latitude={formData.latitude}
+                            longitude={formData.longitude}
+                            onCoordinateChange={handleCoordinateChange}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <FormSelect
+                      label="Property Type"
                       name="property_type"
                       value={formData.property_type}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
+                      error={fieldErrors.property_type}
                     >
                       <option value="house">House</option>
                       <option value="apartment">Apartment</option>
                       <option value="flat">Flat</option>
                       <option value="land">Land</option>
+                      <option value="commercial">Commercial</option>
                       <option value="villa">Villa</option>
                       <option value="cluster">Cluster</option>
                       <option value="stand">Stand</option>
-                    </select>
-                  </div>
+                      <option value="duplex">Duplex</option>
+                      <option value="townhouse">Townhouse</option>
+                    </FormSelect>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Category
-                    </label>
-                    <select
+                    <FormSelect
+                      label="Category"
                       name="category"
                       value={formData.category}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
+                      error={fieldErrors.category}
                     >
                       <option value="rental">Rental</option>
                       <option value="sale">Sale</option>
                       <option value="development">Developments</option>
                       <option value="commercial">Commercial Property</option>
                       <option value="industrial">Industrial Property</option>
-                    </select>
-                  </div>
+                    </FormSelect>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Status
-                    </label>
-                    <select
+                    <FormSelect
+                      label="Status"
                       name="status"
                       value={formData.status}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      error={fieldErrors.status}
                     >
                       <option value="available">Available</option>
                       <option value="pending">Pending</option>
                       <option value="sold">Sold</option>
                       <option value="off-market">Off Market</option>
-                    </select>
-                  </div>
+                    </FormSelect>
 
-                  <div className="flex items-center mt-4">
-                    <input
-                      type="checkbox"
-                      name="is_published"
-                      id="is_published"
-                      checked={formData.is_published}
-                      onChange={handleInputChange}
-                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                    />
-                    <label
-                      htmlFor="is_published"
-                      className="ml-2 block text-sm text-gray-700"
-                    >
-                      Published (visible to users)
-                    </label>
+                    <div className="flex items-center mt-4">
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            name="is_published"
+                            checked={formData.is_published}
+                            onChange={handleInputChange}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-white/10 rounded-full peer peer-checked:bg-[#C9A962]/30 transition-colors"></div>
+                          <div className="absolute left-1 top-1 w-4 h-4 bg-gray-400 rounded-full peer-checked:bg-[#C9A962] peer-checked:translate-x-5 transition-all"></div>
+                        </div>
+                        <span className="text-gray-400 group-hover:text-white transition-colors">
+                          Published (visible to users)
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Property Details Section - Same as before */}
-              <div className="border-b pb-4">
-                <h3 className="font-medium text-lg mb-3">Property Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Bedrooms
-                    </label>
-                    <input
+                {/* Property Details Section */}
+                <div className="border-b border-white/10 pb-6">
+                  <h3 className="font-semibold text-lg text-white mb-4 flex items-center gap-2">
+                    <Square className="w-5 h-5 text-[#C9A962]" />
+                    Property Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormInput
+                      label="Bedrooms"
+                      icon={Bed}
                       type="number"
                       name="beds"
                       value={formData.beds}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       min="0"
+                      placeholder="0"
                     />
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Bathrooms
-                    </label>
-                    <input
+                    <FormInput
+                      label="Bathrooms"
+                      icon={Bath}
                       type="number"
                       name="baths"
                       value={formData.baths}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       min="0"
+                      placeholder="0"
                     />
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Square Feet
-                    </label>
-                    <input
+                    <FormInput
+                      label="Square Feet"
                       type="number"
                       name="sqft"
                       value={formData.sqft}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       min="0"
+                      placeholder="0"
                     />
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Area
-                    </label>
-                    <input
+                    <FormInput
+                      label="Area"
                       type="number"
-                      name="area"
-                      value={formData.area}
+                      name="area_measurement"
+                      value={formData.area_measurement}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       min="0"
                       step="0.01"
+                      placeholder="0.00"
                     />
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Area Unit
-                    </label>
-                    <select
+                    <FormSelect
+                      label="Area Unit"
                       name="area_unit"
                       value={formData.area_unit}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       {areaUnits.map((unit) => (
                         <option key={unit.value} value={unit.value}>
                           {unit.label}
                         </option>
                       ))}
-                    </select>
-                  </div>
+                    </FormSelect>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Year Built
-                    </label>
-                    <input
+                    <FormInput
+                      label="Year Built"
+                      icon={Calendar}
                       type="number"
                       name="year_built"
                       value={formData.year_built}
                       onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       min="1800"
                       max={new Date().getFullYear()}
+                      placeholder={new Date().getFullYear().toString()}
                     />
                   </div>
                 </div>
-              </div>
 
-              {/* Property Agents Section */}
-              <div className="border-b pb-4">
-                <h3 className="font-medium text-lg mb-3 flex items-center">
-                  <Users className="mr-2" size={20} />
-                  Property Agents/Negotiators
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex space-x-2">
-                    <select
-                      value={selectedAgent}
-                      onChange={(e) => setSelectedAgent(e.target.value)}
-                      className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select an agent...</option>
-                      {agents.map((agent) => (
-                        <option key={agent.id} value={agent.id.toString()}>
-                          {agent.full_name} - {agent.position}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={handleAddAgent}
-                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                    >
-                      <Plus size={20} />
-                    </button>
-                  </div>
+                {/* Property Agents Section */}
+                <div className="border-b border-white/10 pb-6">
+                  <h3 className="font-semibold text-lg text-white mb-4 flex items-center gap-2">
+                    <FaRegCircleUser className="w-5 h-5 text-[#C9A962]" />
+                    Property Agents/Negotiators
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex space-x-2">
+                      <select
+                        value={selectedAgent}
+                        onChange={(e) => setSelectedAgent(e.target.value)}
+                        className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#C9A962]/50 transition-colors"
+                      >
+                        <option value="">Select an agent...</option>
+                        {agents.map((agent) => (
+                          <option key={agent.id} value={agent.id.toString()}>
+                            {agent.full_name} - {agent.position}
+                          </option>
+                        ))}
+                      </select>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        type="button"
+                        onClick={handleAddAgent}
+                        className="px-4 py-3 bg-[#C9A962]/10 border border-[#C9A962]/20 text-[#C9A962] rounded-xl hover:bg-[#C9A962]/20 transition-all"
+                      >
+                        <Plus size={20} />
+                      </motion.button>
+                    </div>
 
-                  {formData.agents.length > 0 && (
-                    <div className="mt-2">
-                      <p className="text-sm font-medium text-gray-700 mb-2">
-                        Selected Agents:
-                      </p>
-                      <div className="space-y-2">
+                    {formData.agents.length > 0 && (
+                      <div className="mt-3 space-y-2">
                         {formData.agents.map((agent, index) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md"
+                            className="flex items-center justify-between bg-white/5 border border-white/10 px-4 py-3 rounded-xl"
                           >
-                            <div className="flex items-center space-x-2">
-                              <span className="text-sm font-medium">
-                                {agent.name}
-                              </span>
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-[#C9A962]/10 rounded-full flex items-center justify-center">
+                                <FaRegCircleUser className="w-5 h-5 text-[#C9A962]" />
+                              </div>
+                              <span className="text-white font-medium">{agent.name}</span>
                               {agent.is_primary && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  <Star size={12} className="mr-1" />
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#C9A962]/20 text-[#C9A962] border border-[#C9A962]/30">
+                                  <MdStarPurple500 size={12} className="mr-1" />
                                   Primary
                                 </span>
                               )}
@@ -927,14 +1114,14 @@ export const PropertyForm = ({
                               <button
                                 type="button"
                                 onClick={() => handleTogglePrimaryAgent(index)}
-                                className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                                className="text-xs px-3 py-1.5 bg-white/5 text-gray-400 rounded-lg hover:bg-white/10 hover:text-white transition-all"
                               >
                                 {agent.is_primary ? "Remove Primary" : "Set Primary"}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleRemoveAgent(index)}
-                                className="text-red-500 hover:text-red-700"
+                                className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
                               >
                                 <X size={16} />
                               </button>
@@ -942,106 +1129,109 @@ export const PropertyForm = ({
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Features Section */}
-              <div className="border-b pb-4">
-                <h3 className="font-medium text-lg mb-3">Property Features</h3>
-                <div className="space-y-2">
-                  <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      value={feature}
-                      onChange={(e) => setFeature(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddFeature();
-                        }
-                      }}
-                      placeholder="Add a feature (e.g., Pool, Fireplace, Garden)"
-                      className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddFeature}
-                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                    >
-                      <Plus size={20} />
-                    </button>
+                    )}
                   </div>
+                </div>
 
-                  {formData.features.length > 0 && (
-                    <div className="mt-2">
-                      <p className="text-sm font-medium text-gray-700 mb-1">
-                        Added Features:
-                      </p>
-                      <div className="flex flex-wrap gap-2">
+                {/* Features Section */}
+                <div className="border-b border-white/10 pb-6">
+                  <h3 className="font-semibold text-lg text-white mb-4 flex items-center gap-2">
+                    <IoCheckmarkDoneCircleOutline className="w-5 h-5 text-[#C9A962]" />
+                    Property Features
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={feature}
+                        onChange={(e) => setFeature(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddFeature();
+                          }
+                        }}
+                        placeholder="Add a feature (e.g., Pool, Fireplace, Garden)"
+                        className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
+                      />
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        type="button"
+                        onClick={handleAddFeature}
+                        className="px-4 py-3 bg-[#C9A962]/10 border border-[#C9A962]/20 text-[#C9A962] rounded-xl hover:bg-[#C9A962]/20 transition-all"
+                      >
+                        <Plus size={20} />
+                      </motion.button>
+                    </div>
+
+                    {formData.features.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
                         {formData.features.map((feat, index) => (
-                          <div
+                          <motion.div
                             key={index}
-                            className="flex items-center bg-gray-100 px-3 py-1 rounded-full"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            className="flex items-center gap-2 bg-[#C9A962]/10 border border-[#C9A962]/20 px-3 py-1.5 rounded-full"
                           >
-                            <span className="text-sm">{feat}</span>
+                            <span className="text-sm text-[#C9A962]">{feat}</span>
                             <button
                               type="button"
                               onClick={() => handleRemoveFeature(index)}
-                              className="ml-1 text-gray-500 hover:text-gray-700"
+                              className="text-[#C9A962] hover:text-white transition-colors"
                             >
                               <X size={14} />
                             </button>
-                          </div>
+                          </motion.div>
                         ))}
                       </div>
-                    </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description Section */}
+                <div className="border-b border-white/10 pb-6">
+                  <h3 className="font-semibold text-lg text-white mb-4 flex items-center gap-2">
+                    <AlignLeft className="w-5 h-5 text-[#C9A962]" />
+                    Property Description<span className="text-[#C9A962]">*</span>
+                  </h3>
+                  <div className={fieldErrors.description ? 'ring-2 ring-red-500/50 rounded-xl' : ''}>
+                    <RichTextEditor
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      placeholder="Enter a detailed description of the property..."
+                      className="min-h-[250px]"
+                    />
+                  </div>
+                  {fieldErrors.description && (
+                    <p className="mt-2 text-sm text-red-400 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.description}
+                    </p>
                   )}
                 </div>
-              </div>
 
-              {/* Rich Text Description Section */}
-              <div className="border-b pb-4">
-                <h3 className="font-medium text-lg mb-3">
-                  Property Description*
-                </h3>
-                <div className="space-y-2">
-                  <RichTextEditor
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    placeholder="Enter a detailed description of the property..."
-                    className="min-h-[250px]"
-                  />
-                </div>
-              </div>
+                {/* Images Section */}
+                <div>
+                  <h3 className="font-semibold text-lg text-white mb-4 flex items-center gap-2">
+                    <ImageIcon className="w-5 h-5 text-[#C9A962]" />
+                    Property Images
+                    {imagePreviewUrls.length > 0 && (
+                      <span className="text-sm text-gray-400 font-normal ml-2">
+                        ({imagePreviewUrls.length} image{imagePreviewUrls.length !== 1 ? 's' : ''})
+                      </span>
+                    )}
+                  </h3>
 
-              {/* Enhanced Images Section with Drag & Drop */}
-              <div>
-                <h3 className="font-medium text-lg mb-3">
-                  Property Images
-                  {imagePreviewUrls.length > 0 && (
-                    <span className="text-sm text-gray-500 ml-2">
-                      ({imagePreviewUrls.length} image{imagePreviewUrls.length !== 1 ? 's' : ''})
-                    </span>
-                  )}
-                </h3>
-                
-                <div className="space-y-4">
-                  <div>
+                  <div className="space-y-4">
                     <label
                       htmlFor="property-images"
-                      className="flex justify-center items-center border-2 border-dashed border-gray-300 rounded-md h-32 cursor-pointer hover:bg-gray-50 transition-colors"
+                      className="flex flex-col justify-center items-center border-2 border-dashed border-white/10 rounded-xl h-32 cursor-pointer hover:bg-white/5 hover:border-[#C9A962]/30 transition-all"
                     >
-                      <div className="text-center">
-                        <ImageIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500">
-                          Click to upload images
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          PNG, JPG, GIF up to 10MB each
-                        </p>
-                      </div>
+                      <ImageIcon className="w-10 h-10 text-gray-500 mb-2" />
+                      <p className="text-gray-400 text-sm">Click to upload images</p>
+                      <p className="text-gray-500 text-xs mt-1">PNG, JPG, GIF up to 10MB each</p>
                       <input
                         id="property-images"
                         type="file"
@@ -1051,133 +1241,136 @@ export const PropertyForm = ({
                         className="hidden"
                       />
                     </label>
-                  </div>
 
-                  {imagePreviewUrls.length > 0 && (
-                    <div>
-                      <p className="text-sm text-gray-600 mb-3">
-                        <GripVertical className="inline mr-1" size={16} />
-                        Drag images to reorder. The first image will be the main property image.
-                      </p>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {imagePreviewUrls.map((preview, index) => (
-                          <div
-                            key={preview.id || preview.tempId || index}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, index)}
-                            onDragOver={(e) => handleDragOver(e, index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => handleDrop(e, index)}
-                            onDragEnd={handleDragEnd}
-                            className={`
-                              border rounded-md p-2 space-y-2 cursor-move transition-all
-                              ${isDragging && draggedIndex === index ? 'opacity-50' : ''}
-                              ${dragOverIndex === index ? 'border-blue-500 border-2' : 'border-gray-300'}
-                              ${index === 0 ? 'ring-2 ring-blue-300' : ''}
-                            `}
-                          >
-                            {index === 0 && (
-                              <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full text-center">
-                                Main Image
+                    {imagePreviewUrls.length > 0 && (
+                      <div>
+                        <p className="text-sm text-gray-400 mb-3 flex items-center gap-2">
+                          <GripVertical className="w-4 h-4" />
+                          Drag images to reorder. The first image will be the main property image.
+                        </p>
+
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {imagePreviewUrls.map((preview, index) => (
+                            <div
+                              key={preview.id || preview.tempId || index}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, index)}
+                              onDragOver={(e) => handleDragOver(e, index)}
+                              onDragLeave={handleDragLeave}
+                              onDrop={(e) => handleDrop(e, index)}
+                              onDragEnd={handleDragEnd}
+                              className={`
+                                bg-white/5 border rounded-xl p-3 space-y-2 cursor-move transition-all
+                                ${isDragging && draggedIndex === index ? 'opacity-50' : ''}
+                                ${dragOverIndex === index ? 'border-[#C9A962] border-2' : 'border-white/10'}
+                                ${index === 0 ? 'ring-2 ring-[#C9A962]/50' : ''}
+                              `}
+                            >
+                              {index === 0 && (
+                                <div className="bg-[#C9A962] text-[#0A1628] text-xs font-semibold px-3 py-1 rounded-full text-center">
+                                  Main Image
+                                </div>
+                              )}
+
+                              <div className="relative h-40 group">
+                                <img
+                                  src={preview.url}
+                                  alt={`Property preview ${index + 1}`}
+                                  className="h-full w-full object-cover rounded-lg"
+                                  draggable={false}
+                                />
+
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all rounded-lg flex items-center justify-center">
+                                  <GripVertical className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={24} />
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveImage(index)}
+                                  className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-all"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+
+                                {preview.isExisting ? (
+                                  <div className="absolute top-2 left-2 bg-green-500/90 text-white text-xs px-2 py-1 rounded-lg">
+                                    Existing
+                                  </div>
+                                ) : (
+                                  <div className="absolute top-2 left-2 bg-[#C9A962] text-[#0A1628] text-xs px-2 py-1 rounded-lg">
+                                    New
+                                  </div>
+                                )}
                               </div>
-                            )}
-                            
-                            <div className="relative h-40 group">
-                              <img
-                                src={preview.url}
-                                alt={`Property preview ${index + 1}`}
-                                className="h-full w-full object-cover rounded-md"
-                                draggable={false}
+
+                              <input
+                                type="text"
+                                placeholder="Add caption (optional)"
+                                value={preview.caption || ""}
+                                onChange={(e) => handleCaptionChange(index, e.target.value)}
+                                className="w-full px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50"
+                                onClick={(e) => e.stopPropagation()}
                               />
-                              
-                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-md flex items-center justify-center">
-                                <GripVertical className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={24} />
-                              </div>
-                              
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveImage(index)}
-                                className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                              
-                              {preview.isExisting && (
-                                <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                                  Existing
-                                </div>
-                              )}
-                              
-                              {!preview.isExisting && (
-                                <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                                  New
-                                </div>
-                              )}
                             </div>
-                            
-                            <input
-                              type="text"
-                              placeholder="Add caption (optional)"
-                              value={preview.caption || ""}
-                              onChange={(e) => handleCaptionChange(index, e.target.value)}
-                              className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                      
-                      {deletedImageIds.length > 0 && (
-                        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                          <p className="text-sm text-yellow-800">
-                            <AlertCircle className="inline mr-1" size={16} />
-                            {deletedImageIds.length} image{deletedImageIds.length !== 1 ? 's' : ''} will be deleted when you save
-                          </p>
+                          ))}
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
 
-              {/* Form Actions */}
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setCurrentForm(null)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  style={{
-                    backgroundColor: loading ? '#ccc' : COLORS.primary,
-                    color: COLORS.white,
-                  }}
-                  className="px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-50 flex items-center space-x-2"
-                  disabled={loading}
-                >
-                  {loading && <Loader className="animate-spin h-5 w-5" />}
-                  <span>
-                    {loading 
-                      ? (currentForm === "edit" ? "Updating..." : "Creating...")
-                      : (currentForm === "edit" ? "Update Property" : "Add Property")
-                    }
-                  </span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      
+                        {deletedImageIds.length > 0 && (
+                          <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+                            <p className="text-sm text-yellow-400 flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4" />
+                              {deletedImageIds.length} image{deletedImageIds.length !== 1 ? 's' : ''} will be deleted when you save
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex justify-end space-x-3 pt-4 border-t border-white/10">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="button"
+                    onClick={() => setCurrentForm(null)}
+                    className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-all"
+                    disabled={loading}
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader className="animate-spin w-5 h-5" />
+                        {currentForm === "edit" ? "Updating..." : "Creating..."}
+                      </>
+                    ) : (
+                      <>
+                        <IoCheckmarkDoneCircleOutline className="w-5 h-5" />
+                        {currentForm === "edit" ? "Update Property" : "Add Property"}
+                      </>
+                    )}
+                  </motion.button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Alert
           severity={snackbar.severity}

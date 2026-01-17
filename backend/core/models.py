@@ -79,12 +79,14 @@ class Property(models.Model):
     PROPERTY_TYPES = [
         ('house', 'House'),
         ('apartment', 'Apartment'),
+        ('flat', 'Flat'),
         ('land', 'Land'),
         ('commercial', 'Commercial'),
-        ('villa', 'Villa'),  
+        ('villa', 'Villa'),
         ('cluster', 'Cluster'),
         ('stand', 'Stand'),
         ('duplex', 'Duplex'),
+        ('townhouse', 'Townhouse'),
     ]
     CATEGORY_TYPES = [
         ('rental', 'Rental'),
@@ -94,7 +96,7 @@ class Property(models.Model):
         ('industrial', 'Industrial Property'),
     ]
     title = models.CharField(max_length=200)
-    description = models.TextField()
+    description = models.TextField(blank=True, default='')
     price = models.DecimalField(max_digits=12, decimal_places=2)
     location = models.CharField(max_length=200)
     property_type = models.CharField(max_length=20, choices=PROPERTY_TYPES)
@@ -276,10 +278,31 @@ class Neighborhood(models.Model):
     school_rating = models.FloatField()
 
 class Inquiry(models.Model):
-    property = models.ForeignKey(Property, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    STATUS_CHOICES = [
+        ('new', 'New'),
+        ('contacted', 'Contacted'),
+        ('responded', 'Responded'),
+        ('closed', 'Closed'),
+    ]
+
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='inquiries')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    # For anonymous inquiries
+    name = models.CharField(max_length=100, blank=True)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
     message = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'Inquiries'
+
+    def __str__(self):
+        sender = self.user.email if self.user else self.email
+        return f"Inquiry for {self.property.title} from {sender}"
 
 class BlogPost(models.Model):
     title = models.CharField(max_length=200)
@@ -300,11 +323,12 @@ class PropertyAlert(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class PropertyShare(models.Model):
-    property = models.ForeignKey(Property, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='shares')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)  # Null for anonymous shares
     share_token = models.UUIDField(default=uuid.uuid4, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
+    session_key = models.CharField(max_length=40, blank=True)  # Track anonymous shares
     
 class PropertyInteraction(models.Model):
     INTERACTION_TYPES = [
@@ -338,3 +362,50 @@ class AdminActionLog(models.Model):
 
     def __str__(self):
         return f"{self.admin} performed {self.action_type} at {self.timestamp}"
+
+
+class Notification(models.Model):
+    """
+    System notifications for CRUD operations and user activity.
+    """
+    NOTIFICATION_TYPES = [
+        ('property_created', 'Property Created'),
+        ('property_updated', 'Property Updated'),
+        ('property_deleted', 'Property Deleted'),
+        ('property_status', 'Property Status Changed'),
+        ('agent_created', 'Agent Created'),
+        ('agent_updated', 'Agent Updated'),
+        ('agent_deleted', 'Agent Deleted'),
+        ('user_created', 'User Registered'),
+        ('user_updated', 'User Updated'),
+        ('inquiry_received', 'Inquiry Received'),
+        ('property_shared', 'Property Shared'),
+        ('lead', 'New Lead'),
+        ('alert', 'System Alert'),
+        ('info', 'Information'),
+    ]
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+        null=True,
+        blank=True,
+        help_text="Target user for this notification. Null means for all admins."
+    )
+    notification_type = models.CharField(max_length=50, choices=NOTIFICATION_TYPES)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    data = models.JSONField(default=dict, blank=True)
+    read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'read', '-created_at']),
+            models.Index(fields=['notification_type']),
+        ]
+
+    def __str__(self):
+        return f"{self.notification_type}: {self.title}"

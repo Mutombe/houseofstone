@@ -1,6 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { motion, AnimatePresence } from "framer-motion";
 import StatisticsDashboard from "./stats";
+import NotificationPanel from "./NotificationPanel";
+import { selectUnreadCount } from "../../redux/slices/notificationSlice";
+import { TableRowSkeleton } from "../ui/Skeleton";
 import {
   BarChart,
   Bar,
@@ -40,8 +44,17 @@ import {
   User,
   UserPlus,
   Camera,
+  TrendingUp,
+  Activity,
+  Settings,
+  LogOut,
+  ChevronRight,
+  ChevronLeft,
+  ChevronsLeft,
+  ChevronsRight,
+  ExternalLink,
 } from "lucide-react";
-import { Bold, Italic, List, AlignLeft, Underline, Type } from "lucide-react";
+import { FaRegCircleUser } from "react-icons/fa6";
 import { fetchUsers } from "../../redux/slices/userSlice";
 import { fetchAdminStats } from "../../redux/slices/adminSlice";
 import {
@@ -56,192 +69,531 @@ import {
   createProperty,
   updateProperty,
   deleteProperty,
+  fetchAdminProperties,
+  selectAdminPagination,
+  selectItemLoading,
+  selectIsCreating,
 } from "../../redux/slices/propertySlice";
-import { fetchPropertiesWithoutPagination } from "../../redux/slices/propertySlice";
 import { Snackbar, Alert } from "@mui/material";
-import { PropertyForm } from './propertyForm';
+import { PropertyForm } from "./propertyForm";
+import { showSuccess, showError } from "../../redux/slices/toastSlice";
+import { MdHouseSiding } from "react-icons/md";
+import { MdOutlineBedroomParent } from "react-icons/md";
+import { PiBathtub } from "react-icons/pi";
+import { BsTextareaResize } from "react-icons/bs";
+import { TbFileDescription } from "react-icons/tb";
+import { MdStarPurple500 } from "react-icons/md";
+import { MdOutlineHouse } from "react-icons/md";
+import { FaUsersGear } from "react-icons/fa6";
+import { PiUserCirclePlus } from "react-icons/pi";
+import { PiPerson } from "react-icons/pi";
 
-// Brand color constants
-const COLORS = {
-  primary: "#8B7355", // Stone brown as primary brand color
-  secondary: "#D2B48C", // Tan/light stone color
-  accent: "#5D4037", // Dark stone color for accents
-  light: "#F5F5DC", // Beige/off-white for light backgrounds
-  dark: "#3E2723", // Very dark brown for text
-  white: "#FFFFFF",
-  black: "#000000",
-  gray: {
-    50: "#F9F7F5",
-    100: "#F0EBE5",
-    200: "#E0D5C9",
-    300: "#C9B8A8",
-    400: "#B39E89",
-    500: "#8B7355",
-    600: "#6D5A43",
-    700: "#4F4132",
-    800: "#332B21",
-    900: "#1A1610",
-  },
+// Property Detail View Modal Component
+const PropertyDetailModal = ({ property, onClose, onEdit }) => {
+  if (!property) return null;
+
+  const formatPrice = (price) => {
+    if (!price) return "POA";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+    }).format(parseFloat(price));
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="bg-[#0A1628] border border-white/10 rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header Image Gallery */}
+          <div className="relative h-64 bg-gradient-to-br from-[#1F2E44] to-[#0A1628] overflow-hidden">
+            {property.images && property.images.length > 0 ? (
+              <div className="flex h-full gap-1">
+                <div className="flex-1">
+                  <img
+                    src={property.images[0].image}
+                    alt={property.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = "/hsp-fallback1.png";
+                    }}
+                  />
+                </div>
+                {property.images.length > 1 && (
+                  <div className="w-48 flex flex-col gap-1">
+                    {property.images.slice(1, 4).map((img, index) => (
+                      <div key={index} className="flex-1 relative">
+                        <img
+                          src={img.image}
+                          alt={`${property.title} ${index + 2}`}
+                          onError={(e) => {
+                            e.target.src = "/hsp-fallback1.png";
+                          }}
+                          className="w-full h-full object-cover"
+                        />
+                        {index === 2 && property.images.length > 4 && (
+                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <span className="text-white font-bold">
+                              +{property.images.length - 4}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <MdHouseSiding className="w-16 h-16 text-white/20" />
+              </div>
+            )}
+
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Status badges */}
+            <div className="absolute top-4 left-4 flex gap-2">
+              <span
+                className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+                  property.is_published
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-500 text-white"
+                }`}
+              >
+                {property.is_published ? "Published" : "Draft"}
+              </span>
+              <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-[#C9A962] text-[#0A1628] capitalize">
+                {property.property_type}
+              </span>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-6">
+            {/* Title and Price */}
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {property.title}
+                </h2>
+                <div className="flex items-center gap-2 text-gray-400">
+                  <MapPin className="w-4 h-4 text-[#C9A962]" />
+                  <span>{property.location}</span>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-[#C9A962]">
+                  {formatPrice(property.price)}
+                </p>
+                <p className="text-sm text-gray-400 mt-1">ID: {property.id}</p>
+              </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+              {property.beds && (
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                  <div className="w-10 h-10 bg-[#C9A962]/10 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <MdOutlineBedroomParent className="w-5 h-5 text-[#C9A962]" />
+                  </div>
+                  <p className="text-xl font-bold text-white">
+                    {property.beds}
+                  </p>
+                  <p className="text-xs text-gray-400">Bedrooms</p>
+                </div>
+              )}
+              {property.baths && (
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                  <div className="w-10 h-10 bg-[#C9A962]/10 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <PiBathtub className="w-5 h-5 text-[#C9A962]" />
+                  </div>
+                  <p className="text-xl font-bold text-white">
+                    {property.baths}
+                  </p>
+                  <p className="text-xs text-gray-400">Bathrooms</p>
+                </div>
+              )}
+              {property.sqft && (
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                  <div className="w-10 h-10 bg-[#C9A962]/10 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <BsTextareaResize className="w-5 h-5 text-[#C9A962]" />
+                  </div>
+                  <p className="text-xl font-bold text-white">
+                    {property.sqft}
+                  </p>
+                  <p className="text-xs text-gray-400">Sq Ft</p>
+                </div>
+              )}
+              {property.year_built && (
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                  <div className="w-10 h-10 bg-[#C9A962]/10 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <Calendar className="w-5 h-5 text-[#C9A962]" />
+                  </div>
+                  <p className="text-xl font-bold text-white">
+                    {property.year_built}
+                  </p>
+                  <p className="text-xs text-gray-400">Year Built</p>
+                </div>
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <TbFileDescription className="w-4 h-4 text-[#C9A962]" />
+                Description
+              </h3>
+              <div
+                className="text-gray-400 leading-relaxed prose prose-invert max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: property.description || "No description available.",
+                }}
+              />
+            </div>
+
+            {/* Features */}
+            {property.features && property.features.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                  <MdStarPurple500 className="w-4 h-4 text-[#C9A962]" />
+                  Features
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {property.features.map((feature, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 text-gray-400 text-sm"
+                    >
+                      <CheckCircle className="w-4 h-4 text-[#C9A962]" />
+                      <span>
+                        {typeof feature === "object" ? feature.name : feature}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Agent Info */}
+            {property.agent && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                  <User className="w-4 h-4 text-[#C9A962]" />
+                  Listed By
+                </h3>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#C9A962] to-[#B8985A] flex items-center justify-center text-[#0A1628] font-bold text-lg">
+                    {property.agent?.full_name?.[0] || "A"}
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">
+                      {property.agent?.full_name || "Agent"}
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      {property.agent?.email}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Meta Info */}
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <p className="text-gray-400 mb-1">Created</p>
+                <p className="text-white font-medium">
+                  {new Date(property.created_at).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <p className="text-gray-400 mb-1">Last Updated</p>
+                <p className="text-white font-medium">
+                  {new Date(
+                    property.updated_at || property.created_at
+                  ).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t border-white/10">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  onClose();
+                  onEdit(property);
+                }}
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all"
+              >
+                <Edit className="w-4 h-4" />
+                Edit Property
+              </motion.button>
+              <a
+                href={`/properties/${property.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-white/5 border border-white/10 text-white font-semibold rounded-xl hover:bg-white/10 transition-all"
+              >
+                <ExternalLink className="w-4 h-4" />
+                View Live
+              </a>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
 };
 
-// Rich Text Editor Component
-
+// Property Analytics Modal Component
 const PropertyAnalyticsModal = ({ property, onClose }) => {
   if (!property) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold" style={{ color: COLORS.dark }}>
-              Analytics for {property.title}
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full hover:bg-gray-100"
-            >
-              <X size={20} />
-            </button>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="bg-[#0A1628] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-6">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#C9A962]/10 rounded-xl flex items-center justify-center">
+                  <BarChart2 className="w-5 h-5 text-[#C9A962]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    Property Analytics
+                  </h2>
+                  <p className="text-gray-400 text-sm">{property.title}</p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Basic Info */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <MdHouseSiding className="w-4 h-4 text-[#C9A962]" />
+                  Property Information
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Price</span>
+                    <span className="text-white font-medium">
+                      ${property.price?.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Location</span>
+                    <span className="text-white font-medium">
+                      {property.location}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Type</span>
+                    <span className="text-white font-medium capitalize">
+                      {property.property_type}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Status</span>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        property.status === "available"
+                          ? "bg-green-500/20 text-green-400"
+                          : "bg-yellow-500/20 text-yellow-400"
+                      }`}
+                    >
+                      {property.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Views Stats */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Eye className="w-4 h-4 text-[#C9A962]" />
+                  Views Statistics
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Total Views</span>
+                    <span className="text-white font-medium">
+                      {property.total_views || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Last 7 Days</span>
+                    <span className="text-white font-medium">
+                      {property.views_last_7_days || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Last 30 Days</span>
+                    <span className="text-white font-medium">
+                      {property.views_last_30_days || 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Leads Stats */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Users className="w-4 h-4 text-[#C9A962]" />
+                  Leads Statistics
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Total Leads</span>
+                    <span className="text-white font-medium">
+                      {property.total_leads || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Last 7 Days</span>
+                    <span className="text-white font-medium">
+                      {property.leads_last_7_days || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Conversion Rate</span>
+                    <span className="text-[#C9A962] font-medium">
+                      {property.total_views
+                        ? `${Math.round(
+                            (property.total_leads / property.total_views) * 100
+                          )}%`
+                        : "0%"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Engagement Stats */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#C9A962]" />
+                  Engagement
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Avg. Time on Page</span>
+                    <span className="text-white font-medium">
+                      {property.avg_time_on_page || "0s"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Contact Clicks</span>
+                    <span className="text-white font-medium">
+                      {property.contact_clicks || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Favorite Saves</span>
+                    <span className="text-white font-medium">
+                      {property.favorite_saves || 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Charts Section */}
+              <div className="md:col-span-2 bg-white/5 border border-white/10 rounded-xl p-5">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-[#C9A962]" />
+                  Views Over Time
+                </h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        { name: "Jan", views: 10 },
+                        { name: "Feb", views: 20 },
+                        { name: "Mar", views: 15 },
+                        { name: "Apr", views: 25 },
+                        { name: "May", views: 30 },
+                        { name: "Jun", views: 20 },
+                        { name: "Jul", views: 35 },
+                      ]}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1E3A5F" />
+                      <XAxis dataKey="name" stroke="#6B7280" />
+                      <YAxis stroke="#6B7280" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#0A1628",
+                          border: "1px solid rgba(255,255,255,0.1)",
+                          borderRadius: "8px",
+                        }}
+                        labelStyle={{ color: "#fff" }}
+                      />
+                      <Bar
+                        dataKey="views"
+                        fill="#C9A962"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Basic Info */}
-            <div className="border rounded-lg p-4">
-              <h3 className="text-lg font-semibold mb-4">
-                Property Information
-              </h3>
-              <div className="space-y-2">
-                <p>
-                  <span className="font-medium">Price:</span> $
-                  {property.price?.toLocaleString()}
-                </p>
-                <p>
-                  <span className="font-medium">Location:</span>{" "}
-                  {property.location}
-                </p>
-                <p>
-                  <span className="font-medium">Type:</span>{" "}
-                  {property.property_type}
-                </p>
-                <p>
-                  <span className="font-medium">Status:</span> {property.status}
-                </p>
-              </div>
-            </div>
-
-            {/* Views Stats */}
-            <div className="border rounded-lg p-4">
-              <h3 className="text-lg font-semibold mb-4">Views Statistics</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Total Views:</span>
-                  <span className="font-medium">
-                    {property.total_views || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Last 7 Days:</span>
-                  <span className="font-medium">
-                    {property.views_last_7_days || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Last 30 Days:</span>
-                  <span className="font-medium">
-                    {property.views_last_30_days || 0}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Leads Stats */}
-            <div className="border rounded-lg p-4">
-              <h3 className="text-lg font-semibold mb-4">Leads Statistics</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Total Leads:</span>
-                  <span className="font-medium">
-                    {property.total_leads || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Last 7 Days:</span>
-                  <span className="font-medium">
-                    {property.leads_last_7_days || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Conversion Rate:</span>
-                  <span className="font-medium">
-                    {property.total_views
-                      ? `${Math.round(
-                          (property.total_leads / property.total_views) * 100
-                        )}%`
-                      : "0%"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Engagement Stats */}
-            <div className="border rounded-lg p-4">
-              <h3 className="text-lg font-semibold mb-4">Engagement</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Avg. Time on Page:</span>
-                  <span className="font-medium">
-                    {property.avg_time_on_page || "0s"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Contact Clicks:</span>
-                  <span className="font-medium">
-                    {property.contact_clicks || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Favorite Saves:</span>
-                  <span className="font-medium">
-                    {property.favorite_saves || 0}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Charts Section */}
-            <div className="md:col-span-2 border rounded-lg p-4">
-              <h3 className="text-lg font-semibold mb-4">Views Over Time</h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={[
-                      { name: "Jan", views: 10 },
-                      { name: "Feb", views: 20 },
-                      { name: "Mar", views: 15 },
-                      { name: "Apr", views: 25 },
-                      { name: "May", views: 30 },
-                      { name: "Jun", views: 20 },
-                      { name: "Jul", views: 35 },
-                    ]}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="views" fill={COLORS.primary} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
+// Agent Form Modal Component
 const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
@@ -334,225 +686,258 @@ const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold" style={{ color: COLORS.dark }}>
-                {currentForm === "edit" ? "Edit Agent" : "Add New Agent"}
-              </h2>
-              <button
-                onClick={() => setCurrentForm(null)}
-                className="p-2 rounded-full hover:bg-gray-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* First Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    First Name*
-                  </label>
-                  <input
-                    type="text"
-                    name="first_name"
-                    value={formData.first_name}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setCurrentForm(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="bg-[#0A1628] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#C9A962]/10 rounded-xl flex items-center justify-center">
+                    <UserPlus className="w-5 h-5 text-[#C9A962]" />
+                  </div>
+                  <h2 className="text-xl font-bold text-white">
+                    {currentForm === "edit" ? "Edit Agent" : "Add New Agent"}
+                  </h2>
                 </div>
-
-                {/* Middle Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Middle Name
-                  </label>
-                  <input
-                    type="text"
-                    name="middle_name"
-                    value={formData.middle_name}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-
-                {/* Surname */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Surname*
-                  </label>
-                  <input
-                    type="text"
-                    name="surname"
-                    value={formData.surname}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email*
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
-                </div>
-
-                {/* Cell Number */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Cell Number*
-                  </label>
-                  <input
-                    type="tel"
-                    name="cell_number"
-                    value={formData.cell_number}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
-                </div>
-
-                {/* Position */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Position*
-                  </label>
-                  <select
-                    name="position"
-                    value={formData.position}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  >
-                    <option value="">Select Position</option>
-                    <option value="agency_admin">Agency Admin</option>
-                    <option value="agent">Agent</option>
-                  </select>
-                </div>
-
-                {/* Permissions */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Permissions*
-                  </label>
-                  <select
-                    name="permissions"
-                    value={formData.permissions}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  >
-                    <option value="upload">Upload</option>
-                    <option value="edit">Edit</option>
-                    <option value="delete">Delete</option>
-                    <option value="view_only">View Only</option>
-                  </select>
-                </div>
-
-                {/* Agency Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Agency Name
-                  </label>
-                  <input
-                    type="text"
-                    name="agency_name"
-                    value={formData.agency_name}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-
-                {/* Branch */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Branch
-                  </label>
-                  <input
-                    type="text"
-                    name="branch"
-                    value={formData.branch}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-
-                {/* Address */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Address
-                  </label>
-                  <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    rows="2"
-                  ></textarea>
-                </div>
-
-                {/* Active Status */}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="is_active"
-                    id="is_active"
-                    checked={formData.is_active}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                  />
-                  <label
-                    htmlFor="is_active"
-                    className="ml-2 block text-sm text-gray-700"
-                  >
-                    Active Status
-                  </label>
-                </div>
-              </div>
-
-              {/* Form Actions */}
-              <div className="flex justify-end space-x-3">
                 <button
-                  type="button"
                   onClick={() => setCurrentForm(null)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-300"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  style={{
-                    backgroundColor: COLORS.primary,
-                    color: COLORS.white,
-                  }}
-                  className="px-4 py-2 rounded-md hover:opacity-90"
-                >
-                  {loading ? (
-                    <Loader className="animate-spin h-5 w-5" />
-                  ) : currentForm === "edit" ? (
-                    "Update Agent"
-                  ) : (
-                    "Create Agent"
-                  )}
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* First Name */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">
+                      First Name*
+                    </label>
+                    <input
+                      type="text"
+                      name="first_name"
+                      value={formData.first_name}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
+                      required
+                    />
+                  </div>
+
+                  {/* Middle Name */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">
+                      Middle Name
+                    </label>
+                    <input
+                      type="text"
+                      name="middle_name"
+                      value={formData.middle_name}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
+                    />
+                  </div>
+
+                  {/* Surname */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">
+                      Surname*
+                    </label>
+                    <input
+                      type="text"
+                      name="surname"
+                      value={formData.surname}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
+                      required
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">
+                      Email*
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
+                      required
+                    />
+                  </div>
+
+                  {/* Cell Number */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">
+                      Cell Number*
+                    </label>
+                    <input
+                      type="tel"
+                      name="cell_number"
+                      value={formData.cell_number}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
+                      required
+                    />
+                  </div>
+
+                  {/* Position */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">
+                      Position*
+                    </label>
+                    <select
+                      name="position"
+                      value={formData.position}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#C9A962]/50 transition-colors"
+                      required
+                    >
+                      <option value="" className="bg-[#0A1628]">
+                        Select Position
+                      </option>
+                      <option value="agency_admin" className="bg-[#0A1628]">
+                        Agency Admin
+                      </option>
+                      <option value="agent" className="bg-[#0A1628]">
+                        Agent
+                      </option>
+                    </select>
+                  </div>
+
+                  {/* Permissions */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">
+                      Permissions*
+                    </label>
+                    <select
+                      name="permissions"
+                      value={formData.permissions}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#C9A962]/50 transition-colors"
+                      required
+                    >
+                      <option value="upload" className="bg-[#0A1628]">
+                        Upload
+                      </option>
+                      <option value="edit" className="bg-[#0A1628]">
+                        Edit
+                      </option>
+                      <option value="delete" className="bg-[#0A1628]">
+                        Delete
+                      </option>
+                      <option value="view_only" className="bg-[#0A1628]">
+                        View Only
+                      </option>
+                    </select>
+                  </div>
+
+                  {/* Agency Name */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">
+                      Agency Name
+                    </label>
+                    <input
+                      type="text"
+                      name="agency_name"
+                      value={formData.agency_name}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
+                    />
+                  </div>
+
+                  {/* Branch */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">
+                      Branch
+                    </label>
+                    <input
+                      type="text"
+                      name="branch"
+                      value={formData.branch}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
+                    />
+                  </div>
+
+                  {/* Address */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-400 mb-2">
+                      Address
+                    </label>
+                    <textarea
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors resize-none"
+                      rows="2"
+                    ></textarea>
+                  </div>
+
+                  {/* Active Status */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      name="is_active"
+                      id="is_active"
+                      checked={formData.is_active}
+                      onChange={handleInputChange}
+                      className="w-5 h-5 rounded border-white/20 bg-white/5 text-[#C9A962] focus:ring-[#C9A962] focus:ring-offset-0"
+                    />
+                    <label
+                      htmlFor="is_active"
+                      className="text-sm text-gray-400"
+                    >
+                      Active Status
+                    </label>
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentForm(null)}
+                    className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium hover:bg-white/10 transition-all duration-300"
+                  >
+                    Cancel
+                  </button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    className="px-6 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all duration-300 flex items-center gap-2"
+                  >
+                    {loading ? (
+                      <Loader className="animate-spin h-5 w-5" />
+                    ) : currentForm === "edit" ? (
+                      "Update Agent"
+                    ) : (
+                      "Create Agent"
+                    )}
+                  </motion.button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
@@ -572,10 +957,136 @@ const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
   );
 };
 
+// Stats Card Component
+const StatsCard = ({ card, index }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: index * 0.1 }}
+    className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-[#C9A962]/30 transition-all duration-300"
+  >
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm text-gray-400 font-medium mb-1">{card.title}</p>
+        <h3 className="text-2xl font-bold text-white">{card.value}</h3>
+        {card.change && (
+          <p
+            className={`text-xs mt-1 flex items-center gap-1 ${
+              card.change > 0 ? "text-green-400" : "text-red-400"
+            }`}
+          >
+            {card.change > 0 ? (
+              <ArrowUp className="w-3 h-3" />
+            ) : (
+              <ArrowDown className="w-3 h-3" />
+            )}
+            {Math.abs(card.change)}% from last month
+          </p>
+        )}
+      </div>
+      <div
+        className="w-12 h-12 rounded-xl flex items-center justify-center"
+        style={{ backgroundColor: `${card.color}20` }}
+      >
+        <div style={{ color: card.color }}>{card.icon}</div>
+      </div>
+    </div>
+  </motion.div>
+);
+
+// Sidebar Navigation Item
+const SidebarItem = ({ icon: Icon, label, active, onClick, badge }) => (
+  <button
+    onClick={onClick}
+    className={`flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all duration-300 ${
+      active
+        ? "bg-[#C9A962]/10 text-[#C9A962] border border-[#C9A962]/20"
+        : "text-gray-400 hover:bg-white/5 hover:text-white"
+    }`}
+  >
+    <div className="flex items-center gap-3">
+      <Icon className="w-5 h-5" />
+      <span className="font-medium">{label}</span>
+    </div>
+    {badge && (
+      <span className="px-2 py-0.5 bg-[#C9A962] text-[#0A1628] text-xs font-bold rounded-full">
+        {badge}
+      </span>
+    )}
+  </button>
+);
+
+// Confirmation Modal Component
+const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = "Delete", confirmStyle = "danger" }) => {
+  if (!isOpen) return null;
+
+  const buttonStyles = {
+    danger: "bg-red-500 hover:bg-red-600 text-white",
+    warning: "bg-amber-500 hover:bg-amber-600 text-white",
+    primary: "bg-[#C9A962] hover:bg-[#B8984F] text-[#0A1628]",
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="bg-[#0A1628] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-4 mb-4">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+              confirmStyle === "danger" ? "bg-red-500/20" : "bg-amber-500/20"
+            }`}>
+              <AlertCircle className={`w-6 h-6 ${
+                confirmStyle === "danger" ? "text-red-400" : "text-amber-400"
+              }`} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-white">{title}</h3>
+              <p className="text-gray-400 text-sm mt-1">{message}</p>
+            </div>
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-medium transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                onConfirm();
+                onClose();
+              }}
+              className={`flex-1 px-4 py-2.5 rounded-xl font-medium transition-colors ${buttonStyles[confirmStyle]}`}
+            >
+              {confirmText}
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 const PropertyDashboard = () => {
   const dispatch = useDispatch();
   const properties = useSelector((state) => state.properties?.adminProperties);
+  const pagination = useSelector(selectAdminPagination);
   const loadingStatus = useSelector((state) => state.properties.status);
+  const itemLoading = useSelector(selectItemLoading);
+  const isCreating = useSelector(selectIsCreating);
   const [analyticsProperty, setAnalyticsProperty] = useState(null);
   const error = useSelector((state) => state.properties.error);
   const user = useSelector((state) => state.auth.user);
@@ -584,12 +1095,17 @@ const PropertyDashboard = () => {
   const usersStatus = useSelector((state) => state.user.status);
   const usersError = useSelector((state) => state.user.error);
   const agents = useSelector((state) => state.agent.agents);
+  const agentsStatus = useSelector((state) => state.agent.status);
+  const notificationCount = useSelector(selectUnreadCount);
 
   const [activeTab, setActiveTab] = useState("properties");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentForm, setCurrentForm] = useState(null);
-  const [currentAgentForm, setCurrentAgentForm] = useState(null);
   const [selectedAgent, setSelectedAgent] = useState(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCriteria, setFilterCriteria] = useState({
@@ -602,28 +1118,54 @@ const PropertyDashboard = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [agentsSearchTerm, setAgentsSearchTerm] = useState("");
 
-  // Add handler functions
+  // Confirmation modal state
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+    confirmText: "Delete",
+    confirmStyle: "danger",
+  });
+  const [propertyDetailView, setPropertyDetailView] = useState(null);
+
   const handleAddAgent = () => {
     setSelectedAgent(null);
     setCurrentForm("addAgent");
   };
 
   const handleEditAgent = (agent) => {
-    selectSelectedAgent(agent);
+    setSelectedAgent(agent);
     setCurrentForm("editAgent");
   };
 
-  const handleDeleteAgent = (id) => {
-    if (window.confirm("Are you sure you want to delete this agent?")) {
-      dispatch(deleteAgent(id));
-    }
+  const handleDeleteAgent = (id, agentName) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Agent",
+      message: `Are you sure you want to delete "${agentName || 'this agent'}"? This action cannot be undone.`,
+      confirmText: "Delete",
+      confirmStyle: "danger",
+      onConfirm: async () => {
+        try {
+          await dispatch(deleteAgent(id)).unwrap();
+          dispatch(showSuccess("Agent deleted successfully!", "Delete Agent"));
+        } catch (error) {
+          dispatch(
+            showError(
+              "Unable to delete agent. Please try again.",
+              "Delete Failed"
+            )
+          );
+        }
+      },
+    });
   };
 
   const showPropertyAnalytics = (property) => {
     setAnalyticsProperty(property);
   };
 
-  // Initial form state for new/edit property
   const initialFormState = {
     title: "",
     description: "",
@@ -647,11 +1189,56 @@ const PropertyDashboard = () => {
 
   const [formData, setFormData] = useState(initialFormState);
 
+  // Fetch properties with pagination
   useEffect(() => {
-    dispatch(fetchPropertiesWithoutPagination());
+    dispatch(fetchAdminProperties({ page: currentPage, page_size: pageSize }));
+  }, [dispatch, currentPage, pageSize]);
+
+  // Listen for property update/create events (optimistic UI notifications)
+  useEffect(() => {
+    const handleUpdateSuccess = (e) => {
+      dispatch(showSuccess(e.detail.message, "Property Updated"));
+    };
+    const handleUpdateError = (e) => {
+      dispatch(showError(e.detail.message, "Update Failed"));
+    };
+    const handleCreateSuccess = (e) => {
+      dispatch(showSuccess(e.detail.message, "Property Created"));
+    };
+    const handleCreateError = (e) => {
+      dispatch(showError(e.detail.message, "Creation Failed"));
+    };
+
+    window.addEventListener('propertyUpdateSuccess', handleUpdateSuccess);
+    window.addEventListener('propertyUpdateError', handleUpdateError);
+    window.addEventListener('propertyCreateSuccess', handleCreateSuccess);
+    window.addEventListener('propertyCreateError', handleCreateError);
+
+    return () => {
+      window.removeEventListener('propertyUpdateSuccess', handleUpdateSuccess);
+      window.removeEventListener('propertyUpdateError', handleUpdateError);
+      window.removeEventListener('propertyCreateSuccess', handleCreateSuccess);
+      window.removeEventListener('propertyCreateError', handleCreateError);
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
     dispatch(fetchAdminStats());
     dispatch(fetchAgents());
   }, [dispatch]);
+
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= (pagination?.totalPages || 1)) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setCurrentPage(1); // Reset to first page
+  };
 
   useEffect(() => {
     if (activeTab === "users" && usersStatus === "idle") {
@@ -666,7 +1253,6 @@ const PropertyDashboard = () => {
     }
   }, [currentForm]);
 
-  // Load property data into form when editing
   useEffect(() => {
     if (selectedProperty && currentForm === "edit") {
       setFormData({
@@ -686,47 +1272,59 @@ const PropertyDashboard = () => {
     }
   }, [selectedProperty, currentForm]);
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? checked : value,
+  const handleDeleteProperty = (id, propertyTitle) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Property",
+      message: `Are you sure you want to delete "${propertyTitle || 'this property'}"? This action cannot be undone.`,
+      confirmText: "Delete",
+      confirmStyle: "danger",
+      onConfirm: async () => {
+        try {
+          await dispatch(deleteProperty(id)).unwrap();
+          dispatch(
+            showSuccess("Property deleted successfully!", "Delete Property")
+          );
+          dispatch(fetchAdminProperties({ page: currentPage, page_size: pageSize }));
+        } catch (error) {
+          dispatch(
+            showError(
+              "Unable to delete property. Please try again.",
+              "Delete Failed"
+            )
+          );
+        }
+      },
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    // Convert string values to appropriate types
-    const propertyData = {
-      ...formData,
-      price: parseFloat(formData.price),
-      latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-      longitude: formData.longitude ? parseFloat(formData.longitude) : null,
-    };
-
-    if (currentForm === "edit" && selectedProperty) {
-      dispatch(updateProperty({ id: selectedProperty.id, data: propertyData }));
-    } else {
-      dispatch(createProperty(propertyData));
-    }
-
-    setCurrentForm(null);
-  };
-
-  const handleDeleteProperty = (id) => {
-    if (window.confirm("Are you sure you want to delete this property?")) {
-      dispatch(deleteProperty(id));
-    }
-  };
-
   const handleToggleVisibility = (property) => {
+    const newStatus = !property.is_published;
+
+    // Optimistic UI - show success immediately
+    dispatch(
+      showSuccess(
+        newStatus ? "Property published!" : "Property unpublished",
+        "Visibility Updated"
+      )
+    );
+
+    // Dispatch update in background
     dispatch(
       updateProperty({
         id: property.id,
-        data: { is_published: !property.is_published },
+        data: { is_published: newStatus },
       })
-    );
+    ).unwrap().catch(() => {
+      // Revert on error - refetch to get correct state
+      dispatch(fetchAdminProperties({ page: currentPage, page_size: pageSize }));
+      dispatch(
+        showError(
+          "Unable to update visibility. Please try again.",
+          "Update Failed"
+        )
+      );
+    });
   };
 
   const handleEditProperty = (property) => {
@@ -754,8 +1352,6 @@ const PropertyDashboard = () => {
         prev.sortBy === field && prev.sortDirection === "asc" ? "desc" : "asc",
     }));
   };
-
-  // Filter and sort properties
 
   const filteredProperties = Array.isArray(properties)
     ? properties
@@ -805,50 +1401,71 @@ const PropertyDashboard = () => {
         })
     : [];
 
-  // Dashboard statistics cards
   const statsCards = [
     {
       title: "Active Listings",
       value: adminStats?.active_listings || 0,
-      icon: <Building2 />,
-      color: "#4CAF50",
+      icon: <MdOutlineHouse className="w-6 h-6" />,
+      color: "#C9A962",
+      change: 12,
     },
     {
       title: "Total Inquiries",
       value: adminStats?.total_inquiries || 0,
-      icon: <Users />,
-      color: "#2196F3",
+      icon: <PiPerson className="w-6 h-6" />,
+      color: "#10B981",
+      change: 8,
     },
     {
       title: "Total Views",
       value: adminStats?.total_views || 0,
-      icon: <Eye />,
-      color: "#9C27B0",
+      icon: <Eye className="w-6 h-6" />,
+      color: "#8B5CF6",
+      change: 24,
     },
     {
       title: "Total Users",
       value: adminStats?.total_users || 0,
-      icon: <Users />,
-      color: "#FF9800",
+      icon: <FaUsersGear className="w-6 h-6" />,
+      color: "#3B82F6",
+      change: 5,
     },
   ];
 
-  // Render statistics charts based on admin data
   const renderStatCharts = () => {
     if (!adminStats || Object.keys(adminStats).length === 0) {
-      return <div className="text-center py-8">Loading statistics...</div>;
+      // Show skeleton charts instead of spinner
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="animate-pulse">
+              <div className="h-6 bg-white/10 rounded w-1/3 mb-4"></div>
+              <div className="h-64 bg-white/10 rounded"></div>
+            </div>
+          </div>
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="animate-pulse">
+              <div className="h-6 bg-white/10 rounded w-1/3 mb-4"></div>
+              <div className="h-64 bg-white/10 rounded"></div>
+            </div>
+          </div>
+        </div>
+      );
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         {/* Views by Interaction Type */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">Interaction Types</h3>
-          <div className="h-64 flex items-end space-x-4 mt-4">
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Activity className="w-5 h-5 text-[#C9A962]" />
+            Interaction Types
+          </h3>
+          <div className="h-64 flex items-end gap-4 mt-4">
             {adminStats?.views_by_type?.map((item, index) => (
               <div key={index} className="flex flex-col items-center flex-1">
                 <div
-                  className="w-full rounded-t-md transition-all duration-300 hover:opacity-80"
+                  className="w-full rounded-t-lg transition-all duration-300 hover:opacity-80"
                   style={{
                     height: `${
                       (item.count /
@@ -857,40 +1474,42 @@ const PropertyDashboard = () => {
                         )) *
                       200
                     }px`,
-                    backgroundColor: COLORS.primary,
+                    background: "linear-gradient(to top, #C9A962, #E8D5A3)",
                   }}
                 ></div>
-                <div className="text-xs mt-2 text-gray-600 w-full text-center truncate">
+                <div className="text-xs mt-2 text-gray-400 w-full text-center truncate">
                   {item.interaction_type}
                 </div>
-                <div className="font-semibold">{item.count}</div>
+                <div className="font-semibold text-white">{item.count}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Popular Locations */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">Popular Locations</h3>
-          <div className="space-y-3">
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-[#C9A962]" />
+            Popular Locations
+          </h3>
+          <div className="space-y-4">
             {adminStats?.popular_locations?.map((location, index) => (
-              <div key={index} className="flex flex-col">
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{location.location}</span>
-                  <span className="font-semibold">
+              <div key={index} className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">{location.location}</span>
+                  <span className="font-semibold text-white">
                     {location.count} properties
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-white/10 rounded-full h-2">
                   <div
-                    className="h-2 rounded-full"
+                    className="h-2 rounded-full bg-gradient-to-r from-[#C9A962] to-[#E8D5A3]"
                     style={{
                       width: `${
                         (location.count /
                           adminStats.popular_locations[0].count) *
                         100
                       }%`,
-                      backgroundColor: COLORS.primary,
                     }}
                   ></div>
                 </div>
@@ -900,21 +1519,23 @@ const PropertyDashboard = () => {
         </div>
 
         {/* Popular Properties Chart */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">Most Viewed Properties</h3>
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-[#C9A962]" />
+            Most Viewed Properties
+          </h3>
           <div className="space-y-4">
             {adminStats?.popular_properties?.map((property, index) => (
-              <div key={index} className="flex items-center">
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold mr-3"
-                  style={{ backgroundColor: COLORS.primary }}
-                >
+              <div key={index} className="flex items-center gap-4">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#C9A962] to-[#B8985A] flex items-center justify-center text-[#0A1628] font-bold text-sm">
                   {index + 1}
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium truncate">{property.title}</h4>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Eye size={14} className="mr-1" />
+                  <h4 className="font-medium text-white truncate">
+                    {property.title}
+                  </h4>
+                  <div className="flex items-center text-sm text-gray-400">
+                    <Eye className="w-3 h-3 mr-1" />
                     {property.views} views
                   </div>
                 </div>
@@ -924,9 +1545,12 @@ const PropertyDashboard = () => {
         </div>
 
         {/* User Growth Chart */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">User Growth</h3>
-          <div className="h-64 flex items-end space-x-1">
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <PiUserCirclePlus className="w-5 h-5 text-[#C9A962]" />
+            User Growth
+          </h3>
+          <div className="h-64 flex items-end gap-1">
             {adminStats?.user_growth?.map((item, index) => (
               <div
                 key={index}
@@ -934,7 +1558,7 @@ const PropertyDashboard = () => {
                 title={`${item.date}: ${item.count} users`}
               >
                 <div
-                  className="w-full rounded-t-sm transition-all duration-300 hover:opacity-80"
+                  className="w-full rounded-t-sm transition-all duration-300 hover:opacity-80 bg-[#C9A962]/60"
                   style={{
                     height: `${
                       (item.count /
@@ -943,10 +1567,9 @@ const PropertyDashboard = () => {
                         )) *
                       200
                     }px`,
-                    backgroundColor: COLORS.secondary,
                   }}
                 ></div>
-                <div className="text-xs mt-1 text-gray-600 transform -rotate-45 origin-top-left">
+                <div className="text-[10px] mt-1 text-gray-500 transform -rotate-45 origin-top-left">
                   {new Date(item.date).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -960,9 +1583,13 @@ const PropertyDashboard = () => {
     );
   };
 
-  // Property Form Modal
   const renderPropertyForm = () => {
-    if (!currentForm) return null;
+    if (
+      !currentForm ||
+      currentForm === "addAgent" ||
+      currentForm === "editAgent"
+    )
+      return null;
 
     return (
       <PropertyForm
@@ -973,229 +1600,194 @@ const PropertyDashboard = () => {
     );
   };
 
-  // Loading state
-  if (loadingStatus === "loading" && properties.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="flex flex-col items-center">
-          <Loader
-            size={40}
-            className="animate-spin mb-4"
-            style={{ color: COLORS.primary }}
-          />
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  // Computed loading state for data sections only
+  const isDataLoading = loadingStatus === "loading";
 
   // Error state
   if (loadingStatus === "failed") {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="bg-red-50 p-6 rounded-lg border border-red-200 max-w-md text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">
+      <div className="min-h-screen bg-[#060D16] flex items-center justify-center p-4">
+        <div className="bg-red-500/10 border border-red-500/20 p-8 rounded-2xl max-w-md text-center">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">
             Error Loading Data
           </h2>
-          <p className="text-gray-700 mb-4">
-            {error || "Failed to load properties. Please try again."}
+          <p className="text-gray-400 mb-6">
+            {typeof error === 'string' ? error : (error?.message || "Failed to load properties. Please try again.")}
           </p>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => dispatch(fetchProperties())}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            className="px-6 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl"
           >
             Retry
-          </button>
+          </motion.button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 pt-16">
+    <div className="flex min-h-screen bg-[#060D16]">
       {/* Mobile sidebar toggle */}
-      <div className="lg:hidden fixed top-4 left-4 z-20 pt-20">
+      <div className="lg:hidden fixed top-24 left-4 z-30">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-md bg-white shadow"
+          className="p-2 bg-[#0A1628] border border-white/10 rounded-lg text-white"
         >
-          {sidebarOpen ? <X size={20} /> : <Menu size={20} className="" />}
+          {sidebarOpen ? (
+            <X className="w-5 h-5" />
+          ) : (
+            <Menu className="w-5 h-5" />
+          )}
         </button>
       </div>
 
       {/* Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 transform ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:relative lg:translate-x-0 z-10 transition duration-200 ease-in-out lg:flex`}
-        style={{
-          backgroundColor: COLORS.dark,
-          width: "250px",
-          paddingTop: "95px",
-        }}
+      <motion.div
+        initial={false}
+        animate={{ x: sidebarOpen ? 0 : -280 }}
+        className={`fixed lg:relative inset-y-0 left-0 z-20 w-[280px] bg-[#0A1628] border-r border-white/10 flex flex-col pt-24`}
       >
-        <div className="flex flex-col h-full">
-          <div className="px-4 py-6 text-center">
-            <h1 className="text-2xl font-bold text-white">House of Stone</h1>
-            <p className="text-gray-400 text-sm">Admin Dashboard</p>
-          </div>
-
-          <nav className="flex-1 space-y-1 px-2 py-4">
-            <button
-              onClick={() => setActiveTab("properties")}
-              className={`flex items-center space-x-3 w-full px-4 py-3 rounded-lg transition-colors ${
-                activeTab === "properties"
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
-              }`}
-            >
-              <Building2 size={18} />
-              <span>Properties</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("users")}
-              className={`flex items-center space-x-3 w-full px-4 py-3 rounded-lg transition-colors ${
-                activeTab === "users"
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
-              }`}
-            >
-              <Users size={18} />
-              <span>Users</span>
-            </button>
-
-            {/* Add this button to the sidebar navigation */}
-            <button
-              onClick={() => setActiveTab("agents")}
-              className={`flex items-center space-x-3 w-full px-4 py-3 rounded-lg transition-colors ${
-                activeTab === "agents"
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
-              }`}
-            >
-              <Users size={18} />
-              <span>Agents</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("notifications")}
-              className={`flex items-center space-x-3 w-full px-4 py-3 rounded-lg transition-colors ${
-                activeTab === "notifications"
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
-              }`}
-            >
-              <BellRing size={18} />
-              <span>Notifications</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("stats")}
-              className={`flex items-center space-x-3 w-full px-4 py-3 rounded-lg transition-colors ${
-                activeTab === "stats"
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
-              }`}
-            >
-              <BarChart2 size={18} />
-              <span>Statistics</span>
-            </button>
-          </nav>
-
-          <div className="px-4 py-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white font-semibold">
-                A
+        <div className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          {/* Logo */}
+          <div className="px-4 pb-6 mb-4 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#C9A962]/10 rounded-xl flex items-center justify-center">
+                <Home className="w-5 h-5 text-[#C9A962]" />
               </div>
               <div>
-                <p className="text-sm font-medium text-white">Admin User</p>
-                <p className="text-xs text-gray-400">{user?.email}</p>
+                <h1 className="text-lg font-bold text-white">House of Stone</h1>
+                <p className="text-xs text-gray-500">Admin Dashboard</p>
               </div>
             </div>
           </div>
+
+          {/* Navigation */}
+          <SidebarItem
+            icon={MdOutlineHouse}
+            label="Properties"
+            active={activeTab === "properties"}
+            onClick={() => setActiveTab("properties")}
+            badge={pagination?.count || filteredProperties.length}
+          />
+          <SidebarItem
+            icon={FaUsersGear}
+            label="Users"
+            active={activeTab === "users"}
+            onClick={() => setActiveTab("users")}
+          />
+          <SidebarItem
+            icon={UserCheck}
+            label="Agents"
+            active={activeTab === "agents"}
+            onClick={() => setActiveTab("agents")}
+          />
+          <SidebarItem
+            icon={BellRing}
+            label="Notifications"
+            active={activeTab === "notifications"}
+            onClick={() => setActiveTab("notifications")}
+            badge={notificationCount > 0 ? String(notificationCount) : null}
+          />
+          <SidebarItem
+            icon={BarChart2}
+            label="Statistics"
+            active={activeTab === "stats"}
+            onClick={() => setActiveTab("stats")}
+          />
         </div>
-      </div>
 
-      {/* Main content */}
-      <div className="flex-1 overflow-auto">
-        <header className="bg-white shadow">
-          <div className="px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-            <h1 className="text-2xl font-bold" style={{ color: COLORS.dark }}>
-              {activeTab === "properties" && "Property Management"}
-              {activeTab === "users" && "User Management"}
-              {activeTab === "notifications" && "Notifications"}
-              {activeTab === "stats" && "Statistics Dashboard"}
-            </h1>
+        {/* User Profile */}
+        <div className="p-4 border-t border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#C9A962] to-[#B8985A] flex items-center justify-center text-[#0A1628] font-bold">
+              A
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">
+                Admin User
+              </p>
+              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-500 hidden md:block">
-                <Clock size={14} className="inline mr-1" />
+      {/* Main content - Scrollable area */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pt-24 lg:ml-0 custom-scrollbar">
+        {/* Header - Sticky at top */}
+        <header className="sticky top-0 z-10 bg-[#060D16]/95 backdrop-blur-xl border-b border-white/10">
+          <div className="px-6 py-4 flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-white">
+                {activeTab === "properties" && "Property Management"}
+                {activeTab === "users" && "User Management"}
+                {activeTab === "agents" && "Agent Management"}
+                {activeTab === "notifications" && "Notifications"}
+                {activeTab === "stats" && "Statistics Dashboard"}
+              </h1>
+              <p className="text-sm text-gray-400 mt-1 flex items-center gap-2">
+                <Clock className="w-4 h-4" />
                 {new Date().toLocaleDateString("en-US", {
                   weekday: "long",
                   year: "numeric",
                   month: "short",
                   day: "numeric",
                 })}
-              </div>
-
-              {activeTab === "properties" && (
-                <button
-                  onClick={() => setCurrentForm("add")}
-                  style={{
-                    backgroundColor: COLORS.primary,
-                    color: COLORS.white,
-                  }}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-md hover:opacity-90"
-                >
-                  <Plus size={18} />
-                  <span>Add Property</span>
-                </button>
-              )}
+              </p>
             </div>
+
+            {activeTab === "properties" && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setCurrentForm("add")}
+                className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all duration-300"
+              >
+                <Plus className="w-5 h-5" />
+                Add Property
+              </motion.button>
+            )}
+
+            {activeTab === "agents" && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleAddAgent}
+                className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all duration-300"
+              >
+                <UserPlus className="w-5 h-5" />
+                Add Agent
+              </motion.button>
+            )}
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        <main className="p-6">
           {/* Stats Overview */}
           {activeTab !== "stats" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {statsCards.map((card, index) => (
-                <div key={index} className="bg-white rounded-lg shadow p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500 font-medium mb-1">
-                        {card.title}
-                      </p>
-                      <h3 className="text-2xl font-bold">{card.value}</h3>
-                    </div>
-                    <div
-                      className="w-12 h-12 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: `${card.color}20` }}
-                    >
-                      <div style={{ color: card.color }}>{card.icon}</div>
-                    </div>
-                  </div>
-                </div>
+                <StatsCard key={index} card={card} index={index} />
               ))}
             </div>
           )}
 
           {/* Properties Tab */}
           {activeTab === "properties" && (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
+              {/* Search and Filters */}
+              <div className="p-6 border-b border-white/10">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                   {/* Search */}
-                  <div className="relative">
-                    <Search
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                      size={18}
-                    />
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
                     <input
                       type="text"
                       placeholder="Search properties..."
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full md:w-80 focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
                       value={searchTerm}
                       onChange={handleSearch}
                     />
@@ -1203,22 +1795,50 @@ const PropertyDashboard = () => {
 
                   {/* Filters */}
                   <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center">
-                      <Filter size={16} className="text-gray-500 mr-2" />
-                      <span className="text-sm text-gray-500">Filters:</span>
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <Filter className="w-4 h-4" />
+                      <span className="text-sm">Filters:</span>
                     </div>
 
                     <select
                       name="propertyType"
                       value={filterCriteria.propertyType}
                       onChange={handleFilterChange}
-                      className="text-sm border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#C9A962]/50"
                     >
-                      <option value="">All Types</option>
-                      <option value="house">House</option>
-                      <option value="apartment">Apartment</option>
-                      <option value="land">Land</option>
-                      <option value="commercial">Commercial</option>
+                      <option value="" className="bg-[#0A1628]">
+                        All Types
+                      </option>
+                      <option value="house" className="bg-[#0A1628]">
+                        House
+                      </option>
+                      <option value="apartment" className="bg-[#0A1628]">
+                        Apartment
+                      </option>
+                      <option value="flat" className="bg-[#0A1628]">
+                        Flat
+                      </option>
+                      <option value="land" className="bg-[#0A1628]">
+                        Land
+                      </option>
+                      <option value="commercial" className="bg-[#0A1628]">
+                        Commercial
+                      </option>
+                      <option value="villa" className="bg-[#0A1628]">
+                        Villa
+                      </option>
+                      <option value="cluster" className="bg-[#0A1628]">
+                        Cluster
+                      </option>
+                      <option value="stand" className="bg-[#0A1628]">
+                        Stand
+                      </option>
+                      <option value="duplex" className="bg-[#0A1628]">
+                        Duplex
+                      </option>
+                      <option value="townhouse" className="bg-[#0A1628]">
+                        Townhouse
+                      </option>
                     </select>
 
                     <input
@@ -1227,7 +1847,7 @@ const PropertyDashboard = () => {
                       placeholder="Min Price"
                       value={filterCriteria.priceMin}
                       onChange={handleFilterChange}
-                      className="text-sm border border-gray-300 rounded-md px-3 py-1.5 w-24 focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-28 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50"
                     />
 
                     <input
@@ -1236,64 +1856,456 @@ const PropertyDashboard = () => {
                       placeholder="Max Price"
                       value={filterCriteria.priceMax}
                       onChange={handleFilterChange}
-                      className="text-sm border border-gray-300 rounded-md px-3 py-1.5 w-24 focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <input
-                      type="text"
-                      name="sortBy"
-                      placeholder="Sort By"
-                      value={filterCriteria.sortBy}
-                      onChange={handleFilterChange}
-                      className="text-sm border border-gray-300 rounded-md px-3 py-1.5 w-24 focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-28 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50"
                     />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleSort("price")}
-                      className={`text-sm text-gray-500 ${
-                        filterCriteria.sortBy === "price" ? "font-semibold" : ""
-                      }`}
-                    >
-                      Price{" "}
-                      {filterCriteria.sortDirection === "asc" ? (
-                        <ArrowUp size={16} />
-                      ) : (
-                        <ArrowDown size={16} />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleSort("created_at")}
-                      className={`text-sm text-gray-500 ${
-                        filterCriteria.sortBy === "created_at"
-                          ? "font-semibold"
-                          : ""
-                      }`}
-                    >
-                      Date{" "}
-                      {filterCriteria.sortDirection === "asc" ? (
-                        <ArrowUp size={16} />
-                      ) : (
-                        <ArrowDown size={16} />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleSort("location")}
-                      className={`text-sm text-gray-500 ${
-                        filterCriteria.sortBy === "location"
-                          ? "font-semibold"
-                          : ""
-                      }`}
-                    >
-                      Location{" "}
-                      {filterCriteria.sortDirection === "asc" ? (
-                        <ArrowUp size={16} />
-                      ) : (
-                        <ArrowDown size={16} />
-                      )}
-                    </button>
+
+                  {/* Sort Buttons */}
+                  <div className="flex items-center gap-2">
+                    {["price", "created_at", "location"].map((field) => (
+                      <button
+                        key={field}
+                        onClick={() => handleSort(field)}
+                        className={`px-3 py-2 text-sm rounded-lg transition-all duration-300 flex items-center gap-1 ${
+                          filterCriteria.sortBy === field
+                            ? "bg-[#C9A962]/20 text-[#C9A962]"
+                            : "text-gray-400 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        {field === "created_at"
+                          ? "Date"
+                          : field.charAt(0).toUpperCase() + field.slice(1)}
+                        {filterCriteria.sortBy === field &&
+                          (filterCriteria.sortDirection === "asc" ? (
+                            <ArrowUp className="w-3 h-3" />
+                          ) : (
+                            <ArrowDown className="w-3 h-3" />
+                          ))}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
+
+              {/* Helpful tip */}
+              <div className="px-6 py-2 bg-[#C9A962]/5 border-b border-white/10 flex items-center gap-2">
+                <span className="text-xs text-gray-400">
+                  💡 <span className="text-[#C9A962]">Tip:</span> Click on any
+                  row to view property details. Use filters to narrow down
+                  results.
+                </span>
+              </div>
+
+              {/* Properties Table */}
+              <div className="overflow-x-auto relative">
+                {/* Loading overlay for pagination */}
+                {isDataLoading && filteredProperties.length > 0 && (
+                  <div className="absolute inset-0 bg-[#0A1628]/70 backdrop-blur-sm z-10 flex items-center justify-center">
+                    <div className="flex items-center gap-3 px-4 py-2 bg-[#0A1628] border border-white/10 rounded-xl">
+                      <Loader className="w-5 h-5 text-[#C9A962] animate-spin" />
+                      <span className="text-white text-sm">
+                        Loading properties...
+                      </span>
+                    </div>
+                  </div>
+                )}
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Property
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Price
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Location
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {/* Show creating skeleton row at top when creating a new property */}
+                    {isCreating && (
+                      <motion.tr
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-emerald-500/5"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-lg bg-emerald-500/20 animate-pulse" />
+                            <div className="space-y-2">
+                              <div className="h-4 w-32 bg-emerald-500/20 rounded animate-pulse" />
+                              <div className="h-3 w-16 bg-white/10 rounded animate-pulse" />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="h-4 w-20 bg-emerald-500/20 rounded animate-pulse" />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="h-4 w-28 bg-white/10 rounded animate-pulse" />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="h-6 w-20 bg-white/10 rounded-lg animate-pulse" />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="h-6 w-16 bg-emerald-500/20 rounded-full animate-pulse" />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-1">
+                            <Loader className="w-3 h-3 text-emerald-400 animate-spin" />
+                            <span className="text-xs text-emerald-400 font-medium">Creating...</span>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    )}
+                    {isDataLoading && filteredProperties.length === 0
+                      ? // Show skeleton rows when loading and no data
+                        [...Array(pageSize)].map((_, i) => (
+                          <TableRowSkeleton key={i} columns={6} />
+                        ))
+                      : filteredProperties.length > 0
+                      ? filteredProperties.map((property) =>
+                          itemLoading[property.id] ? (
+                            // Show skeleton for this specific property being updated
+                            <motion.tr
+                              key={property.id}
+                              initial={{ opacity: 0.5 }}
+                              animate={{ opacity: [0.5, 1, 0.5] }}
+                              transition={{ duration: 1.5, repeat: Infinity }}
+                              className="bg-[#C9A962]/5"
+                            >
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-12 h-12 rounded-lg bg-[#C9A962]/20 animate-pulse" />
+                                  <div className="space-y-2">
+                                    <div className="h-4 w-32 bg-[#C9A962]/20 rounded animate-pulse" />
+                                    <div className="h-3 w-16 bg-white/10 rounded animate-pulse" />
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="h-4 w-20 bg-[#C9A962]/20 rounded animate-pulse" />
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="h-4 w-28 bg-white/10 rounded animate-pulse" />
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="h-6 w-20 bg-white/10 rounded-lg animate-pulse" />
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="h-6 w-16 bg-[#C9A962]/20 rounded-full animate-pulse" />
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-[#C9A962] font-medium">Updating...</span>
+                                </div>
+                              </td>
+                            </motion.tr>
+                          ) : (
+                          <motion.tr
+                            key={property.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="hover:bg-white/5 transition-colors cursor-pointer group"
+                            onClick={() => setPropertyDetailView(property)}
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-lg bg-white/10 overflow-hidden ring-2 ring-transparent group-hover:ring-[#C9A962]/30 transition-all">
+                                  {property.images?.[0]?.image ? (
+                                    <img
+                                      src={property.images[0].image}
+                                      alt={property.title}
+                                      onError={(e) => {
+                                        e.target.src = "/hsp-fallback1.png";
+                                      }}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <MdHouseSiding className="w-5 h-5 text-white/30" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="text-sm font-medium text-white truncate block max-w-[200px] group-hover:text-[#C9A962] transition-colors">
+                                    {property.title}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    #{property.id}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="text-sm text-[#C9A962] font-semibold">
+                                ${property.price?.toLocaleString() || "POA"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-1 text-sm text-gray-400">
+                                <MapPin className="w-3 h-3 text-[#C9A962]" />
+                                <span className="truncate max-w-[150px]">
+                                  {property.location}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="text-sm text-white capitalize px-2 py-1 bg-white/5 rounded-lg">
+                                {property.property_type}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span
+                                className={`px-3 py-1 text-xs font-medium rounded-full ${
+                                  property.is_published
+                                    ? "bg-green-500/20 text-green-400"
+                                    : "bg-gray-500/20 text-gray-400"
+                                }`}
+                              >
+                                {property.is_published ? "Published" : "Draft"}
+                              </span>
+                            </td>
+                            <td
+                              className="px-6 py-4 whitespace-nowrap"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPropertyDetailView(property);
+                                  }}
+                                  className="p-2 text-[#C9A962] hover:text-[#E8D5A3] hover:bg-[#C9A962]/10 rounded-lg transition-all"
+                                  title="View Details"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleToggleVisibility(property);
+                                  }}
+                                  className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                                  title={
+                                    property.is_published
+                                      ? "Unpublish"
+                                      : "Publish"
+                                  }
+                                >
+                                  {property.is_published ? (
+                                    <EyeOff className="w-4 h-4" />
+                                  ) : (
+                                    <CheckCircle className="w-4 h-4" />
+                                  )}
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    showPropertyAnalytics(property);
+                                  }}
+                                  className="p-2 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 rounded-lg transition-all"
+                                  title="Analytics"
+                                >
+                                  <BarChart2 className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditProperty(property);
+                                  }}
+                                  className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all"
+                                  title="Edit"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteProperty(property.id, property.title);
+                                  }}
+                                  className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </motion.tr>
+                          )
+                        )
+                      : null}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Empty State - Only show when not loading and no data */}
+              {!isDataLoading && filteredProperties.length === 0 && (
+                <div className="py-16 text-center">
+                  <MdOutlineHouse className="mx-auto h-12 w-12 text-gray-600" />
+                  <h3 className="mt-4 text-lg font-medium text-white">
+                    No properties found
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-400">
+                    {searchTerm ||
+                    filterCriteria.propertyType ||
+                    filterCriteria.priceMin ||
+                    filterCriteria.priceMax
+                      ? "Try changing your search filters"
+                      : "Get started by adding a property"}
+                  </p>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setCurrentForm("add")}
+                    className="mt-6 inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Add Property
+                  </motion.button>
+                </div>
+              )}
+
+              {/* Pagination Controls */}
+              {filteredProperties.length > 0 && (
+                <div className="p-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  {/* Info */}
+                  <div className="text-sm text-gray-400">
+                    Showing{" "}
+                    <span className="text-white font-medium">
+                      {(currentPage - 1) * pageSize + 1}
+                    </span>{" "}
+                    to{" "}
+                    <span className="text-white font-medium">
+                      {Math.min(
+                        currentPage * pageSize,
+                        pagination?.count || filteredProperties.length
+                      )}
+                    </span>{" "}
+                    of{" "}
+                    <span className="text-white font-medium">
+                      {pagination?.count || filteredProperties.length}
+                    </span>{" "}
+                    properties
+                  </div>
+
+                  {/* Page Size Selector */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-400">Show:</span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) =>
+                        handlePageSizeChange(Number(e.target.value))
+                      }
+                      className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-[#C9A962]/50"
+                    >
+                      <option value={5} className="bg-[#0A1628]">
+                        5
+                      </option>
+                      <option value={10} className="bg-[#0A1628]">
+                        10
+                      </option>
+                      <option value={25} className="bg-[#0A1628]">
+                        25
+                      </option>
+                      <option value={50} className="bg-[#0A1628]">
+                        50
+                      </option>
+                    </select>
+                  </div>
+
+                  {/* Pagination Buttons */}
+                  <div className="flex items-center gap-1">
+                    {/* First Page */}
+                    <button
+                      onClick={() => handlePageChange(1)}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      title="First page"
+                    >
+                      <ChevronsLeft className="w-4 h-4" />
+                    </button>
+
+                    {/* Previous Page */}
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      title="Previous page"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+
+                    {/* Page Numbers */}
+                    <div className="flex items-center gap-1 mx-2">
+                      {Array.from(
+                        { length: Math.min(5, pagination?.totalPages || 1) },
+                        (_, i) => {
+                          let pageNum;
+                          const totalPages = pagination?.totalPages || 1;
+
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => handlePageChange(pageNum)}
+                              className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
+                                currentPage === pageNum
+                                  ? "bg-[#C9A962] text-[#0A1628]"
+                                  : "text-gray-400 hover:text-white hover:bg-white/10"
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        }
+                      )}
+                    </div>
+
+                    {/* Next Page */}
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === (pagination?.totalPages || 1)}
+                      className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      title="Next page"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+
+                    {/* Last Page */}
+                    <button
+                      onClick={() =>
+                        handlePageChange(pagination?.totalPages || 1)
+                      }
+                      disabled={currentPage === (pagination?.totalPages || 1)}
+                      className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      title="Last page"
+                    >
+                      <ChevronsRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1302,331 +2314,241 @@ const PropertyDashboard = () => {
             <div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {statsCards.map((card, index) => (
-                  <div key={index} className="bg-white rounded-lg shadow p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-500 font-medium mb-1">
-                          {card.title}
-                        </p>
-                        <h3 className="text-2xl font-bold">{card.value}</h3>
-                      </div>
-                      <div
-                        className="w-12 h-12 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: `${card.color}20` }}
-                      >
-                        <div style={{ color: card.color }}>{card.icon}</div>
-                      </div>
-                    </div>
-                  </div>
+                  <StatsCard key={index} card={card} index={index} />
                 ))}
               </div>
-
-              <StatisticsDashboard />
+              {renderStatCharts()}
+              <div className="mt-8">
+                <StatisticsDashboard />
+              </div>
             </div>
           )}
 
           {/* Users Tab */}
           {activeTab === "users" && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
-                <div className="relative">
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
+              <div className="p-6 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="relative max-w-md flex-1">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
                   <input
                     type="text"
                     placeholder="Search users..."
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full md:w-80 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
                   />
                 </div>
-
-                <button
-                  style={{
-                    backgroundColor: COLORS.primary,
-                    color: COLORS.white,
-                  }}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-md hover:opacity-90"
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl"
                 >
-                  <Plus size={18} />
-                  <span>Add User</span>
-                </button>
-                {usersStatus === "loading" && <div>Loading users...</div>}
-                {usersError && (
-                  <div className="text-red-500">Error: {usersError}</div>
-                )}
+                  <UserPlus className="w-5 h-5" />
+                  Add User
+                </motion.button>
               </div>
 
+              {usersError && (
+                <div className="p-8 text-center text-red-400">{usersError}</div>
+              )}
+
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="w-full">
                   <thead>
-                    <tr>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <tr className="border-b border-white/10">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Name
                       </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Email
                       </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Role
                       </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {Array.isArray(users) &&
-                      users.map((user) => (
-                        <tr key={user.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                {user.first_name?.[0] ||
-                                  user.email[0].toUpperCase()}
-                              </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {user.first_name} {user.last_name}
+                  <tbody className="divide-y divide-white/5">
+                    {usersStatus === "loading" && (!users || users.length === 0)
+                      ? // Show skeleton rows when loading users
+                        [...Array(5)].map((_, i) => (
+                          <TableRowSkeleton key={i} columns={5} />
+                        ))
+                      : Array.isArray(users) && users.length > 0
+                      ? users.map((user) => (
+                          <tr
+                            key={user.id}
+                            className="hover:bg-white/5 transition-colors"
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#C9A962] to-[#B8985A] flex items-center justify-center text-[#0A1628] font-bold">
+                                  {user.first_name?.[0] ||
+                                    user.email[0].toUpperCase()}
                                 </div>
-                                <div className="text-sm text-gray-500">
-                                  Joined{" "}
-                                  {new Date(
-                                    user.date_joined
-                                  ).toLocaleDateString()}
+                                <div>
+                                  <div className="text-sm font-medium text-white">
+                                    {user.first_name} {user.last_name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Joined{" "}
+                                    {new Date(
+                                      user.date_joined
+                                    ).toLocaleDateString()}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {user.email}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                              {user.is_staff ? "Admin" : "User"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                user.is_active
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-red-100 text-red-800"
-                              }`}
-                            >
-                              {user.is_active ? "Active" : "Inactive"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div className="flex space-x-2">
-                              <button className="text-blue-600 hover:text-blue-900">
-                                <Edit size={16} />
-                              </button>
-                              <button className="text-red-600 hover:text-red-900">
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="text-sm text-gray-400">
+                                {user.email}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/20 text-blue-400">
+                                {user.is_staff ? "Admin" : "User"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span
+                                className={`px-3 py-1 text-xs font-medium rounded-full ${
+                                  user.is_active
+                                    ? "bg-green-500/20 text-green-400"
+                                    : "bg-red-500/20 text-red-400"
+                                }`}
+                              >
+                                {user.is_active ? "Active" : "Inactive"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                <button className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all">
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      : null}
                   </tbody>
                 </table>
-              </div>
-
-              <div className="py-3 flex items-center justify-between border-t border-gray-200 mt-4">
-                <div className="flex-1 flex justify-between sm:hidden">
-                  <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Previous
-                  </button>
-                  <button className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Next
-                  </button>
-                </div>
-                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm text-gray-700">
-                      Showing <span className="font-medium">1</span> to{" "}
-                      <span className="font-medium">5</span> of{" "}
-                      <span className="font-medium">20</span> users
-                    </p>
-                  </div>
-                  <div>
-                    <nav
-                      className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                      aria-label="Pagination"
-                    >
-                      <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        <span className="sr-only">Previous</span>
-                        <svg
-                          className="h-5 w-5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </button>
-                      {[1, 2, 3].map((page) => (
-                        <button
-                          key={page}
-                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            page === 1
-                              ? "z-10 bg-stone-50 border-stone-500 text-stone-600"
-                              : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
-                      <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        <span className="sr-only">Next</span>
-                        <svg
-                          className="h-5 w-5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </button>
-                    </nav>
-                  </div>
-                </div>
               </div>
             </div>
           )}
 
-          {/* Add this case to the main content switch */}
+          {/* Agents Tab */}
           {activeTab === "agents" && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
-                <div className="relative">
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
+              <div className="p-6 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="relative max-w-md flex-1">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
                   <input
                     type="text"
                     placeholder="Search agents..."
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full md:w-80 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
                     value={agentsSearchTerm}
                     onChange={(e) => setAgentsSearchTerm(e.target.value)}
                   />
                 </div>
-                <button
-                  onClick={handleAddAgent}
-                  style={{
-                    backgroundColor: COLORS.primary,
-                    color: COLORS.white,
-                  }}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-md hover:opacity-90"
-                >
-                  <Plus size={18} />
-                  <span>Add Agent</span>
-                </button>
               </div>
 
-              {/* Agents Table */}
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="w-full">
                   <thead>
-                    <tr>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
+                    <tr className="border-b border-white/10">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Agent
                       </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Email
                       </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Phone
                       </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Position
                       </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {agents
-                      .filter(
-                        (agent) =>
-                          agent.full_name
-                            ?.toLowerCase()
-                            .includes(agentsSearchTerm.toLowerCase()) ||
-                          agent.email
-                            ?.toLowerCase()
-                            .includes(agentsSearchTerm.toLowerCase()) ||
-                          agent.phone
-                            ?.toLowerCase()
-                            .includes(agentsSearchTerm.toLowerCase()) ||
-                          agent.position
-                            ?.toLowerCase()
-                            .includes(agentsSearchTerm.toLowerCase())
-                      )
-                      .map((agent) => (
-                        <tr key={agent.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                {agent.full_name?.charAt(0) || "A"}
-                              </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {agent.full_name}
+                  <tbody className="divide-y divide-white/5">
+                    {agentsStatus === "loading" && agents.length === 0
+                      ? // Show skeleton rows when loading agents
+                        [...Array(5)].map((_, i) => (
+                          <TableRowSkeleton key={i} columns={5} />
+                        ))
+                      : agents
+                          .filter(
+                            (agent) =>
+                              agent.full_name
+                                ?.toLowerCase()
+                                .includes(agentsSearchTerm.toLowerCase()) ||
+                              agent.email
+                                ?.toLowerCase()
+                                .includes(agentsSearchTerm.toLowerCase()) ||
+                              agent.phone
+                                ?.toLowerCase()
+                                .includes(agentsSearchTerm.toLowerCase()) ||
+                              agent.position
+                                ?.toLowerCase()
+                                .includes(agentsSearchTerm.toLowerCase())
+                          )
+                          .map((agent) => (
+                            <tr
+                              key={agent.id}
+                              className="hover:bg-white/5 transition-colors"
+                            >
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-3">
+                                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#C9A962] to-[#B8985A] flex items-center justify-center text-[#0A1628] font-bold">
+                                    {agent.full_name?.charAt(0) || "A"}
+                                  </div>
+                                  <span className="text-sm font-medium text-white">
+                                    {agent.full_name}
+                                  </span>
                                 </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {agent.email}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {agent.cell_number}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {agent.position}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleEditAgent(agent)}
-                                className="text-blue-600 hover:text-blue-900"
-                              >
-                                <Edit size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteAgent(agent.id)}
-                                className="text-red-600 hover:text-red-900"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="text-sm text-gray-400">
+                                  {agent.email}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="text-sm text-gray-400">
+                                  {agent.cell_number}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="px-3 py-1 text-xs font-medium rounded-full bg-[#C9A962]/20 text-[#C9A962] capitalize">
+                                  {agent.position}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleEditAgent(agent)}
+                                    className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteAgent(agent.id, agent.full_name)}
+                                    className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
                   </tbody>
                 </table>
               </div>
@@ -1635,291 +2557,12 @@ const PropertyDashboard = () => {
 
           {/* Notifications Tab */}
           {activeTab === "notifications" && (
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">
-                    Recent Notifications
-                  </h3>
-                  <div>
-                    <button className="text-sm text-blue-600 hover:text-blue-800">
-                      Mark all as read
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="divide-y divide-gray-200">
-                {[
-                  {
-                    type: "message",
-                    title: "New inquiry received",
-                    desc: 'You have received a new inquiry for "Modern Apartment in Downtown"',
-                    time: "5 minutes ago",
-                    read: false,
-                  },
-                  {
-                    type: "user",
-                    title: "New user registration",
-                    desc: "Sarah Johnson has registered a new account",
-                    time: "2 hours ago",
-                    read: false,
-                  },
-                  {
-                    type: "property",
-                    title: "Property listing approved",
-                    desc: "Beach House in Malibu has been approved and is now live",
-                    time: "1 day ago",
-                    read: true,
-                  },
-                  {
-                    type: "alert",
-                    title: "System maintenance",
-                    desc: "The system will undergo maintenance on June 15th from 2:00 AM to 4:00 AM",
-                    time: "2 days ago",
-                    read: true,
-                  },
-                  {
-                    type: "update",
-                    title: "Price update",
-                    desc: 'The price for "Luxury Villa" has been updated to $1,250,000',
-                    time: "3 days ago",
-                    read: true,
-                  },
-                ].map((notification, index) => (
-                  <div
-                    key={index}
-                    className={`px-6 py-4 transition-colors ${
-                      !notification.read ? "bg-blue-50" : ""
-                    }`}
-                  >
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0 mr-4">
-                        {notification.type === "message" && (
-                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <BellRing size={20} className="text-blue-700" />
-                          </div>
-                        )}
-                        {notification.type === "user" && (
-                          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                            <Users size={20} className="text-green-700" />
-                          </div>
-                        )}
-                        {notification.type === "property" && (
-                          <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                            <Building2 size={20} className="text-purple-700" />
-                          </div>
-                        )}
-                        {notification.type === "alert" && (
-                          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                            <BellRing size={20} className="text-red-700" />
-                          </div>
-                        )}
-                        {notification.type === "update" && (
-                          <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                            <DollarSign size={20} className="text-yellow-700" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <p
-                            className={`text-sm font-semibold ${
-                              !notification.read
-                                ? "text-blue-800"
-                                : "text-gray-900"
-                            }`}
-                          >
-                            {notification.title}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {notification.time}
-                          </p>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {notification.desc}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="px-6 py-4 border-t border-gray-200 text-center">
-                <button
-                  style={{ color: COLORS.primary }}
-                  className="text-sm font-medium hover:underline"
-                >
-                  View all notifications
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Properties Table (continued from previous code) */}
-          {activeTab === "properties" && (
-            <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th
-                        className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                        onClick={() => handleSort("title")}
-                      >
-                        <div className="flex items-center">
-                          Title
-                          {filterCriteria.sortBy === "title" &&
-                            (filterCriteria.sortDirection === "asc" ? (
-                              <ArrowUp size={14} className="ml-1" />
-                            ) : (
-                              <ArrowDown size={14} className="ml-1" />
-                            ))}
-                        </div>
-                      </th>
-                      <th
-                        className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                        onClick={() => handleSort("price")}
-                      >
-                        <div className="flex items-center">
-                          Price
-                          {filterCriteria.sortBy === "price" &&
-                            (filterCriteria.sortDirection === "asc" ? (
-                              <ArrowUp size={14} className="ml-1" />
-                            ) : (
-                              <ArrowDown size={14} className="ml-1" />
-                            ))}
-                        </div>
-                      </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Location
-                      </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredProperties.map((property) => (
-                      <tr key={property.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="text-sm font-medium text-gray-900 truncate max-w-xs">
-                              {property.title}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            ${property.price.toLocaleString()}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 flex items-center">
-                            <MapPin size={14} className="mr-1 text-gray-400" />
-                            <span className="truncate max-w-[150px]">
-                              {property.location}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 capitalize">
-                            {property.property_type}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              property.is_published
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {property.is_published ? "Published" : "Draft"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleToggleVisibility(property)}
-                              className="text-gray-600 hover:text-gray-900 tooltip"
-                              title={property.is_published ? "Hide" : "Publish"}
-                            >
-                              {property.is_published ? (
-                                <EyeOff size={16} />
-                              ) : (
-                                <Eye size={16} />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => showPropertyAnalytics(property)}
-                              className="text-purple-600 hover:text-purple-900 tooltip"
-                              title="Analytics"
-                            >
-                              <BarChart2 size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleEditProperty(property)}
-                              className="text-blue-600 hover:text-blue-900 tooltip"
-                              title="Edit"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteProperty(property.id)}
-                              className="text-red-600 hover:text-red-900 tooltip"
-                              title="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {filteredProperties.length === 0 && (
-                <div className="py-12 text-center">
-                  <Building2 className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">
-                    No properties found
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {searchTerm ||
-                    filterCriteria.propertyType ||
-                    filterCriteria.priceMin ||
-                    filterCriteria.priceMax
-                      ? "Try changing your search filters"
-                      : "Get started by adding a property"}
-                  </p>
-                  <div className="mt-6">
-                    <button
-                      onClick={() => setCurrentForm("add")}
-                      style={{
-                        backgroundColor: COLORS.primary,
-                        color: COLORS.white,
-                      }}
-                      className="inline-flex items-center px-4 py-2 rounded-md shadow-sm text-sm font-medium"
-                    >
-                      <Plus className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
-                      Add Property
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
+            <NotificationPanel maxHeight="max-h-[calc(100vh-280px)]" />
           )}
         </main>
       </div>
 
+      {/* Modals */}
       {renderPropertyForm()}
       {(currentForm === "addAgent" || currentForm === "editAgent") && (
         <AgentForm
@@ -1928,20 +2571,30 @@ const PropertyDashboard = () => {
           selectedAgent={selectedAgent}
         />
       )}
-
-      {(currentForm === "addAgent" || currentForm === "editAgent") && (
-        <AgentForm
-          currentForm={currentForm === "editAgent" ? "edit" : "add"}
-          setCurrentForm={setCurrentForm}
-          selectedAgent={selectedAgent} // This should come from local state
-        />
-      )}
       {analyticsProperty && (
         <PropertyAnalyticsModal
           property={analyticsProperty}
           onClose={() => setAnalyticsProperty(null)}
         />
       )}
+      {propertyDetailView && (
+        <PropertyDetailModal
+          property={propertyDetailView}
+          onClose={() => setPropertyDetailView(null)}
+          onEdit={handleEditProperty}
+        />
+      )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        confirmStyle={confirmModal.confirmStyle}
+      />
     </div>
   );
 };

@@ -37,6 +37,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { SiFsecure } from "react-icons/si";
+import { LiaAwardSolid } from "react-icons/lia";
 
 // Brand colors
 const COLORS = {
@@ -269,10 +271,14 @@ const ListPropertyPage = () => {
                     >
                       <option value="house">House</option>
                       <option value="apartment">Apartment</option>
-                      <option value="villa">Villa</option>
-                      <option value="townhouse">Townhouse</option>
-                      <option value="commercial">Commercial</option>
+                      <option value="flat">Flat</option>
                       <option value="land">Land</option>
+                      <option value="commercial">Commercial</option>
+                      <option value="villa">Villa</option>
+                      <option value="cluster">Cluster</option>
+                      <option value="stand">Stand</option>
+                      <option value="duplex">Duplex</option>
+                      <option value="townhouse">Townhouse</option>
                     </select>
                   </div>
                 </div>

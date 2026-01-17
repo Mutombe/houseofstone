@@ -1,190 +1,242 @@
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { motion } from 'framer-motion';
-import { Share2, Copy, Check, Facebook, Twitter, Linkedin } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Share2,
+  Copy,
+  Check,
+  Facebook,
+  Twitter,
+  Linkedin,
+  X,
+  Link2,
+  MapPin,
+} from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
-import { shareProperty } from '../../redux/slices/propertySlice';
+import { IoCheckmarkDoneCircleOutline } from "react-icons/io5";
+import { FaXTwitter } from "react-icons/fa6";
 
 const PropertyShareModal = ({ property, isOpen, onClose }) => {
-  const dispatch = useDispatch();
-  const [shareLink, setShareLink] = useState('');
   const [copied, setCopied] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState(null);
 
-  // Generate a share link for the property
-  const generateShareLink = async () => {
-    if (!property || isGenerating) return;
-    
-    setIsGenerating(true);
-    setError(null);
-    
-    try {
-      const resultAction = await dispatch(shareProperty(property.id));
-      if (shareProperty.fulfilled.match(resultAction)) {
-        setShareLink(resultAction.payload.share_link);
-      } else {
-        setError('You`re not logged in');
-      }
-    } catch (err) {
-      setError('An error occurred. Please try again.');
-    } finally {
-      setIsGenerating(false);
+  // Generate the share link from the current URL
+  const shareLink = property ? `${window.location.origin}/properties/${property.id}` : "";
+
+  // Reset copied state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setCopied(false);
     }
-  };
+  }, [isOpen]);
 
   // Copy the share link to clipboard
   const copyToClipboard = () => {
     if (!shareLink) return;
-    
-    navigator.clipboard.writeText(shareLink)
+
+    navigator.clipboard
+      .writeText(shareLink)
       .then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       })
-      .catch(() => {
-        setError('Failed to copy to clipboard');
+      .catch((err) => {
+        console.error("Failed to copy:", err);
       });
   };
 
   // Get social sharing links
   const getSocialShareUrl = (platform) => {
-    if (!shareLink) return '#';
-    
+    if (!shareLink) return "#";
+
     const text = `Check out this property: ${property.title}`;
-    
+
     switch (platform) {
-      case 'whatsapp':
-        return `https://wa.me/?text=${encodeURIComponent(text + ' ' + shareLink)}`;
-      case 'facebook':
+      case "whatsapp":
+        return `https://wa.me/?text=${encodeURIComponent(text + " " + shareLink)}`;
+      case "facebook":
         return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareLink)}`;
-      case 'twitter':
+      case "twitter":
         return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareLink)}`;
-      case 'linkedin':
+      case "linkedin":
         return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareLink)}`;
       default:
-        return '#';
+        return "#";
     }
   };
 
-  if (!isOpen) return null;
+  // Social platform config
+  const socialPlatforms = [
+    {
+      name: "WhatsApp",
+      platform: "whatsapp",
+      icon: FaWhatsapp,
+      bgColor: "bg-green-500",
+      hoverColor: "hover:bg-green-600",
+    },
+    {
+      name: "Facebook",
+      platform: "facebook",
+      icon: Facebook,
+      bgColor: "bg-blue-600",
+      hoverColor: "hover:bg-blue-700",
+    },
+    {
+      name: "Twitter",
+      platform: "twitter",
+      icon: FaXTwitter,
+      bgColor: "bg-sky-500",
+      hoverColor: "hover:bg-sky-600",
+    },
+    {
+      name: "LinkedIn",
+      platform: "linkedin",
+      icon: Linkedin,
+      bgColor: "bg-blue-700",
+      hoverColor: "hover:bg-blue-800",
+    },
+  ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
-      onClick={onClose}
-    >
-      <motion.div 
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-white rounded-xl p-6 max-w-md w-full mx-4"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-stone-900">Share Property</h2>
-          <button 
-            className="text-stone-500 hover:text-stone-900"
-            onClick={onClose}
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="bg-[#0A1628] border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <div className="mb-6">
-          <div className="bg-stone-100 rounded-lg p-4 mb-4">
-            <p className="font-medium text-stone-900">{property?.title}</p>
-            <p className="text-stone-600 text-sm">{property?.location}</p>
-          </div>
-          
-          {!shareLink ? (
-            <button
-              onClick={generateShareLink}
-              disabled={isGenerating}
-              className="w-full bg-stone-900 text-white py-3 rounded-lg hover:bg-stone-800 transition-colors flex items-center justify-center"
-            >
-              {isGenerating ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-5 h-5 mr-2" />
-                  Generate Share Link
-                </>
-              )}
-            </button>
-          ) : (
-            <>
-              <div className="flex mb-4">
-                <input
-                  type="text"
-                  value={shareLink}
-                  readOnly
-                  className="flex-1 px-4 py-2 rounded-l-lg border border-stone-200 focus:outline-none"
-                />
-                <button
-                  onClick={copyToClipboard}
-                  className="bg-stone-900 text-white px-4 rounded-r-lg hover:bg-stone-800 transition-colors flex items-center justify-center"
-                >
-                  {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                </button>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#C9A962]/10 rounded-xl flex items-center justify-center">
+                  <Share2 className="w-5 h-5 text-[#C9A962]" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Share Property</h2>
               </div>
-              
-              <div className="mb-4">
-                <p className="text-stone-600 mb-2">Share via:</p>
-                <div className="flex space-x-4">
-                  <a
-                    href={getSocialShareUrl('whatsapp')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-colors"
-                  >
-                    <FaWhatsapp className="w-5 h-5" />
-                  </a>
-                  <a
-                    href={getSocialShareUrl('facebook')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors"
-                  >
-                    <Facebook className="w-5 h-5" />
-                  </a>
-                  <a
-                    href={getSocialShareUrl('twitter')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-blue-400 text-white p-2 rounded-full hover:bg-blue-500 transition-colors"
-                  >
-                    <Twitter className="w-5 h-5" />
-                  </a>
-                  <a
-                    href={getSocialShareUrl('linkedin')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-blue-700 text-white p-2 rounded-full hover:bg-blue-800 transition-colors"
-                  >
-                    <Linkedin className="w-5 h-5" />
-                  </a>
+              <button
+                className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-300"
+                onClick={onClose}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Property Preview */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
+              <div className="flex gap-4">
+                {property?.images?.[0] && (
+                  <img
+                    src={property.images[0].image}
+                    alt={property.title}
+                    className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-white truncate mb-1">
+                    {property?.title}
+                  </h3>
+                  <div className="flex items-center gap-1 text-gray-400 text-sm">
+                    <MapPin className="w-3 h-3 text-[#C9A962]" />
+                    <span className="truncate">{property?.location}</span>
+                  </div>
+                  {property?.price && (
+                    <div className="text-[#C9A962] font-semibold mt-2">
+                      ${property.price.toLocaleString()}
+                    </div>
+                  )}
                 </div>
               </div>
-            </>
-          )}
-          
-          {error && (
-            <div className="text-red-500 text-sm mt-2">
-              {error}
             </div>
-          )}
-        </div>
-      </motion.div>
-    </motion.div>
+
+            {/* Content */}
+            <div className="space-y-6">
+              {/* Share Link Input */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">
+                  Share Link
+                </label>
+                <div className="flex">
+                  <div className="flex-1 flex items-center gap-2 bg-white/5 border border-white/10 rounded-l-xl px-4 py-3">
+                    <Link2 className="w-4 h-4 text-[#C9A962] flex-shrink-0" />
+                    <input
+                      type="text"
+                      value={shareLink}
+                      readOnly
+                      className="flex-1 bg-transparent text-white text-sm focus:outline-none truncate"
+                    />
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={copyToClipboard}
+                    className={`px-4 rounded-r-xl flex items-center justify-center transition-all duration-300 ${
+                      copied
+                        ? "bg-green-500 text-white"
+                        : "bg-[#C9A962] text-[#0A1628] hover:bg-[#B8985A]"
+                    }`}
+                  >
+                    {copied ? (
+                      <IoCheckmarkDoneCircleOutline className="w-5 h-5" />
+                    ) : (
+                      <Copy className="w-5 h-5" />
+                    )}
+                  </motion.button>
+                </div>
+                {copied && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-green-400 text-xs mt-2"
+                  >
+                    Link copied to clipboard!
+                  </motion.p>
+                )}
+              </div>
+
+              {/* Social Share */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-3">
+                  Share via social media
+                </label>
+                <div className="grid grid-cols-4 gap-3">
+                  {socialPlatforms.map((social) => {
+                    const Icon = social.icon;
+                    return (
+                      <motion.a
+                        key={social.platform}
+                        whileHover={{ scale: 1.1, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        href={getSocialShareUrl(social.platform)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${social.bgColor} ${social.hoverColor} text-white p-3 rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg`}
+                      >
+                        <Icon className="w-5 h-5" />
+                      </motion.a>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Note */}
+            <div className="mt-6 pt-4 border-t border-white/10">
+              <p className="text-gray-500 text-xs text-center">
+                Share this property with friends and family via link or social media.
+              </p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

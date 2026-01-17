@@ -28,7 +28,8 @@ const userSlice = createSlice({
       })
       .addCase(fetchUsers.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.list = action.payload.results;
+        // Handle both paginated and non-paginated responses
+        state.list = action.payload.results || action.payload || [];
       })
       .addCase(fetchUsers.rejected, (state, action) => {
         state.status = 'failed';

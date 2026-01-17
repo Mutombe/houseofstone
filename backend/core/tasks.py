@@ -4,6 +4,7 @@ from .models import Property, PropertyAlert, PropertyImage
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
+from django.db.models import Count
 import logging
 
 logger = logging.getLogger(__name__)
@@ -145,3 +146,152 @@ def send_weekly_summary():
             logger.info("Weekly summary sent successfully")
     except Exception as e:
         logger.error(f"Error sending weekly summary: {str(e)}")
+
+@shared_task
+def aggregate_daily_stats():
+    """
+    Aggregate PropertyInteraction records into PropertyStat for efficient dashboard queries.
+    Runs daily at 1 AM to aggregate the previous day's interactions.
+    """
+    from .models import PropertyInteraction, PropertyStat
+    from datetime import date
+
+    try:
+        # Aggregate yesterday's interactions
+        yesterday = date.today() - timedelta(days=1)
+
+        # Get all interactions from yesterday grouped by property and type
+        interactions = PropertyInteraction.objects.filter(
+            timestamp__date=yesterday
+        ).values('property_id', 'interaction_type').annotate(
+            count=Count('id')
+        )
+
+        # Group by property
+        property_stats = {}
+        for interaction in interactions:
+            prop_id = interaction['property_id']
+            if prop_id not in property_stats:
+                property_stats[prop_id] = {
+                    'views': 0,
+                    'inquiries': 0,
+                    'favorites': 0,
+                    'shares': 0
+                }
+
+            interaction_type = interaction['interaction_type']
+            count = interaction['count']
+
+            if interaction_type == 'view':
+                property_stats[prop_id]['views'] = count
+            elif interaction_type == 'inquiry':
+                property_stats[prop_id]['inquiries'] = count
+            elif interaction_type == 'favorite':
+                property_stats[prop_id]['favorites'] = count
+            elif interaction_type == 'share':
+                property_stats[prop_id]['shares'] = count
+
+        # Create or update PropertyStat records
+        created_count = 0
+        updated_count = 0
+
+        for prop_id, stats in property_stats.items():
+            stat, created = PropertyStat.objects.update_or_create(
+                property_id=prop_id,
+                date=yesterday,
+                defaults=stats
+            )
+            if created:
+                created_count += 1
+            else:
+                updated_count += 1
+
+        logger.info(
+            f"Daily stats aggregation completed: {created_count} created, "
+            f"{updated_count} updated for {yesterday}"
+        )
+        return {
+            'date': str(yesterday),
+            'created': created_count,
+            'updated': updated_count
+        }
+
+    except Exception as e:
+        logger.error(f"Error aggregating daily stats: {str(e)}")
+        raise
+
+@shared_task
+def backfill_property_stats(days=30):
+    """
+    One-time task to backfill PropertyStat from historical PropertyInteraction data.
+    Run manually: celery call core.tasks.backfill_property_stats --args='[30]'
+    """
+    from .models import PropertyInteraction, PropertyStat
+    from datetime import date
+
+    try:
+        end_date = date.today() - timedelta(days=1)
+        start_date = end_date - timedelta(days=days)
+
+        total_created = 0
+        total_updated = 0
+
+        # Process each day
+        current_date = start_date
+        while current_date <= end_date:
+            interactions = PropertyInteraction.objects.filter(
+                timestamp__date=current_date
+            ).values('property_id', 'interaction_type').annotate(
+                count=Count('id')
+            )
+
+            property_stats = {}
+            for interaction in interactions:
+                prop_id = interaction['property_id']
+                if prop_id not in property_stats:
+                    property_stats[prop_id] = {
+                        'views': 0,
+                        'inquiries': 0,
+                        'favorites': 0,
+                        'shares': 0
+                    }
+
+                interaction_type = interaction['interaction_type']
+                count = interaction['count']
+
+                if interaction_type == 'view':
+                    property_stats[prop_id]['views'] = count
+                elif interaction_type == 'inquiry':
+                    property_stats[prop_id]['inquiries'] = count
+                elif interaction_type == 'favorite':
+                    property_stats[prop_id]['favorites'] = count
+                elif interaction_type == 'share':
+                    property_stats[prop_id]['shares'] = count
+
+            for prop_id, stats in property_stats.items():
+                stat, created = PropertyStat.objects.update_or_create(
+                    property_id=prop_id,
+                    date=current_date,
+                    defaults=stats
+                )
+                if created:
+                    total_created += 1
+                else:
+                    total_updated += 1
+
+            current_date += timedelta(days=1)
+
+        logger.info(
+            f"Backfill completed: {total_created} created, {total_updated} updated "
+            f"from {start_date} to {end_date}"
+        )
+        return {
+            'start_date': str(start_date),
+            'end_date': str(end_date),
+            'created': total_created,
+            'updated': total_updated
+        }
+
+    except Exception as e:
+        logger.error(f"Error backfilling property stats: {str(e)}")
+        raise

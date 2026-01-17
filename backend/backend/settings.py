@@ -30,21 +30,37 @@ ALLOWED_HOSTS = [
 CORS_ALLOWED_ORIGINS = [
     'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
-     'https://houseofstone-frontend.onrender.com',
+    'https://houseofstone-frontend.onrender.com',
     'https://houseofstone-backend.onrender.com',
     'https://houseofstone-backend1.onrender.com',
     'http://localhost:5173',
-    'http://127.0.0.1:5173'
+    'http://localhost:5174',
+    'http://localhost:5175',
+    'http://localhost:5176',
+    'http://localhost:5177',
+    'http://localhost:5178',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5177',
+    'http://127.0.0.1:3000',
 ]
 
 CORS_TRUSTED_ORIGINS = [
     'https://hsp.co.zw',
     'https://houseofstone.onrender.com',
-     'https://houseofstone-frontend.onrender.com',
+    'https://houseofstone-frontend.onrender.com',
     'https://houseofstone-backend.onrender.com',
     'https://houseofstone-backend1.onrender.com',
     'http://localhost:5173',
-    'http://127.0.0.1:5173'
+    'http://localhost:5174',
+    'http://localhost:5175',
+    'http://localhost:5176',
+    'http://localhost:5177',
+    'http://localhost:5178',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5177',
+    'http://127.0.0.1:3000',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -202,6 +218,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'core.tasks.cleanup_old_shares',
         'schedule': crontab(minute=0, hour=2),  # Daily at 2 AM
     },
+    'aggregate-daily-stats': {
+        'task': 'core.tasks.aggregate_daily_stats',
+        'schedule': crontab(hour=1, minute=0),  # Daily at 1 AM
+    },
 }
 
 # Logging configuration
@@ -299,9 +319,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        
     ],
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
@@ -330,12 +348,53 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-import os
 
-STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# DigitalOcean Spaces Configuration
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', 'DO00Y7P86G72BG7NLX3X')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '7SDVxpTVCyglkO0UknCsR2MO7lH7wVvozKgJOsU4o5Q')
+AWS_STORAGE_BUCKET_NAME = 'hspmedia'
+AWS_S3_REGION_NAME = 'sgp1'
+AWS_S3_ENDPOINT_URL = f'https://{AWS_S3_REGION_NAME}.digitaloceanspaces.com'
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.{AWS_S3_REGION_NAME}.cdn.digitaloceanspaces.com'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+AWS_DEFAULT_ACL = 'public-read'
+AWS_S3_FILE_OVERWRITE = False
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+
+# Use DigitalOcean Spaces for production
+USE_SPACES = os.environ.get('USE_SPACES', 'True').lower() == 'true'
+
+if USE_SPACES:
+    # Static files
+    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
+    STATICFILES_STORAGE = 'dospace.storage.StaticStorage'
+
+    # Media files
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+    DEFAULT_FILE_STORAGE = 'dospace.storage.MediaStorage'
+
+    # Storage backends configuration (Django 4.2+)
+    STORAGES = {
+        "default": {
+            "BACKEND": "dospace.storage.MediaStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "dospace.storage.StaticStorage",
+        },
+    }
+else:
+    # Local development storage
+    STATIC_URL = '/static/'
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Local directories (still needed for collectstatic source)
+STATICFILES_DIRS = [BASE_DIR / 'staticfiles'] if (BASE_DIR / 'staticfiles').exists() else []
+MEDIA_ROOT_LOCAL = BASE_DIR / 'media'
 
 
 # Default primary key field type

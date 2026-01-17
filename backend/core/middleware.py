@@ -28,26 +28,94 @@ class DatabaseOptimizationMiddleware:
         return response
 
 class InteractionTrackingMiddleware:
+    """
+    Enhanced middleware to track property interactions:
+    - Views (GET /properties/{id}/)
+    - Shares (POST /properties/{id}/share/)
+    - Inquiries (POST /properties/{id}/inquiry/)
+    - Favorites (POST /favorites/)
+    """
+
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         response = self.get_response(request)
-        
-        if request.path.startswith('/api/properties/') and request.method == 'GET':
-            property_id = request.path.split('/')[-2]
-            if property_id.isdigit():
-                self.record_interaction(request, int(property_id))
-                
+
+        try:
+            # Track property views
+            if self._is_property_detail_view(request):
+                property_id = self._extract_property_id(request.path)
+                if property_id:
+                    self._record_interaction(request, property_id, 'view')
+
+            # Track favorites (only successful creates)
+            elif self._is_favorite_create(request, response):
+                property_id = self._get_property_from_request_body(request)
+                if property_id:
+                    self._record_interaction(request, property_id, 'favorite')
+
+        except Exception as e:
+            logger.error(f"Error tracking interaction: {str(e)}")
+
         return response
 
-    def record_interaction(self, request, property_id):
+    def _is_property_detail_view(self, request):
+        """Check if this is a property detail view request"""
+        import re
+        # Match /properties/{id}/ or /public/properties/{id}/
+        pattern = r'^/(properties|public/properties)/\d+/?$'
+        return request.method == 'GET' and re.match(pattern, request.path)
+
+    def _is_favorite_create(self, request, response):
+        """Check if this is a successful favorite creation"""
+        return (
+            request.method == 'POST' and
+            request.path.rstrip('/') == '/favorites' and
+            response.status_code in [200, 201]
+        )
+
+    def _extract_property_id(self, path):
+        """Extract property ID from URL path"""
+        import re
+        match = re.search(r'/properties/(\d+)', path)
+        if match:
+            return int(match.group(1))
+        return None
+
+    def _get_property_from_request_body(self, request):
+        """Extract property ID from request body"""
+        try:
+            import json
+            if hasattr(request, 'body'):
+                data = json.loads(request.body.decode('utf-8'))
+                return data.get('property')
+        except (json.JSONDecodeError, AttributeError):
+            pass
+        return None
+
+    def _record_interaction(self, request, property_id, interaction_type):
+        """Record the interaction in the database"""
+        from .models import Property
+
+        # Verify property exists
+        if not Property.objects.filter(id=property_id).exists():
+            return
+
+        # Get session key, create session if needed
+        session_key = ''
+        if hasattr(request, 'session'):
+            if not request.session.session_key:
+                request.session.create()
+            session_key = request.session.session_key or ''
+
         PropertyInteraction.objects.create(
             user=request.user if request.user.is_authenticated else None,
             property_id=property_id,
-            interaction_type='view',
-            session_key=request.session.session_key
+            interaction_type=interaction_type,
+            session_key=session_key
         )
+        logger.debug(f"Recorded {interaction_type} interaction for property {property_id}")
 
 class AdminActionLoggingMiddleware(MiddlewareMixin):
     """

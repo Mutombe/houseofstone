@@ -1,7 +1,7 @@
 // website/src/utils/api.js
 
 import axios from "axios";
-import { logout } from "../redux/slices/authSlice";
+import { logout, setSessionExpired } from "../redux/slices/authSlice";
 
 // Store reference for dispatching actions
 let store;
@@ -17,12 +17,14 @@ const debouncedSearch = debounce((searchTerm, callback) => {
   propertyAPI.getAll({ search: searchTerm }).then(callback);
 }, 300);
 
+// API Base URL - use local backend in development
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8001/";
+
 // Centralized token refresh function
 export const refreshTokens = async (refresh) => {
   try {
-    const baseUrl = "https://houseofstone-backend1.onrender.com/";
     const { data } = await axios.post(
-      `${baseUrl}core/auth/refresh/`,
+      `${API_BASE_URL}core/auth/refresh/`,
       { refresh },
       {
         headers: {
@@ -42,7 +44,7 @@ export const refreshTokens = async (refresh) => {
 
 // Enhanced API utilities WITHOUT caching
 const api = axios.create({
-  baseURL: "https://houseofstone-backend1.onrender.com/",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -52,7 +54,7 @@ const api = axios.create({
 });
 
 const publicApi = axios.create({
-  baseURL: "https://houseofstone-backend1.onrender.com/",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -78,11 +80,14 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+// Slow request threshold (ms)
+const SLOW_REQUEST_THRESHOLD = 5000;
+
 // Enhanced request interceptor
 api.interceptors.request.use((config) => {
   const auth = JSON.parse(localStorage.getItem("auth"));
   const token = auth?.access;
-  
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -91,12 +96,25 @@ api.interceptors.request.use((config) => {
     config.headers["Content-Type"] = "multipart/form-data";
   }
 
+  // Track request start time for slow request detection
+  config.metadata = { startTime: Date.now() };
+
   return config;
 });
 
 // Enhanced response interceptor with token refresh logic
 api.interceptors.response.use(
   (response) => {
+    // Check if request was slow
+    if (response.config.metadata?.startTime) {
+      const duration = Date.now() - response.config.metadata.startTime;
+      if (duration > SLOW_REQUEST_THRESHOLD) {
+        // Emit slow request event
+        window.dispatchEvent(new CustomEvent('slowRequest', {
+          detail: { duration, url: response.config.url }
+        }));
+      }
+    }
     return response;
   },
   async (error) => {
@@ -147,21 +165,23 @@ api.interceptors.response.use(
           // Refresh failed - log user out
           processQueue(refreshError, null);
           isRefreshing = false;
-          
+
           // Clear auth data
           localStorage.removeItem("auth");
-          
-          // Dispatch logout action if store is available
+
+          // Dispatch session expired and logout actions if store is available
           if (store) {
+            store.dispatch(setSessionExpired(true));
             store.dispatch(logout());
           }
-          
+
           // Show user-friendly message
           console.error("Session expired. Please log in again.");
-          
+
           return Promise.reject({
             ...refreshError,
             isAuthError: true,
+            isSessionExpired: true,
             message: "Your session has expired. Please log in again."
           });
         }
@@ -169,14 +189,16 @@ api.interceptors.response.use(
         // No refresh token available - user needs to login
         isRefreshing = false;
         localStorage.removeItem("auth");
-        
+
         if (store) {
+          store.dispatch(setSessionExpired(true));
           store.dispatch(logout());
         }
-        
+
         return Promise.reject({
           ...error,
           isAuthError: true,
+          isSessionExpired: true,
           message: "Please log in to continue."
         });
       }
@@ -184,16 +206,48 @@ api.interceptors.response.use(
 
     // Handle other types of errors
     if (error.code === 'ECONNABORTED') {
+      // Emit slow request event for timeouts
+      window.dispatchEvent(new CustomEvent('slowRequest', {
+        detail: { duration: 'timeout', url: error.config?.url }
+      }));
       return Promise.reject({
         ...error,
-        message: "Request timeout. Please try again."
+        isNetworkError: true,
+        message: "Request timeout. Please check your connection and try again."
+      });
+    }
+
+    // Handle network errors (no internet)
+    if (error.code === 'ERR_NETWORK' || !navigator.onLine) {
+      return Promise.reject({
+        ...error,
+        isNetworkError: true,
+        isOffline: true,
+        message: "Unable to connect. Please check your internet connection."
       });
     }
 
     if (error.response?.status >= 500) {
       return Promise.reject({
         ...error,
-        message: "Server error. Please try again later."
+        isServerError: true,
+        message: "Server error. Our team has been notified. Please try again later."
+      });
+    }
+
+    if (error.response?.status === 429) {
+      return Promise.reject({
+        ...error,
+        isRateLimited: true,
+        message: "Too many requests. Please wait a moment and try again."
+      });
+    }
+
+    if (error.response?.status === 404) {
+      return Promise.reject({
+        ...error,
+        isNotFound: true,
+        message: "The requested resource was not found."
       });
     }
 
@@ -213,7 +267,7 @@ export const propertyAPI = {
   getAll: async (params = {}) => {
     try {
       // First try without authentication for public endpoints
-      const response = await axios.get("https://houseofstone-backend1.onrender.com/properties/", {
+      const response = await axios.get(`${API_BASE_URL}properties/`, {
         params,
         headers: {
           "Content-Type": "application/json",
@@ -229,9 +283,9 @@ export const propertyAPI = {
           // We have a token that's causing issues, clear it and retry
           console.log("Clearing invalid token and retrying...");
           clearInvalidAuth();
-          
+
           // Retry without authentication
-          return axios.get("https://houseofstone-backend1.onrender.com/properties/", {
+          return axios.get(`${API_BASE_URL}properties/`, {
             params,
             headers: {
               "Content-Type": "application/json",
@@ -244,45 +298,16 @@ export const propertyAPI = {
     }
   },
 
-    getAllAdmin: async (params = {}) => {
-    try {
-      // First try without authentication for public endpoints
-      const response = await axios.get("https://houseofstone-backend1.onrender.com/public/properties/", {
-        params,
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      });
-      return response;
-    } catch (error) {
-      // If we get a 403, it might be because we're sending a bad token
-      if (error.response?.status === 403) {
-        const auth = JSON.parse(localStorage.getItem("auth"));
-        if (auth?.access) {
-          // We have a token that's causing issues, clear it and retry
-          console.log("Clearing invalid token and retrying...");
-          clearInvalidAuth();
-          
-          // Retry without authentication
-          return axios.get("https://houseofstone-backend1.onrender.com/public/properties/", {
-            params,
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          });
-        }
-      }
-      throw error;
-    }
+  getAllAdmin: async (params = {}) => {
+    // Use authenticated endpoint to get ALL properties (including unpublished)
+    return api.get('/properties/', { params });
   },
 
   getById: async (id) => {
     try {
       // Try public endpoint first for shared links
       const response = await axios.get(
-        `https://houseofstone-backend1.onrender.com/public/properties/${id}/`,
+        `${API_BASE_URL}public/properties/${id}/`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -310,8 +335,13 @@ export const propertyAPI = {
   delete: (id) => api.delete(`/properties/${id}/`),
   getUserProperties: (userId) => api.get("/properties/", { params: { user_id: userId } }),
   getStats: (id) => api.get(`/properties/${id}/stats/`),
-  share: (id) => api.post(`/properties/${id}/share/`),
+  // Share works for both authenticated and unauthenticated users
+  share: (id) => publicApi.post(`/properties/${id}/share/`),
   getShared: (token) => publicApi.get(`/shared-properties/${token}/`),
+  // Inquiry works for both authenticated and unauthenticated users
+  inquiry: (id, data) => publicApi.post(`/properties/${id}/inquiry/`, data),
+  // Filter options (cached on server)
+  getFilterOptions: () => publicApi.get('/properties/filter-options/'),
 };
 
 export const alertAPI = {

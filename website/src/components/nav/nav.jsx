@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { NavLink, Link, useNavigate } from "react-router-dom";
+// src/components/nav/nav.jsx
+// Premium Navigation Component - House of Stone Properties
+import React, { useState, useEffect, useRef } from "react";
+import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   User,
   LogIn,
@@ -12,6 +14,7 @@ import {
   Briefcase,
   BookOpen,
   ChevronDown,
+  ChevronRight,
   BarChart,
   Banknote,
   TrendingUp,
@@ -21,1763 +24,874 @@ import {
   Menu,
   X,
   Home,
-  Bell,
-  AlertCircle,
-  AtSign,
-  Lock,
-  ChartNoAxesColumn,
-  BarChart2,
   MapPin,
-  MapIcon,
-  Calendar,
   PlusCircle,
   FileText,
   Download,
   Calculator,
-  ArrowRight,
-  DollarSign,
-  ShoppingCart,
+  Building,
 } from "lucide-react";
-import { MdManageAccounts } from "react-icons/md";
-import { FaPeopleGroup } from "react-icons/fa6";
-import { IoIosPeople } from "react-icons/io";
-import { CgMenuRight } from "react-icons/cg";
-// Material UI
-import {
-  Dialog,
-  TextField,
-  Divider,
-  Button,
-  Snackbar,
-  Alert,
-} from "@mui/material";
+import { GiWorld } from "react-icons/gi";
+import { PiUserCircleDashedBold } from "react-icons/pi";
+import { TbUserScan } from "react-icons/tb";
+import { BiUserCircle } from "react-icons/bi";
+import { GiTakeMyMoney } from "react-icons/gi";
+import { BsHouseCheck } from "react-icons/bs";
+import { GiHouseKeys } from "react-icons/gi";
+import { SiFsecure } from "react-icons/si";
+import { MdOutlineDashboard } from "react-icons/md";
+import { LiaPeopleCarrySolid } from "react-icons/lia";
+
+
 
 // Redux actions
 import { logout, login, register } from "../../redux/slices/authSlice";
 
-/**
- * Auth header component for login/register screens
- */
-export function AuthHeader({ view }) {
+// Brand Colors
+const COLORS = {
+  navy: "#0A1628",
+  navyLight: "#1F2E44",
+  gold: "#C9A962",
+  goldLight: "#D4B978",
+  goldDark: "#B8985A",
+};
+
+// Floating Orb Background
+const FloatingOrb = ({ className, delay = 0 }) => (
+  <motion.div
+    className={`absolute rounded-full blur-3xl opacity-20 ${className}`}
+    animate={{
+      scale: [1, 1.2, 1],
+      opacity: [0.1, 0.2, 0.1],
+    }}
+    transition={{
+      duration: 8,
+      repeat: Infinity,
+      delay,
+      ease: "easeInOut",
+    }}
+  />
+);
+
+// Magnetic Button Component
+const MagneticButton = ({ children, className, onClick, ...props }) => {
+  const ref = useRef(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouse = (e) => {
+    const { clientX, clientY } = e;
+    const { left, top, width, height } = ref.current.getBoundingClientRect();
+    const x = (clientX - left - width / 2) * 0.3;
+    const y = (clientY - top - height / 2) * 0.3;
+    setPosition({ x, y });
+  };
+
+  const reset = () => setPosition({ x: 0, y: 0 });
+
   return (
-    <div className="text-center">
-      {/* Blue background container for logo */}
-      <div className="mx-auto w-24 h-20 mb-6 bg-slate-800 rounded-2xl flex items-center justify-center shadow-lg">
-        <img
-          src="/logo2.webp"
-          alt="HSP Logo"
-          className="w-16 h-12 object-contain filter brightness-110"
-        />
-      </div>
-      <h2 className="text-3xl font-bold bg-slate-800 bg-clip-text text-transparent mb-3">
-        {view === "login" ? "Welcome Back!" : "Join HSP"}
-      </h2>
-      <p className="text-gray-600 text-lg">
-        {view === "login"
-          ? "Sign in to continue to your account"
-          : "Create your free HSP account"}
-      </p>
+    <motion.button
+      ref={ref}
+      onMouseMove={handleMouse}
+      onMouseLeave={reset}
+      onClick={onClick}
+      animate={{ x: position.x, y: position.y }}
+      transition={{ type: "spring", stiffness: 350, damping: 15 }}
+      className={className}
+      {...props}
+    >
+      {children}
+    </motion.button>
+  );
+};
+
+// Animated Logo
+const AnimatedLogo = ({ scrolled }) => (
+  <Link to="/" className="relative group flex-shrink-0">
+    <motion.div
+      className="relative z-10"
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+    >
+      <img
+        src="/logo.png"
+        alt="House of Stone Properties"
+        className="h-8 sm:h-10 lg:h-12 w-auto transition-all duration-500"
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = "/logo2.webp";
+        }}
+      />
+    </motion.div>
+
+    {/* Glow effect on hover */}
+    <motion.div
+      className="absolute inset-0 bg-[#C9A962]/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+      initial={false}
+    />
+  </Link>
+);
+
+// Premium Navigation Link
+const NavItem = ({ to, label, icon: Icon, scrolled, isActive, onClick }) => (
+  <NavLink
+    to={to}
+    onClick={onClick}
+    className="relative group"
+  >
+    {({ isActive: active }) => (
+      <motion.div
+        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+          active
+            ? scrolled
+              ? "text-[#C9A962]"
+              : "text-[#C9A962]"
+            : scrolled
+            ? "text-white/80 hover:text-white"
+            : "text-white/90 hover:text-white"
+        }`}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        {Icon && (
+          <Icon className={`w-4 h-4 transition-transform group-hover:scale-110 ${
+            active ? "text-[#C9A962]" : ""
+          }`} />
+        )}
+        <span>{label}</span>
+
+        {/* Active indicator 
+        {active && (
+          <motion.div
+            layoutId="activeNavIndicator"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#C9A962] rounded-full"
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          />
+        )}*/}
+      </motion.div>
+    )}
+  </NavLink>
+);
+
+// Dropdown Menu Component
+const DropdownMenu = ({ label, icon: Icon, items, scrolled, isOpen, onToggle }) => {
+  const dropdownRef = useRef(null);
+
+  return (
+    <div
+      className="relative"
+      ref={dropdownRef}
+      onMouseEnter={() => onToggle(true)}
+      onMouseLeave={() => onToggle(false)}
+    >
+      <motion.button
+        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+          isOpen
+            ? scrolled
+              ? "text-[#C9A962] bg-white/5"
+              : "text-white bg-white/10"
+            : scrolled
+            ? "text-white/80 hover:text-white"
+            : "text-white/90 hover:text-white"
+        }`}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        {Icon && <Icon className="w-4 h-4" />}
+        <span>{label}</span>
+        <motion.div
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown className="w-4 h-4" />
+        </motion.div>
+      </motion.button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="absolute top-full left-0 mt-2 w-72 z-50"
+          >
+            {/* Glassmorphism dropdown */}
+            <div className="bg-[#0A1628]/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/20 overflow-hidden">
+              {/* Gold accent line */}
+              <div className="h-0.5 bg-gradient-to-r from-transparent via-[#C9A962] to-transparent" />
+
+              <div className="p-2">
+                {items.map((item, index) => (
+                  <motion.div
+                    key={item.path}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <Link
+                      to={item.path}
+                      className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-all duration-200 group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-[#C9A962]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#C9A962]/20 transition-colors">
+                        <item.icon className="w-5 h-5 text-[#C9A962]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium text-sm group-hover:text-[#C9A962] transition-colors">
+                          {item.label}
+                        </p>
+                        {item.description && (
+                          <p className="text-white/50 text-xs mt-0.5 line-clamp-1">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-[#C9A962] transition-colors opacity-0 group-hover:opacity-100" />
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-}
+};
 
-/**
- * Authentication modals component for login and registration
- */
-export const AuthModals = ({ openType, onClose }) => {
+// Mobile Menu Overlay
+const MobileMenu = ({ isOpen, onClose, navItems, dropdowns, isAuthenticated, user, onLogout, onLogin, onRegister }) => {
+  const [expandedDropdown, setExpandedDropdown] = useState(null);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            onClick={onClose}
+          />
+
+          {/* Menu Panel */}
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed top-0 right-0 h-full w-full sm:max-w-md bg-gradient-to-b from-[#0A1628] to-[#0F1E32] z-50 overflow-hidden"
+          >
+            {/* Decorative elements */}
+            <FloatingOrb className="w-48 sm:w-64 h-48 sm:h-64 bg-[#C9A962] -top-24 sm:-top-32 -right-24 sm:-right-32" />
+            <FloatingOrb className="w-32 sm:w-48 h-32 sm:h-48 bg-[#C9A962] bottom-20 -left-16 sm:-left-24" delay={2} />
+
+            <div className="relative h-full flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
+                <Link to="/" onClick={onClose}>
+                  <img
+                    src="/clogo.png"
+                    alt="HSP"
+                    className="h-8 sm:h-10"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/logo2.webp";
+                    }}
+                  />
+                </Link>
+                <motion.button
+                  onClick={onClose}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white/5 flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <X className="w-5 h-5" />
+                </motion.button>
+              </div>
+
+              {/* Navigation */}
+              <div className="flex-1 overflow-y-auto py-4 sm:py-6 px-3 sm:px-4">
+                <nav className="space-y-1.5 sm:space-y-2">
+                  {/* Main Nav Items */}
+                  {navItems.map((item, index) => (
+                    <motion.div
+                      key={item.path}
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <NavLink
+                        to={item.path}
+                        onClick={onClose}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl transition-all duration-300 ${
+                            isActive
+                              ? "bg-[#C9A962] text-[#0A1628]"
+                              : "text-white hover:bg-white/5 active:bg-white/10"
+                          }`
+                        }
+                      >
+                        <item.icon className="w-5 h-5 flex-shrink-0" />
+                        <span className="font-medium text-sm sm:text-base">{item.label}</span>
+                      </NavLink>
+                    </motion.div>
+                  ))}
+
+                  {/* Dropdowns */}
+                  {dropdowns.map((dropdown, index) => (
+                    <motion.div
+                      key={dropdown.label}
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: (navItems.length + index) * 0.05 }}
+                    >
+                      <button
+                        onClick={() =>
+                          setExpandedDropdown(
+                            expandedDropdown === dropdown.label ? null : dropdown.label
+                          )
+                        }
+                        className={`w-full flex items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl transition-all duration-300 ${
+                          expandedDropdown === dropdown.label
+                            ? "bg-white/10 text-[#C9A962]"
+                            : "text-white hover:bg-white/5 active:bg-white/10"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <dropdown.icon className="w-5 h-5 flex-shrink-0" />
+                          <span className="font-medium text-sm sm:text-base">{dropdown.label}</span>
+                        </div>
+                        <motion.div
+                          animate={{ rotate: expandedDropdown === dropdown.label ? 180 : 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <ChevronDown className="w-5 h-5" />
+                        </motion.div>
+                      </button>
+
+                      <AnimatePresence>
+                        {expandedDropdown === dropdown.label && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="ml-4 sm:ml-6 mt-1.5 sm:mt-2 space-y-1 border-l-2 border-[#C9A962]/30 pl-3 sm:pl-4">
+                              {dropdown.items.map((item) => (
+                                <Link
+                                  key={item.path}
+                                  to={item.path}
+                                  onClick={onClose}
+                                  className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg text-white/70 hover:text-white hover:bg-white/5 active:bg-white/10 transition-all"
+                                >
+                                  <item.icon className="w-4 h-4 text-[#C9A962] flex-shrink-0" />
+                                  <span className="text-xs sm:text-sm">{item.label}</span>
+                                </Link>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Auth Section */}
+              <div className="p-4 sm:p-6 border-t border-white/10 pb-safe">
+                {isAuthenticated ? (
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white/5 rounded-lg sm:rounded-xl">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#C9A962] flex items-center justify-center flex-shrink-0">
+                        <TbUserScan className="w-5 h-5 sm:w-6 sm:h-6 text-[#0A1628]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-white font-medium text-sm sm:text-base truncate">{user?.username || "User"}</p>
+                        <p className="text-white/50 text-xs sm:text-sm">Welcome back!</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        onLogout();
+                        onClose();
+                      }}
+                      className="w-full flex items-center justify-center gap-2 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-colors text-sm sm:text-base"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    <button
+                      onClick={() => {
+                        onLogin();
+                        onClose();
+                      }}
+                      className="flex items-center justify-center gap-2 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-white/20 text-white hover:bg-white/5 active:bg-white/10 transition-colors text-sm sm:text-base"
+                    >
+                      <LogIn className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span>Sign In</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onRegister();
+                        onClose();
+                      }}
+                      className="flex items-center justify-center gap-2 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-[#C9A962] text-[#0A1628] font-medium hover:bg-[#B8985A] active:bg-[#A88949] transition-colors text-sm sm:text-base"
+                    >
+                      <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span>Register</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
+
+// Auth Modal Component
+const AuthModal = ({ type, isOpen, onClose }) => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { status, error } = useSelector((state) => state.auth);
-  const [view, setView] = useState(openType);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "info",
-  });
+  const [view, setView] = useState(type);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     username: "",
   });
 
-  // Update view when openType changes
   useEffect(() => {
-    setView(openType);
-  }, [openType]);
+    setView(type);
+  }, [type]);
 
-  // Reset form data when modal opens
   useEffect(() => {
-    if (openType) {
-      setFormData({
-        email: "",
-        password: "",
-        username: "",
-      });
+    if (isOpen) {
+      setFormData({ email: "", password: "", username: "" });
     }
-  }, [openType]);
+  }, [isOpen]);
 
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
     if (view === "login") {
-      dispatch(
-        login({ username: formData.username, password: formData.password })
-      )
+      dispatch(login({ username: formData.username, password: formData.password }))
         .unwrap()
-        .then(() => {
-          setSnackbar({
-            open: true,
-            message: "You are logged in!",
-            severity: "success",
-          });
-          onClose();
-        })
-        .catch((err) => {
-          console.error("Login Failed:", err);
-        });
+        .then(() => onClose())
+        .catch((err) => console.error("Login failed:", err));
     } else {
       dispatch(register(formData))
         .unwrap()
-        .then((response) => {
-          setSnackbar({
-            open: true,
-            message: "Registration successful. You may Sign-In",
-            severity: "success",
-          });
-
-          // Save auth data to localStorage only if response exists
-          if (response && response.access) {
-            localStorage.setItem(
-              "auth",
-              JSON.stringify({
-                access: response.access,
-                refresh: response.refresh,
-                user: response.user,
-              })
-            );
-          }
-
-          onClose();
-        })
-        .catch((err) => {
-          console.error("Registration Failed:", err);
-        });
+        .then(() => onClose())
+        .catch((err) => console.error("Registration failed:", err));
     }
   };
 
-  const getRegistrationError = () => {
-    if (!error) return null;
-
-    // Check for specific error messages
-    if (typeof error === "object") {
-      if (error.username) return error.username[0];
-      if (error.email) return error.email[0];
-      if (error.detail) return error.detail;
-    }
-
-    // Fallback to generic error message
-    return error.toString();
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleSubmit();
-    }
-  };
+  if (!isOpen) return null;
 
   return (
-    <>
-      <Dialog
-        open={!!openType}
-        onClose={onClose}
-        maxWidth="sm"
-        fullWidth
-        aria-labelledby="auth-dialog-title"
-        PaperProps={{
-          className: "rounded-3xl overflow-hidden shadow-2xl",
-        }}
-      >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="bg-gradient-to-br from-white via-blue-50 to-blue-100"
-        >
-          {/* Header with blue background */}
-          <div className="bg-slate-800 px-8 py-6 text-white">
-            <div className="text-center">
-              {/* Prominent logo on blue background */}
-              <div className="mx-auto w-20 h-16 mb-4 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg border border-white/30">
-                <img
-                  src="/logo2.webp"
-                  alt="HSP Logo"
-                  className="w-14 h-10 object-contain filter brightness-110"
-                />
-              </div>
-              <h2 id="auth-dialog-title" className="text-2xl font-bold mb-2">
-                {view === "login" ? "Welcome Back!" : "Join HSP"}
-              </h2>
-              <p className="text-blue-100 text-sm">
-                {view === "login"
-                  ? "Sign in to continue to your account"
-                  : "Create your free HSP account"}
-              </p>
-            </div>
-          </div>
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
+            onClick={onClose}
+          />
 
-          <div className="px-8 py-6 space-y-6">
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-red-50 border border-red-200 p-4 rounded-xl text-red-700 text-sm"
-              >
-                <div className="flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span>
-                    {view === "register"
-                      ? getRegistrationError()
-                      : typeof error === "object"
-                      ? error.detail || JSON.stringify(error)
-                      : error}
-                  </span>
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-full max-w-md bg-gradient-to-b from-[#0A1628] to-[#0F1E32] rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+              {/* Header */}
+              <div className="relative p-8 text-center">
+                {/* Decorative orb */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-[#C9A962]/20 rounded-full blur-3xl" />
+
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", delay: 0.1 }}
+                  className="relative w-16 h-16 mx-auto mb-4 bg-[#C9A962] rounded-2xl flex items-center justify-center"
+                >
+                  {view === "login" ? (
+                    <LogIn className="w-8 h-8 text-[#0A1628]" />
+                  ) : (
+                    <User className="w-8 h-8 text-[#0A1628]" />
+                  )}
+                </motion.div>
+
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {view === "login" ? "Welcome Back" : "Create Account"}
+                </h2>
+                <p className="text-white/60">
+                  {view === "login"
+                    ? "Sign in to access your account"
+                    : "Join House of Stone Properties"}
+                </p>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-4">
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm"
+                  >
+                    {typeof error === "object" ? error.detail || JSON.stringify(error) : error}
+                  </motion.div>
+                )}
+
+                {view === "register" && (
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#C9A962]" />
+                    <input
+                      type="email"
+                      placeholder="Email address"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:border-[#C9A962] focus:outline-none transition-colors"
+                      required
+                    />
+                  </div>
+                )}
+
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#C9A962]" />
+                  <input
+                    type="text"
+                    placeholder="Username"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:border-[#C9A962] focus:outline-none transition-colors"
+                    required
+                  />
                 </div>
-              </motion.div>
-            )}
 
-            <div className="space-y-5">
-              {view === "register" && (
-                <TextField
-                  fullWidth
-                  label="Email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  onKeyDown={handleKeyDown}
-                  InputProps={{
-                    startAdornment: (
-                      <AtSign className="text-yellow-600 mr-3" size={20} />
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: "12px",
-                      backgroundColor: "white",
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#eab308",
-                        borderWidth: "2px",
-                      },
-                    },
-                    "& .MuiFormLabel-root.Mui-focused": {
-                      color: "#eab308",
-                    },
-                  }}
-                  aria-label="Email"
-                  required
-                />
-              )}
+                <div className="relative">
+                  <SiFsecure className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#C9A962]" />
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:border-[#C9A962] focus:outline-none transition-colors"
+                    required
+                  />
+                </div>
 
-              <TextField
-                fullWidth
-                label="Username"
-                value={formData.username}
-                onChange={(e) =>
-                  setFormData({ ...formData, username: e.target.value })
-                }
-                onKeyDown={handleKeyDown}
-                InputProps={{
-                  startAdornment: (
-                    <User className="text-yellow-500 mr-3" size={20} />
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "12px",
-                    backgroundColor: "white",
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#eab308",
-                      borderWidth: "2px",
-                    },
-                  },
-                  "& .MuiFormLabel-root.Mui-focused": {
-                    color: "#eab308",
-                  },
-                }}
-                aria-label="Username"
-                required
-              />
+                <motion.button
+                  type="submit"
+                  disabled={status === "loading"}
+                  className="w-full py-4 bg-[#C9A962] text-[#0A1628] rounded-xl font-semibold hover:bg-[#B8985A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {status === "loading" ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-5 h-5 border-2 border-[#0A1628] border-t-transparent rounded-full"
+                      />
+                      <span>Processing...</span>
+                    </>
+                  ) : view === "login" ? (
+                    "Sign In"
+                  ) : (
+                    "Create Account"
+                  )}
+                </motion.button>
 
-              <TextField
-                fullWidth
-                label="Password"
-                type="password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                onKeyDown={handleKeyDown}
-                InputProps={{
-                  startAdornment: (
-                    <Lock className="text-yellow-500 mr-3" size={20} />
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "12px",
-                    backgroundColor: "white",
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#eab308",
-                      borderWidth: "2px",
-                    },
-                  },
-                  "& .MuiFormLabel-root.Mui-focused": {
-                    color: "#eab308",
-                  },
-                }}
-                aria-label="Password"
-                required
-              />
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/10" />
+                  </div>
+                  <div className="relative flex justify-center">
+                    <span className="px-4 bg-[#0F1E32] text-white/40 text-sm">or</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setView(view === "login" ? "register" : "login")}
+                  className="w-full py-4 border border-white/10 rounded-xl text-white hover:bg-white/5 transition-colors"
+                >
+                  {view === "login" ? "Create New Account" : "Already have an account? Sign In"}
+                </button>
+              </form>
+
+              {/* Close button */}
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-
-            <Button
-              fullWidth
-              variant="contained"
-              size="large"
-              onClick={handleSubmit}
-              disabled={status === "loading"}
-              sx={{
-                borderRadius: "12px",
-                py: 1.5,
-                background: "#1e293b",
-                fontSize: "16px",
-                fontWeight: 600,
-                textTransform: "none",
-                boxShadow: "0 8px 25px rgba(37, 99, 235, 0.3)",
-                "&:hover": {
-                  background:
-                    "linear-gradient(135deg,rgb(37, 43, 58) 0%,rgb(32, 35, 45) 100%)",
-                  boxShadow: "0 12px 30px rgba(26, 39, 66, 0.4)",
-                },
-                "&:disabled": {
-                  background: "#e5e7eb",
-                  color: "#9ca3af",
-                },
-              }}
-            >
-              {status === "loading" ? (
-                <span className="flex items-center">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Processing...
-                </span>
-              ) : view === "login" ? (
-                "Sign In"
-              ) : (
-                "Create Account"
-              )}
-            </Button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gradient-to-br from-white via-blue-50 to-blue-100 text-gray-500">
-                  or
-                </span>
-              </div>
-            </div>
-
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => setView(view === "login" ? "register" : "login")}
-              sx={{
-                borderRadius: "12px",
-                py: 1.5,
-                color: "#1e293b",
-                borderColor: "#1e293b",
-                fontSize: "16px",
-                fontWeight: 500,
-                textTransform: "none",
-                "&:hover": {
-                  borderColor: "#1d4ed8",
-                  backgroundColor: "#eff6ff",
-                },
-              }}
-            >
-              {view === "login"
-                ? "Create New Account"
-                : "Already have an account? Sign In"}
-            </Button>
-          </div>
-        </motion.div>
-      </Dialog>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-      >
-        <Alert
-          severity={snackbar.severity}
-          className="items-center"
-          iconMapping={{
-            error: <AlertCircle className="w-5 h-5" />,
-          }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 };
 
-/**
- * Main Navbar component
- */
+// Main Navigation Component
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [authModal, setAuthModal] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [authModal, setAuthModal] = useState(null);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+
   const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const [resourcesOpen, setResourcesOpen] = useState(false);
-  const [buyOpen, setBuyOpen] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
-  const [sellOpen, setSellOpen] = useState(false);
   const isAdmin = user?.is_superuser;
   const dispatch = useDispatch();
+  const location = useLocation();
 
-  // Enhanced scroll effect with smooth transitions
+  // Scroll handler
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      setScrolled(scrollPosition > 20);
+      setScrolled(window.scrollY > 50);
     };
-
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Enhanced mobile menu handling with smooth body scroll lock
+  // Lock body scroll when mobile menu is open
   useEffect(() => {
-    if (isOpen) {
+    if (isMenuOpen) {
       document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = "0px"; // Prevent layout shift
     } else {
-      document.body.style.overflow = "unset";
-      document.body.style.paddingRight = "0px";
+      document.body.style.overflow = "";
     }
-
     return () => {
-      document.body.style.overflow = "unset";
-      document.body.style.paddingRight = "0px";
+      document.body.style.overflow = "";
     };
-  }, [isOpen]);
+  }, [isMenuOpen]);
 
-  // Updated navigation links in the exact order requested
-  const navLinks = [
-    { path: "/", label: "Home", icon: Home },
-    { path: "/rent", label: "Rent", icon: Building2 },
-  ];
-
-  const aboutLinks = [
-    { path: "/about", label: "About Us", icon: Users },
-    { path: "/founders", label: "Founders", icon: IoIosPeople },
-    { path: "/about/management", label: "Management", icon: MdManageAccounts },
-    { path: "/agents", label: "Agents", icon: Handshake },
-    { path: "/staff", label: "Our Staff", icon: FaPeopleGroup },
-    { path: "/contact", label: "Contact Us", icon: PhoneCall },
-  ];
-
-  const buyLinks = [
-    {
-      path: "/sale",
-      label: "Residential",
-      icon: Home,
-      description: "Houses, Townhouses, Clusters, etc",
-    },
-    {
-      path: "/commercial",
-      label: "Commercial",
-      icon: Building2,
-      description: "Office buildings, retail spaces",
-    },
-    {
-      path: "/industrial",
-      label: "Industrial",
-      icon: Briefcase,
-      description: "Warehouses, factories",
-    },
-    {
-      path: "/development",
-      label: "Development",
-      icon: TrendingUp,
-      description: "Land and development projects",
-    },
-  ];
-
-  const sellLinks = [
-    {
-      path: "/list",
-      label: "List Property",
-      icon: PlusCircle,
-      description: "List your property for sale",
-    },
-    {
-      path: "/valuation",
-      label: "Property Valuation",
-      icon: Calculator,
-      description: "Get your property valued",
-    },
-    {
-      path: "/guide",
-      label: "Selling Guide",
-      icon: FileText,
-      description: "Tips for selling your property",
-    },
-  ];
-
-  const resourcesLinks = [
-    { path: "/developments", label: "Developments", icon: TrendingUp },
-    { path: "/downloads", label: "Downloads", icon: Download },
-    { path: "/neighborhoods", label: "Neighborhood Guide", icon: MapIcon },
-    { path: "/consulting", label: "Consulting", icon: Briefcase },
-    { path: "/market", label: "Market Analysis", icon: BarChart },
-    { path: "/mortgage", label: "Mortgage", icon: Banknote },
-  ];
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location]);
 
   const handleLogout = () => {
     dispatch(logout());
   };
 
-  const handleMobileNavClick = () => {
-    setIsOpen(false);
-    setResourcesOpen(false);
-    setBuyOpen(false);
-    setSellOpen(false);
-  };
+  // Navigation structure
+  const mainNavItems = [
+    { path: "/", label: "Home", icon: Home },
+    { path: "/rent", label: "Rent", icon: GiHouseKeys },
+  ];
+
+  const buyItems = [
+    { path: "/sale", label: "Residential", icon: Home, description: "Houses, Townhouses, Clusters" },
+    { path: "/commercial", label: "Commercial", icon: Building2, description: "Office spaces, Retail" },
+    { path: "/industrial", label: "Industrial", icon: Building, description: "Warehouses, Factories" },
+    { path: "/development", label: "Development", icon: TrendingUp, description: "Land & Projects" },
+  ];
+
+  const sellItems = [
+    { path: "/list", label: "List Property", icon: PlusCircle, description: "List your property" },
+    { path: "/valuation", label: "Valuation", icon: Calculator, description: "Get property valued" },
+    { path: "/guide", label: "Selling Guide", icon: FileText, description: "Tips & resources" },
+  ];
+
+  const aboutItems = [
+    { path: "/about", label: "About Us", icon: LiaPeopleCarrySolid },
+    { path: "/agents", label: "Our Agents", icon: Handshake },
+    { path: "/contact", label: "Contact", icon: PhoneCall },
+  ];
+
+  const resourceItems = [
+    { path: "/developments", label: "Developments", icon: TrendingUp },
+    { path: "/neighborhoods", label: "Neighborhoods", icon: GiWorld },
+    { path: "/mortgage", label: "Mortgage", icon: Banknote },
+    { path: "/downloads", label: "Downloads", icon: Download },
+  ];
+
+  const dropdowns = [
+    { label: "Buy", icon: BsHouseCheck, items: buyItems },
+    { label: "Sell", icon: GiTakeMyMoney, items: sellItems },
+    { label: "About", icon: LiaPeopleCarrySolid, items: aboutItems },
+    { label: "Resources", icon: BookOpen, items: resourceItems },
+  ];
 
   return (
     <>
-      {/* Top Info Bar - Enhanced with better mobile responsiveness */}
+      {/* Top Bar - Hidden on mobile, shown on tablet and up */}
       <motion.div
-        className="w-full bg-slate-800 text-white py-2 sm:py-3 shadow-sm relative z-100"
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        initial={{ y: -40 }}
+        animate={{ y: 0 }}
+        className="hidden sm:block fixed top-0 left-0 right-0 z-50 bg-[#0A1628] text-white py-2 border-b border-white/5"
       >
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3 sm:space-x-4 text-xs sm:text-sm">
-              <motion.a
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex items-center gap-3 sm:gap-6">
+              <a
                 href="tel:+263772329569"
-                className="flex items-center hover:text-[#DCC471] transition-all duration-300 group"
-                aria-label="Call Us"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-1.5 sm:gap-2 text-white/70 hover:text-[#C9A962] transition-colors"
               >
-                <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-[#DCC471] group-hover:animate-pulse" />
-                <span className="hidden sm:inline text-white group-hover:text-[#DCC471] transition-colors">
-                  +263 772 329 569
-                </span>
-                <span className="sm:hidden text-white group-hover:text-[#DCC471] transition-colors">
-                  Call
-                </span>
-              </motion.a>
-              <motion.a
+                <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#C9A962]" />
+                <span className="hidden md:inline">+263 772 329 569</span>
+                <span className="md:hidden">Call Us</span>
+              </a>
+              <a
                 href="mailto:info@hsp.co.zw"
-                className="flex items-center hover:text-[#DCC471] transition-all duration-300 group"
-                aria-label="Email Us"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-1.5 sm:gap-2 text-white/70 hover:text-[#C9A962] transition-colors"
               >
-                <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-[#DCC471] group-hover:animate-pulse" />
-                <span className="hidden sm:inline text-white group-hover:text-[#DCC471] transition-colors">
-                  info@hsp.co.zw
-                </span>
-                <span className="sm:hidden text-white group-hover:text-[#DCC471] transition-colors">
-                  Email
-                </span>
-              </motion.a>
+                <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#C9A962]" />
+                <span className="hidden md:inline">info@hsp.co.zw</span>
+                <span className="md:hidden">Email</span>
+              </a>
             </div>
-            <motion.div
-              className="text-xs hidden md:flex items-center"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-            >
-              <MapPin className="w-3 h-3 mr-1 text-[#DCC471]" />
-              <span className="text-white">
-                21 Harare Drive Borrowdale, Harare
-              </span>
-            </motion.div>
+            <div className="hidden lg:flex items-center gap-2 text-white/70">
+              <MapPin className="w-3.5 h-3.5 text-[#C9A962]" />
+              <span>21 Harare Drive, Borrowdale, Harare</span>
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Main Navigation - Enhanced with transparent to slate-800 transition */}
-      <motion.nav
-        className={`fixed top-[20px] sm:top-[36px] w-full z-50 transition-all duration-500 ease-in-out ${
-          scrolled
-            ? "bg-slate-800/95 backdrop-blur-xl shadow-2xl border-b border-slate-700/50"
-            : "bg-transparent shadow-none"
-        }`}
+      {/* Main Navigation */}
+      <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ type: "spring", damping: 20, stiffness: 100 }}
+        className={`fixed top-0 sm:top-9 left-0 right-0 z-40 transition-all duration-500 ${
+          scrolled
+            ? "bg-[#0A1628]/90 backdrop-blur-xl shadow-lg shadow-black/10 border-b border-white/5"
+            : "bg-transparent"
+        }`}
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 sm:h-20">
-            {/* Logo Section - Enhanced with better animations */}
-            <motion.div
-              className="flex items-center"
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.2 }}
-            >
-              <NavLink to="/" className="flex items-center group">
-                <motion.div
-                  className={`p-2 sm:p-3 rounded-xl group-hover:shadow-2xl transition-all duration-300 mr-2 sm:mr-3 ${
-                    scrolled ? "" : ""
-                  }`}
-                  whileHover={{
-                    scale: 1.1,
-                    transition: { duration: 0.3 },
-                  }}
-                >
-                  <img
-                    src="/clogo.png"
-                    alt="House of Stone Properties"
-                    className="h-8 sm:h-12 w-auto filter group-hover:brightness-110 transition-all duration-300"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "";
-                    }}
-                  />
-                </motion.div>
-              </NavLink>
-            </motion.div>
+          <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
+            {/* Logo */}
+            <AnimatedLogo scrolled={scrolled} />
 
-            {/* Desktop Navigation - Enhanced with better hover effects in correct order */}
-            <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
-              {/* Home Link */}
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0, duration: 0.5 }}
-              >
-                <NavLink
-                  to="/"
-                  className={({ isActive }) =>
-                    `relative text-sm font-medium transition-all duration-300 flex items-center space-x-2 py-2 px-3 rounded-lg group ${
-                      isActive
-                        ? scrolled
-                          ? "text-[#DCC471] bg-white/10"
-                          : "text-slate-800 bg-slate-100"
-                        : scrolled
-                        ? "text-white hover:text-[#DCC471] hover:bg-white/10"
-                        : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
-                    }`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <motion.div
-                        whileHover={{ scale: 1.2, rotate: 360 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <Home
-                          className={`w-4 h-4 transition-colors ${
-                            isActive
-                              ? scrolled
-                                ? "text-[#DCC471]"
-                                : "text-slate-800"
-                              : scrolled
-                              ? "text-white/80 group-hover:text-[#DCC471]"
-                              : "text-[#DCC471] group-hover:text-slate-800"
-                          }`}
-                        />
-                      </motion.div>
-                      <span>Home</span>
-                      {isActive && (
-                        <motion.div
-                          className={`rounded-full ${
-                            scrolled ? "bg-[#DCC471]" : "bg-slate-800"
-                          }`}
-                          layoutId="activeTab"
-                          transition={{ type: "spring", duration: 0.5 }}
-                        />
-                      )}
-                    </>
-                  )}
-                </NavLink>
-              </motion.div>
-
-              {/* Buy Dropdown */}
-              <motion.div
-                className="relative"
-                onMouseEnter={() => setBuyOpen(true)}
-                onMouseLeave={() => setBuyOpen(false)}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.5 }}
-              >
-                <motion.button
-                  className={`flex items-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 group ${
-                    buyOpen
-                      ? scrolled
-                        ? "text-[#DCC471] bg-white/10"
-                        : "text-slate-800 bg-slate-100"
-                      : scrolled
-                      ? "text-white hover:text-[#DCC471] hover:bg-white/10"
-                      : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.2 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                  </motion.div>
-                  <span>Buy</span>
-                  <motion.div
-                    animate={{ rotate: buyOpen ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </motion.div>
-                </motion.button>
-
-                <AnimatePresence>
-                  {buyOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="absolute left-0 mt-2 w-72 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl z-[60] border border-gray-200/50 overflow-hidden"
-                    >
-                      <div className="py-2">
-                        {buyLinks.map((link, index) => (
-                          <motion.div
-                            key={`${link.path}-${index}`}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05, duration: 0.3 }}
-                          >
-                            <NavLink
-                              to={link.path}
-                              className="flex items-center px-4 py-3 text-sm hover:bg-slate-50 transition-all duration-200 group"
-                              onClick={() => setBuyOpen(false)}
-                            >
-                              <motion.div
-                                whileHover={{ scale: 1.2, rotate: 360 }}
-                                transition={{ duration: 0.3 }}
-                                className="flex-shrink-0"
-                              >
-                                <link.icon className="w-5 h-5 mr-3 text-gray-500 group-hover:text-slate-600" />
-                              </motion.div>
-                              <div className="flex flex-col">
-                                <span className="font-medium text-gray-800 group-hover:text-slate-900">
-                                  {link.label}
-                                </span>
-                                <span className="text-xs text-gray-500 group-hover:text-gray-600">
-                                  {link.description}
-                                </span>
-                              </div>
-                            </NavLink>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-
-              {/* Sell Dropdown */}
-              <motion.div
-                className="relative"
-                onMouseEnter={() => setSellOpen(true)}
-                onMouseLeave={() => setSellOpen(false)}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-              >
-                <motion.button
-                  className={`flex items-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 group ${
-                    sellOpen
-                      ? scrolled
-                        ? "text-[#DCC471] bg-white/10"
-                        : "text-slate-800 bg-slate-100"
-                      : scrolled
-                      ? "text-white hover:text-[#DCC471] hover:bg-white/10"
-                      : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.2 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <DollarSign className="w-4 h-4" />
-                  </motion.div>
-                  <span>Sell</span>
-                  <motion.div
-                    animate={{ rotate: sellOpen ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </motion.div>
-                </motion.button>
-
-                <AnimatePresence>
-                  {sellOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="absolute left-0 mt-2 w-72 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl z-[60] border border-gray-200/50 overflow-hidden"
-                    >
-                      <div className="py-2">
-                        {sellLinks.map((link, index) => (
-                          <motion.div
-                            key={`${link.path}-${index}`}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05, duration: 0.3 }}
-                          >
-                            <NavLink
-                              to={link.path}
-                              className="flex items-center px-4 py-3 text-sm hover:bg-slate-50 transition-all duration-200 group"
-                              onClick={() => setSellOpen(false)}
-                            >
-                              <motion.div
-                                whileHover={{ scale: 1.2, rotate: 360 }}
-                                transition={{ duration: 0.3 }}
-                                className="flex-shrink-0"
-                              >
-                                <link.icon className="w-5 h-5 mr-3 text-gray-500 group-hover:text-slate-600" />
-                              </motion.div>
-                              <div className="flex flex-col">
-                                <span className="font-medium text-gray-800 group-hover:text-slate-900">
-                                  {link.label}
-                                </span>
-                                <span className="text-xs text-gray-500 group-hover:text-gray-600">
-                                  {link.description}
-                                </span>
-                              </div>
-                            </NavLink>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-
-              {/* Remaining Nav Links (Rent, Show Days, About Us) */}
-              {navLinks.slice(1).map((link, index) => (
-                <motion.div
-                  key={link.path}
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: (index + 3) * 0.1, duration: 0.5 }}
-                >
-                  <NavLink
-                    to={link.path}
-                    className={({ isActive }) =>
-                      `relative text-sm font-medium transition-all duration-300 flex items-center space-x-2 py-2 px-3 rounded-lg group ${
-                        isActive
-                          ? scrolled
-                            ? "text-[#DCC471] bg-white/10"
-                            : "text-slate-800 bg-slate-100"
-                          : scrolled
-                          ? "text-white hover:text-[#DCC471] hover:bg-white/10"
-                          : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
-                      }`
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
-                        <motion.div
-                          whileHover={{ scale: 1.2, rotate: 360 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <link.icon
-                            className={`w-4 h-4 transition-colors ${
-                              isActive
-                                ? scrolled
-                                  ? "text-[#DCC471]"
-                                  : "text-slate-800"
-                                : scrolled
-                                ? "text-white/80 group-hover:text-[#DCC471]"
-                                : "text-[#DCC471] group-hover:text-slate-800"
-                            }`}
-                          />
-                        </motion.div>
-                        <span>{link.label}</span>
-                        {isActive && (
-                          <motion.div
-                            className={` rounded-full ${
-                              scrolled ? "bg-[#DCC471]" : "bg-slate-800"
-                            }`}
-                            layoutId="activeTab"
-                            transition={{ type: "spring", duration: 0.5 }}
-                          />
-                        )}
-                      </>
-                    )}
-                  </NavLink>
-                </motion.div>
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center gap-1">
+              {/* Main nav items */}
+              {mainNavItems.map((item) => (
+                <NavItem
+                  key={item.path}
+                  to={item.path}
+                  label={item.label}
+                  icon={item.icon}
+                  scrolled={scrolled}
+                />
               ))}
 
-              <motion.div
-                className="relative"
-                onMouseEnter={() => setAboutOpen(true)}
-                onMouseLeave={() => setAboutOpen(false)}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-              >
-                <motion.button
-                  className={`flex items-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 group ${
-                    aboutOpen
-                      ? scrolled
-                        ? "text-[#DCC471] bg-white/10"
-                        : "text-slate-800 bg-slate-100"
-                      : scrolled
-                      ? "text-white hover:text-[#DCC471] hover:bg-white/10"
-                      : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.2 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Users className="w-4 h-4" />
-                  </motion.div>
-                  <span>About Us</span>
-                  <motion.div
-                    animate={{ rotate: aboutOpen ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </motion.div>
-                </motion.button>
+              {/* Dropdowns */}
+              {dropdowns.map((dropdown) => (
+                <DropdownMenu
+                  key={dropdown.label}
+                  label={dropdown.label}
+                  icon={dropdown.icon}
+                  items={dropdown.items}
+                  scrolled={scrolled}
+                  isOpen={activeDropdown === dropdown.label}
+                  onToggle={(open) => setActiveDropdown(open ? dropdown.label : null)}
+                />
+              ))}
+            </nav>
 
-                <AnimatePresence>
-                  {aboutOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="absolute left-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl z-[60] border border-gray-200/50 overflow-hidden"
+            {/* Desktop Auth */}
+            <div className="hidden lg:flex items-center gap-3">
+              {isAuthenticated ? (
+                <div className="flex items-center gap-2">
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#C9A962]/10 text-[#C9A962] hover:bg-[#C9A962]/20 transition-colors"
                     >
-                      <div className="py-2">
-                        {aboutLinks.map((link, index) => (
-                          <motion.div
-                            key={`${link.path}-${index}`}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05, duration: 0.3 }}
-                          >
-                            <NavLink
-                              to={link.path}
-                              className="flex items-center px-4 py-3 text-sm hover:bg-slate-50 transition-all duration-200 group"
-                              onClick={() => setAboutOpen(false)}
-                            >
-                              <motion.div
-                                whileHover={{ scale: 1.2, rotate: 360 }}
-                                transition={{ duration: 0.3 }}
-                              >
-                                <link.icon className="w-4 h-4 mr-3 text-gray-500 group-hover:text-slate-600" />
-                              </motion.div>
-                              {link.label}
-                            </NavLink>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </motion.div>
+                      <MdOutlineDashboard className="w-4 h-4" />
+                      <span className="text-sm font-medium">Dashboard</span>
+                    </Link>
                   )}
-                </AnimatePresence>
-              </motion.div>
 
-              {/* Desktop Resources Dropdown - Enhanced */}
-              <motion.div
-                className="relative"
-                onMouseEnter={() => setResourcesOpen(true)}
-                onMouseLeave={() => setResourcesOpen(false)}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
-              >
-                <motion.button
-                  className={`flex items-center space-x-2 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 group ${
-                    resourcesOpen
-                      ? scrolled
-                        ? "text-[#DCC471] bg-white/10"
-                        : "text-slate-800 bg-slate-100"
-                      : scrolled
-                      ? "text-white hover:text-[#DCC471] hover:bg-white/10"
-                      : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.2 }}
-                    transition={{ duration: 0.2 }}
+                  <MagneticButton
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/20 text-white/80 hover:text-white hover:bg-white/5 transition-colors text-sm"
                   >
-                    <BookOpen className="w-4 h-4" />
-                  </motion.div>
-                  <span>Resources</span>
-                  <motion.div
-                    animate={{ rotate: resourcesOpen ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
+                    <LogOut className="w-4 h-4" />
+                    <span>Logout</span>
+                  </MagneticButton>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <MagneticButton
+                    onClick={() => setAuthModal("login")}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                      scrolled
+                        ? "border-white/20 text-white hover:bg-white/5"
+                        : "border-white/30 text-white hover:bg-white/10"
+                    }`}
                   >
-                    <ChevronDown className="w-4 h-4" />
-                  </motion.div>
-                </motion.button>
+                    <LogIn className="w-4 h-4" />
+                    <span>Sign In</span>
+                  </MagneticButton>
 
-                <AnimatePresence>
-                  {resourcesOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="absolute left-0 mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl z-[60] border border-gray-200/50 overflow-hidden"
-                    >
-                      <div className="py-2">
-                        {resourcesLinks.map((link, index) => (
-                          <motion.div
-                            key={link.path}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05, duration: 0.3 }}
-                          >
-                            <NavLink
-                              to={link.path}
-                              className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-slate-50 hover:text-slate-800 transition-all duration-200 group"
-                              onClick={() => setResourcesOpen(false)}
-                            >
-                              <motion.div
-                                whileHover={{ scale: 1.2, rotate: 360 }}
-                                transition={{ duration: 0.3 }}
-                              >
-                                <link.icon className="w-4 h-4 mr-3 text-gray-500 group-hover:text-slate-600" />
-                              </motion.div>
-                              {link.label}
-                            </NavLink>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-
-              {/* Auth Buttons - Enhanced */}
-              <motion.div
-                className="ml-6 flex items-center space-x-4"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8, duration: 0.5 }}
-              >
-                {isAuthenticated ? (
-                  <div className="flex items-center space-x-4">
-                    {isAdmin && (
-                      <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Link
-                          to="/admin"
-                          className={`flex items-center text-sm font-medium transition-all duration-300 px-3 py-2 rounded-lg ${
-                            scrolled
-                              ? "text-white hover:text-[#DCC471] hover:bg-white/10"
-                              : "text-gray-700 hover:text-slate-800 hover:bg-slate-100"
-                          }`}
-                        >
-                          <BarChart2 className="mr-2 h-4 w-4" />
-                          Admin
-                        </Link>
-                      </motion.div>
-                    )}
-                    <motion.div
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${
-                        scrolled
-                          ? "bg-white/10 backdrop-blur-sm border border-white/20"
-                          : "bg-slate-100 border border-slate-200"
-                      }`}
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <User
-                        className={`w-4 h-4 ${
-                          scrolled ? "text-[#DCC471]" : "text-slate-800"
-                        }`}
-                      />
-                      <span
-                        className={`text-sm font-medium ${
-                          scrolled ? "text-white" : "text-slate-900"
-                        }`}
-                      >
-                        {user?.username || "User"}
-                      </span>
-                    </motion.div>
-
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={handleLogout}
-                        sx={{
-                          color: scrolled ? "#ffffff" : "#dc2626",
-                          borderColor: scrolled ? "#ffffff" : "#dc2626",
-                          borderRadius: "8px",
-                          textTransform: "none",
-                          "&:hover": {
-                            borderColor: "#b91c1c",
-                            backgroundColor: scrolled
-                              ? "rgba(255,255,255,0.1)"
-                              : "#fef2f2",
-                          },
-                        }}
-                        startIcon={<LogOut className="w-4 h-4" />}
-                      >
-                        Logout
-                      </Button>
-                    </motion.div>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-3">
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => setAuthModal("login")}
-                        sx={{
-                          color: scrolled ? "#ffffff" : "#DCC471",
-                          borderColor: scrolled ? "#ffffff" : "#DCC471",
-                          borderRadius: "8px",
-                          textTransform: "none",
-                          "&:hover": {
-                            borderColor: scrolled ? "#DCC471" : "#1d4ed8",
-                            backgroundColor: scrolled
-                              ? "rgba(255,255,255,0.1)"
-                              : "#eff6ff",
-                          },
-                        }}
-                        startIcon={<LogIn className="w-4 h-4" />}
-                      >
-                        Login
-                      </Button>
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => setAuthModal("register")}
-                        sx={{
-                          background: scrolled
-                            ? "linear-gradient(135deg, #DCC471 0%, #B8A965 100%)"
-                            : "#1e293b",
-                          borderRadius: "8px",
-                          textTransform: "none",
-                          boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
-                          "&:hover": {
-                            background: scrolled
-                              ? "linear-gradient(135deg, #B8A965 0%, #A69659 100%)"
-                              : "linear-gradient(135deg,rgb(21, 30, 57) 0%,rgb(26, 33, 56) 100%)",
-                            boxShadow: "0 6px 16px rgba(37, 99, 235, 0.4)",
-                          },
-                        }}
-                        startIcon={<User className="w-4 h-4" />}
-                      >
-                        Register
-                      </Button>
-                    </motion.div>
-                  </div>
-                )}
-              </motion.div>
+                  <MagneticButton
+                    onClick={() => setAuthModal("register")}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#C9A962] text-[#0A1628] font-medium hover:bg-[#B8985A] transition-colors text-sm"
+                  >
+                    <PiUserCircleDashedBold className="w-4 h-4" />
+                    <span>Register</span>
+                  </MagneticButton>
+                </div>
+              )}
             </div>
 
-            {/* Mobile Menu Button - Enhanced */}
-            <div className="lg:hidden flex items-center">
-              <motion.button
-                onClick={() => setIsOpen(!isOpen)}
-                className={`inline-flex items-center justify-center p-2 rounded-xl transition-all duration-300 ${
-                  scrolled
-                    ? "text-white hover:text-[#DCC471] hover:bg-white/10"
-                    : "text-[#DCC471] hover:text-slate-800 hover:bg-slate-100"
-                }`}
-                aria-label="Toggle menu"
-                aria-expanded={isOpen}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <motion.div
-                  animate={{ rotate: isOpen ? 180 : 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {isOpen ? (
-                    <X className="h-6 w-6" />
-                  ) : (
-                    <CgMenuRight className="h-6 w-6" />
-                  )}
-                </motion.div>
-              </motion.button>
-            </div>
+            {/* Mobile Menu Button */}
+            <motion.button
+              onClick={() => setIsMenuOpen(true)}
+              className="lg:hidden flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white/10 text-white active:bg-white/20"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Menu className="w-5 h-5" />
+            </motion.button>
           </div>
         </div>
+      </motion.header>
 
-        {/* Mobile Navigation - Epic Full Screen Experience */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              className="lg:hidden fixed inset-0 top-[100px] sm:top-[116px] z-[100] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 backdrop-blur-xl"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-            >
-              <div className="h-full overflow-y-auto">
-                <div className="px-4 sm:px-6 pt-6 pb-8 space-y-2">
-                  {/* Home Link */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0, duration: 0.5 }}
-                  >
-                    <NavLink
-                      to="/"
-                      onClick={handleMobileNavClick}
-                      className={({ isActive }) =>
-                        `flex items-center px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
-                          isActive
-                            ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
-                            : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
-                        }`
-                      }
-                    >
-                      <motion.div
-                        whileHover={{ scale: 1.3, rotate: 360 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <Home className="w-6 h-6 mr-4 group-hover:animate-pulse" />
-                      </motion.div>
-                      <span>Home</span>
-                    </NavLink>
-                  </motion.div>
+      {/* Mobile Menu */}
+      <MobileMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        navItems={mainNavItems}
+        dropdowns={dropdowns}
+        isAuthenticated={isAuthenticated}
+        user={user}
+        onLogout={handleLogout}
+        onLogin={() => setAuthModal("login")}
+        onRegister={() => setAuthModal("register")}
+      />
 
-                  {/* Mobile Buy Section */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1, duration: 0.5 }}
-                  >
-                    <motion.button
-                      onClick={() => setBuyOpen(!buyOpen)}
-                      className={`w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
-                        buyOpen
-                          ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
-                          : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
-                      }`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="flex items-center">
-                        <motion.div
-                          whileHover={{ scale: 1.3, rotate: 360 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <ShoppingCart className="w-6 h-6 mr-4 group-hover:animate-pulse" />
-                        </motion.div>
-                        <span>Buy</span>
-                      </div>
-                      <motion.div
-                        animate={{ rotate: buyOpen ? 180 : 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <ChevronDown className="w-5 h-5" />
-                      </motion.div>
-                    </motion.button>
-
-                    <AnimatePresence>
-                      {buyOpen && (
-                        <motion.div
-                          className="mt-2 ml-4 sm:ml-6 space-y-2"
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          {buyLinks.map((link, index) => (
-                            <motion.div
-                              key={`${link.path}-${index}`}
-                              initial={{ opacity: 0, x: -30 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.1, duration: 0.3 }}
-                            >
-                              <NavLink
-                                to={link.path}
-                                onClick={handleMobileNavClick}
-                                className="flex items-start px-4 py-3 rounded-lg text-sm sm:text-base text-white/80 hover:bg-white/10 hover:text-[#DCC471] transition-all duration-300 group"
-                              >
-                                <motion.div
-                                  whileHover={{ scale: 1.2, rotate: 360 }}
-                                  transition={{ duration: 0.3 }}
-                                  className="flex-shrink-0 mt-0.5"
-                                >
-                                  <link.icon className="w-5 h-5 mr-3 text-white/60 group-hover:text-[#DCC471]" />
-                                </motion.div>
-                                <div className="flex flex-col">
-                                  <span className="font-medium">
-                                    {link.label}
-                                  </span>
-                                  <span className="text-xs text-white/60 mt-0.5">
-                                    {link.description}
-                                  </span>
-                                </div>
-                              </NavLink>
-                            </motion.div>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-
-                  {/* Mobile Sell Section */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                  >
-                    <motion.button
-                      onClick={() => setSellOpen(!sellOpen)}
-                      className={`w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
-                        sellOpen
-                          ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
-                          : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
-                      }`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="flex items-center">
-                        <motion.div
-                          whileHover={{ scale: 1.3, rotate: 360 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <DollarSign className="w-6 h-6 mr-4 group-hover:animate-pulse" />
-                        </motion.div>
-                        <span>Sell</span>
-                      </div>
-                      <motion.div
-                        animate={{ rotate: sellOpen ? 180 : 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <ChevronDown className="w-5 h-5" />
-                      </motion.div>
-                    </motion.button>
-
-                    <AnimatePresence>
-                      {sellOpen && (
-                        <motion.div
-                          className="mt-2 ml-4 sm:ml-6 space-y-2"
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          {sellLinks.map((link, index) => (
-                            <motion.div
-                              key={`${link.path}-${index}`}
-                              initial={{ opacity: 0, x: -30 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.1, duration: 0.3 }}
-                            >
-                              <NavLink
-                                to={link.path}
-                                onClick={handleMobileNavClick}
-                                className="flex items-start px-4 py-3 rounded-lg text-sm sm:text-base text-white/80 hover:bg-white/10 hover:text-[#DCC471] transition-all duration-300 group"
-                              >
-                                <motion.div
-                                  whileHover={{ scale: 1.2, rotate: 360 }}
-                                  transition={{ duration: 0.3 }}
-                                  className="flex-shrink-0 mt-0.5"
-                                >
-                                  <link.icon className="w-5 h-5 mr-3 text-white/60 group-hover:text-[#DCC471]" />
-                                </motion.div>
-                                <div className="flex flex-col">
-                                  <span className="font-medium">
-                                    {link.label}
-                                  </span>
-                                  <span className="text-xs text-white/60 mt-0.5">
-                                    {link.description}
-                                  </span>
-                                </div>
-                              </NavLink>
-                            </motion.div>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-
-                  {/* Remaining Mobile Navigation Links (Rent, Show Days, About Us) */}
-                  {navLinks.slice(1).map((link, index) => (
-                    <motion.div
-                      key={link.path}
-                      initial={{ opacity: 0, x: -50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: (index + 3) * 0.1, duration: 0.5 }}
-                    >
-                      <NavLink
-                        to={link.path}
-                        onClick={handleMobileNavClick}
-                        className={({ isActive }) =>
-                          `flex items-center px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
-                            isActive
-                              ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
-                              : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
-                          }`
-                        }
-                      >
-                        <motion.div
-                          whileHover={{ scale: 1.3, rotate: 360 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <link.icon className="w-6 h-6 mr-4 group-hover:animate-pulse" />
-                        </motion.div>
-                        <span>{link.label}</span>
-                      </NavLink>
-                    </motion.div>
-                  ))}
-
-                  {/* Mobile About Section */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.7, duration: 0.5 }}
-                  >
-                    <motion.button
-                      onClick={() => setAboutOpen(!aboutOpen)}
-                      className={`w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
-                        aboutOpen
-                          ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
-                          : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
-                      }`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="flex items-center">
-                        <motion.div
-                          whileHover={{ scale: 1.3, rotate: 360 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Users className="w-6 h-6 mr-4 group-hover:animate-pulse" />
-                        </motion.div>
-                        <span>About</span>
-                      </div>
-                      <motion.div
-                        animate={{ rotate: aboutOpen ? 180 : 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <ChevronDown className="w-5 h-5" />
-                      </motion.div>
-                    </motion.button>
-
-                    <AnimatePresence>
-                      {aboutOpen && (
-                        <motion.div
-                          className="mt-2 ml-4 sm:ml-6 space-y-2"
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          {aboutLinks.map((link, index) => (
-                            <motion.div
-                              key={`${link.path}-${index}`}
-                              initial={{ opacity: 0, x: -30 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.1, duration: 0.3 }}
-                            >
-                              <NavLink
-                                to={link.path}
-                                onClick={handleMobileNavClick}
-                                className="flex items-center px-4 py-3 rounded-lg text-sm sm:text-base text-white/80 hover:bg-white/10 hover:text-[#DCC471] transition-all duration-300 group"
-                              >
-                                <motion.div
-                                  whileHover={{ scale: 1.2, rotate: 360 }}
-                                  transition={{ duration: 0.3 }}
-                                >
-                                  <link.icon className="w-5 h-5 mr-3 text-white/60 group-hover:text-[#DCC471]" />
-                                </motion.div>
-                                {link.label}
-                              </NavLink>
-                            </motion.div>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-
-                  {/* Mobile Resources Section - Enhanced */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6, duration: 0.5 }}
-                  >
-                    <motion.button
-                      onClick={() => setResourcesOpen(!resourcesOpen)}
-                      className={`w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
-                        resourcesOpen
-                          ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
-                          : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
-                      }`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="flex items-center">
-                        <motion.div
-                          whileHover={{ scale: 1.3, rotate: 360 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <BookOpen className="w-6 h-6 mr-4 group-hover:animate-pulse" />
-                        </motion.div>
-                        <span>Resources</span>
-                      </div>
-                      <motion.div
-                        animate={{ rotate: resourcesOpen ? 180 : 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <ChevronDown className="w-5 h-5" />
-                      </motion.div>
-                    </motion.button>
-
-                    <AnimatePresence>
-                      {resourcesOpen && (
-                        <motion.div
-                          className="mt-2 ml-4 sm:ml-6 space-y-2"
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          {resourcesLinks.map((link, index) => (
-                            <motion.div
-                              key={link.path}
-                              initial={{ opacity: 0, x: -30 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.1, duration: 0.3 }}
-                            >
-                              <NavLink
-                                to={link.path}
-                                onClick={handleMobileNavClick}
-                                className="flex items-center px-4 py-3 rounded-lg text-sm sm:text-base text-white/80 hover:bg-white/10 hover:text-[#DCC471] transition-all duration-300 group"
-                              >
-                                <motion.div
-                                  whileHover={{ scale: 1.2, rotate: 360 }}
-                                  transition={{ duration: 0.3 }}
-                                >
-                                  <link.icon className="w-5 h-5 mr-3 text-white/60 group-hover:text-[#DCC471]" />
-                                </motion.div>
-                                {link.label}
-                              </NavLink>
-                            </motion.div>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-
-                  {/* Contact Us Link */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.7, duration: 0.5 }}
-                  >
-                    <NavLink
-                      to="/contact"
-                      onClick={handleMobileNavClick}
-                      className={({ isActive }) =>
-                        `flex items-center px-4 sm:px-6 py-4 sm:py-5 rounded-xl text-base sm:text-lg font-medium transition-all duration-300 group ${
-                          isActive
-                            ? "bg-[#DCC471] text-slate-900 shadow-xl transform scale-105"
-                            : "text-white hover:bg-white/10 hover:text-[#DCC471] hover:shadow-lg hover:transform hover:scale-105"
-                        }`
-                      }
-                    >
-                      <motion.div
-                        whileHover={{ scale: 1.3, rotate: 360 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <PhoneCall className="w-6 h-6 mr-4 group-hover:animate-pulse" />
-                      </motion.div>
-                      <span>Contact Us</span>
-                    </NavLink>
-                  </motion.div>
-
-                  {/* Mobile Auth Section - Enhanced */}
-                  <motion.div
-                    className="pt-6 mt-6 border-t border-white/20"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8, duration: 0.5 }}
-                  >
-                    {isAuthenticated ? (
-                      <div className="space-y-4">
-                        <motion.div
-                          className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 bg-white/10 backdrop-blur-sm rounded-xl shadow-lg border border-white/20"
-                          whileHover={{ scale: 1.02 }}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <motion.div
-                              className="w-10 h-10 sm:w-12 sm:h-12 bg-[#DCC471] rounded-full flex items-center justify-center"
-                              whileHover={{ scale: 1.1, rotate: 360 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <User className="w-5 h-5 sm:w-6 sm:h-6 text-slate-900" />
-                            </motion.div>
-                            <span className="font-medium text-white text-base sm:text-lg">
-                              {user?.username || "User"}
-                            </span>
-                          </div>
-                          {isAdmin && (
-                            <motion.div
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <Link
-                                to="/admin"
-                                className="flex items-center text-[#DCC471] hover:text-white transition-colors"
-                                onClick={handleMobileNavClick}
-                              >
-                                <BarChart2 className="mr-2 h-5 w-5" />
-                                <span className="text-sm">Admin</span>
-                              </Link>
-                            </motion.div>
-                          )}
-                        </motion.div>
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={() => {
-                              handleLogout();
-                              handleMobileNavClick();
-                            }}
-                            sx={{
-                              color: "#ffffff",
-                              borderColor: "#ffffff",
-                              borderRadius: "12px",
-                              py: 2,
-                              fontSize: "1rem",
-                              textTransform: "none",
-                              "&:hover": {
-                                borderColor: "#dc2626",
-                                backgroundColor: "rgba(220, 38, 38, 0.1)",
-                                color: "#dc2626",
-                              },
-                            }}
-                            startIcon={<LogOut className="w-5 h-5" />}
-                          >
-                            Logout
-                          </Button>
-                        </motion.div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col space-y-4">
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={() => {
-                              setAuthModal("login");
-                              handleMobileNavClick();
-                            }}
-                            sx={{
-                              color: "#ffffff",
-                              borderColor: "#ffffff",
-                              borderRadius: "12px",
-                              py: 2,
-                              fontSize: "1rem",
-                              textTransform: "none",
-                              "&:hover": {
-                                borderColor: "#DCC471",
-                                backgroundColor: "rgba(220, 196, 113, 0.1)",
-                                color: "#DCC471",
-                              },
-                            }}
-                            startIcon={<LogIn className="w-5 h-5" />}
-                          >
-                            Login
-                          </Button>
-                        </motion.div>
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Button
-                            fullWidth
-                            variant="contained"
-                            onClick={() => {
-                              setAuthModal("register");
-                              handleMobileNavClick();
-                            }}
-                            sx={{
-                              background:
-                                "linear-gradient(135deg, #DCC471 0%, #B8A965 100%)",
-                              borderRadius: "12px",
-                              py: 2,
-                              fontSize: "1rem",
-                              textTransform: "none",
-                              boxShadow: "0 4px 12px rgba(220, 196, 113, 0.3)",
-                              "&:hover": {
-                                background:
-                                  "linear-gradient(135deg, #B8A965 0%, #A69659 100%)",
-                                boxShadow:
-                                  "0 6px 16px rgba(220, 196, 113, 0.4)",
-                              },
-                            }}
-                            startIcon={<User className="w-5 h-5" />}
-                          >
-                            Register
-                          </Button>
-                        </motion.div>
-                      </div>
-                    )}
-                  </motion.div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AuthModals openType={authModal} onClose={() => setAuthModal(null)} />
-      </motion.nav>
+      {/* Auth Modal */}
+      <AuthModal
+        type={authModal}
+        isOpen={!!authModal}
+        onClose={() => setAuthModal(null)}
+      />
     </>
   );
 };

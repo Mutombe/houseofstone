@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
   Mail,
   Phone,
   X,
   Check,
-  ChevronDown,
-  Calendar,
   AlertCircle,
-  Loader
+  Loader,
+  MessageSquare,
+  MapPin,
+  Building2,
 } from "lucide-react";
 
 const LeadForm = ({ lead, property, leadSources, onClose, onSave }) => {
@@ -50,11 +52,15 @@ const LeadForm = ({ lead, property, leadSources, onClose, onSave }) => {
       ...formData,
       [name]: value
     });
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: "" });
+    }
   };
 
   const validate = () => {
     const newErrors = {};
-    
+
     if (!formData.contact_name) newErrors.contact_name = "Name is required";
     if (!formData.contact_email) {
       newErrors.contact_email = "Email is required";
@@ -63,14 +69,14 @@ const LeadForm = ({ lead, property, leadSources, onClose, onSave }) => {
     }
     if (!formData.contact_phone) newErrors.contact_phone = "Phone is required";
     if (!formData.property_id) newErrors.property_id = "Property is required";
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (validate()) {
       setIsSubmitting(true);
       onSave({
@@ -81,238 +87,244 @@ const LeadForm = ({ lead, property, leadSources, onClose, onSave }) => {
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900">
-              {lead ? "Edit Lead" : "Add New Lead"}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-500"
-            >
-              <X size={20} />
-            </button>
-          </div>
+  // Status options with colors
+  const statusOptions = [
+    { value: "new", label: "New", color: "bg-blue-500/20 text-blue-400" },
+    { value: "contacted", label: "Contacted", color: "bg-yellow-500/20 text-yellow-400" },
+    { value: "qualified", label: "Qualified", color: "bg-purple-500/20 text-purple-400" },
+    { value: "converted", label: "Converted", color: "bg-green-500/20 text-green-400" },
+    { value: "lost", label: "Lost", color: "bg-red-500/20 text-red-400" }
+  ];
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+  // Form Input Component
+  const FormInput = ({ label, icon: Icon, error, ...props }) => (
+    <div>
+      <label className="block text-sm text-gray-400 mb-2">
+        {label}<span className="text-[#C9A962]">*</span>
+      </label>
+      <div className="relative">
+        <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+        <input
+          {...props}
+          className={`w-full pl-12 pr-4 py-3 bg-white/5 border ${
+            error ? "border-red-500/50" : "border-white/10"
+          } rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors`}
+        />
+      </div>
+      {error && (
+        <motion.p
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-2 text-sm text-red-400 flex items-center gap-1"
+        >
+          <AlertCircle size={14} />
+          {error}
+        </motion.p>
+      )}
+    </div>
+  );
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="bg-[#0A1628] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-6">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#C9A962]/10 rounded-xl flex items-center justify-center">
+                  <MessageSquare className="w-5 h-5 text-[#C9A962]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    {lead ? "Edit Lead" : "Add New Lead"}
+                  </h2>
+                  <p className="text-gray-400 text-sm">
+                    {lead ? "Update lead details" : "Create a new lead entry"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Property Preview */}
             {property && (
-              <div className="border-b pb-4 mb-4">
-                <h3 className="text-sm font-medium text-gray-500 mb-2">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
+                <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
                   Property
                 </h3>
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0 h-12 w-12 bg-gray-200 rounded-md overflow-hidden">
-                    {property.images?.[0]?.image && (
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 bg-[#C9A962]/10 rounded-lg overflow-hidden flex-shrink-0">
+                    {property.images?.[0]?.image ? (
                       <img
                         src={property.images[0].image}
                         alt={property.title}
                         className="h-full w-full object-cover"
                       />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Building2 className="w-6 h-6 text-[#C9A962]" />
+                      </div>
                     )}
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium truncate">
                       {property.title}
                     </p>
-                    <p className="text-sm text-gray-500">
-                      ${property.price.toLocaleString()}
+                    <p className="text-[#C9A962] font-semibold">
+                      ${property.price?.toLocaleString()}
                     </p>
                   </div>
                 </div>
               </div>
             )}
 
-            <div>
-              <label
-                htmlFor="contact_name"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Contact Name*
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User size={16} className="text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  id="contact_name"
-                  name="contact_name"
-                  value={formData.contact_name}
-                  onChange={handleChange}
-                  className={`pl-10 block w-full shadow-sm sm:text-sm rounded-md ${
-                    errors.contact_name
-                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                      : "border-gray-300 focus:ring-primary focus:border-primary"
-                  }`}
-                />
-              </div>
-              {errors.contact_name && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle size={14} className="mr-1" />
-                  {errors.contact_name}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="contact_email"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Contact Email*
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail size={16} className="text-gray-400" />
-                </div>
-                <input
-                  type="email"
-                  id="contact_email"
-                  name="contact_email"
-                  value={formData.contact_email}
-                  onChange={handleChange}
-                  className={`pl-10 block w-full shadow-sm sm:text-sm rounded-md ${
-                    errors.contact_email
-                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                      : "border-gray-300 focus:ring-primary focus:border-primary"
-                  }`}
-                />
-              </div>
-              {errors.contact_email && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle size={14} className="mr-1" />
-                  {errors.contact_email}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="contact_phone"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Contact Phone*
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Phone size={16} className="text-gray-400" />
-                </div>
-                <input
-                  type="tel"
-                  id="contact_phone"
-                  name="contact_phone"
-                  value={formData.contact_phone}
-                  onChange={handleChange}
-                  className={`pl-10 block w-full shadow-sm sm:text-sm rounded-md ${
-                    errors.contact_phone
-                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                      : "border-gray-300 focus:ring-primary focus:border-primary"
-                  }`}
-                />
-              </div>
-              {errors.contact_phone && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle size={14} className="mr-1" />
-                  {errors.contact_phone}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="source_id"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Lead Source
-              </label>
-              <select
-                id="source_id"
-                name="source_id"
-                value={formData.source_id}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <FormInput
+                label="Contact Name"
+                icon={User}
+                type="text"
+                name="contact_name"
+                value={formData.contact_name}
                 onChange={handleChange}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-              >
-                <option value="">Select a source</option>
-                {leadSources.map((source) => (
-                  <option key={source.id} value={source.id}>
-                    {source.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-              >
-                <option value="new">New</option>
-                <option value="contacted">Contacted</option>
-                <option value="qualified">Qualified</option>
-                <option value="converted">Converted</option>
-                <option value="lost">Lost</option>
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="notes"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Notes
-              </label>
-              <textarea
-                id="notes"
-                name="notes"
-                rows={3}
-                value={formData.notes}
-                onChange={handleChange}
-                className="shadow-sm focus:ring-primary focus:border-primary mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
+                placeholder="Full name"
+                error={errors.contact_name}
               />
-            </div>
 
-            <div className="flex justify-end space-x-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader size={18} className="animate-spin mr-2" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Check size={18} className="mr-2" />
-                    Save Lead
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+              <FormInput
+                label="Contact Email"
+                icon={Mail}
+                type="email"
+                name="contact_email"
+                value={formData.contact_email}
+                onChange={handleChange}
+                placeholder="email@example.com"
+                error={errors.contact_email}
+              />
+
+              <FormInput
+                label="Contact Phone"
+                icon={Phone}
+                type="tel"
+                name="contact_phone"
+                value={formData.contact_phone}
+                onChange={handleChange}
+                placeholder="+1 (555) 000-0000"
+                error={errors.contact_phone}
+              />
+
+              {/* Lead Source */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">
+                  Lead Source
+                </label>
+                <select
+                  name="source_id"
+                  value={formData.source_id}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#C9A962]/50 transition-colors appearance-none"
+                >
+                  <option value="">Select a source</option>
+                  {leadSources?.map((source) => (
+                    <option key={source.id} value={source.id}>
+                      {source.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">
+                  Status
+                </label>
+                <div className="grid grid-cols-5 gap-2">
+                  {statusOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, status: option.value })}
+                      className={`px-2 py-2 rounded-lg text-xs font-medium transition-all ${
+                        formData.status === option.value
+                          ? `${option.color} border border-current`
+                          : "bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">
+                  Notes
+                </label>
+                <textarea
+                  name="notes"
+                  rows={3}
+                  value={formData.notes}
+                  onChange={handleChange}
+                  placeholder="Additional notes about this lead..."
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors resize-none"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={onClose}
+                  className="px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-all"
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-5 py-2.5 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader className="animate-spin w-4 h-4" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Save Lead
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </form>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

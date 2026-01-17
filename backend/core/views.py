@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
-from .serializers import AdminActionLogSerializer, BlogPostSerializer, PropertyAlertSerializer, PropertyDetailSerializer, PropertyListSerializer, UserSerializer, ProfileSerializer, PropertySerializer, PropertyWithStatsSerializer, LeadSourceSerializer, PropertyLeadSerializer, PropertyStatSerializer
+from .serializers import AdminActionLogSerializer, BlogPostSerializer, PropertyAlertSerializer, PropertyDetailSerializer, PropertyListSerializer, UserSerializer, ProfileSerializer, PropertySerializer, PropertyWithStatsSerializer, LeadSourceSerializer, PropertyLeadSerializer, PropertyStatSerializer, NotificationSerializer
 from .models import BlogPost, Profile, PropertyAlert, PropertyShare
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -19,7 +19,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db import transaction
 from rest_framework import viewsets
-from .models import Property, PropertyImage, SavedSearch, FavoriteProperty, Neighborhood, Inquiry, PropertyInteraction, AdminActionLog
+from .models import Property, PropertyImage, SavedSearch, FavoriteProperty, Neighborhood, Inquiry, PropertyInteraction, AdminActionLog, Notification
 from django.db.models import Q, F
 from django.db.models.functions import TruncHour
 from django.db.models import CharField, Value, Case, When
@@ -195,11 +195,27 @@ class PropertyViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+class AdminPropertyPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+    def get_paginated_response(self, data):
+        return Response({
+            'count': self.page.paginator.count,
+            'total_pages': self.page.paginator.num_pages,
+            'current_page': self.page.number,
+            'page_size': self.get_page_size(self.request),
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'results': data
+        })
+
 class AdminPropertyViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]  # Changed this
     serializer_class = PropertySerializer
-    pagination_class = None  
-    
+    pagination_class = AdminPropertyPagination  # Enable pagination
+
     filterset_fields = {
         'price': ['lte', 'gte'],
         'property_type': ['exact'],
@@ -248,11 +264,26 @@ class AdminPropertyViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        """Override create to return detailed validation errors"""
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     def list(self, request, *args, **kwargs):
         logger.info(f"Properties list requested with params: {request.query_params}")
-        
-        # Start with optimized base queryset
-        base_queryset = Property.objects.filter(is_published=True).select_related('user').prefetch_related('images')
+
+        # For authenticated admin/staff users, show ALL properties (including unpublished)
+        # For regular users or unauthenticated, only show published
+        if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
+            base_queryset = Property.objects.all().select_related('user').prefetch_related('images')
+            logger.info("Admin user - showing all properties including unpublished")
+        else:
+            base_queryset = Property.objects.filter(is_published=True).select_related('user').prefetch_related('images')
     
         # Apply filters from query parameters
         filters = {}
@@ -325,7 +356,15 @@ class AdminPropertyViewSet(viewsets.ModelViewSet):
         # Fall back to default ordering if invalid
             base_queryset = base_queryset.order_by('-created_at')
         logger.info(f"Final queryset has {base_queryset.count()} properties after filtering and ordering")
-        # Return all results without pagination
+
+        # Use pagination
+        page = self.paginate_queryset(base_queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            logger.info(f"Returning paginated response with {len(serializer.data)} properties")
+            return self.get_paginated_response(serializer.data)
+
+        # Fallback for non-paginated (shouldn't happen with pagination_class set)
         serializer = self.get_serializer(base_queryset, many=True)
         logger.info(f"Returning {len(serializer.data)} properties")
         return Response(serializer.data)
@@ -501,21 +540,140 @@ class PropertyAlertViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+
+class PropertyFilterOptionsView(APIView):
+    """
+    Returns available filter options for property searches.
+    Cached for 1 hour to reduce database queries.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from django.core.cache import cache
+
+        cache_key = 'property_filter_options'
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            return Response(cached_data)
+
+        # Get unique locations
+        locations = Property.objects.filter(
+            is_published=True
+        ).values_list('location', flat=True).distinct().order_by('location')
+
+        # Get price range
+        price_stats = Property.objects.filter(
+            is_published=True
+        ).aggregate(
+            min_price=Min('price'),
+            max_price=Max('price')
+        )
+
+        # Get property types with counts
+        property_types = Property.objects.filter(
+            is_published=True
+        ).values('property_type').annotate(
+            count=Count('id')
+        ).order_by('property_type')
+
+        # Get categories with counts
+        categories = Property.objects.filter(
+            is_published=True
+        ).values('category').annotate(
+            count=Count('id')
+        ).order_by('category')
+
+        # Get status options with counts
+        statuses = Property.objects.filter(
+            is_published=True
+        ).values('status').annotate(
+            count=Count('id')
+        ).order_by('status')
+
+        # Get bedroom range
+        bed_stats = Property.objects.filter(
+            is_published=True
+        ).aggregate(
+            min_beds=Min('beds'),
+            max_beds=Max('beds')
+        )
+
+        # Get bathroom range
+        bath_stats = Property.objects.filter(
+            is_published=True
+        ).aggregate(
+            min_baths=Min('baths'),
+            max_baths=Max('baths')
+        )
+
+        data = {
+            'locations': list(locations),
+            'price_range': {
+                'min': price_stats['min_price'] or 0,
+                'max': price_stats['max_price'] or 0,
+            },
+            'property_types': list(property_types),
+            'categories': list(categories),
+            'statuses': list(statuses),
+            'bed_range': {
+                'min': bed_stats['min_beds'] or 0,
+                'max': bed_stats['max_beds'] or 10,
+            },
+            'bath_range': {
+                'min': bath_stats['min_baths'] or 0,
+                'max': bath_stats['max_baths'] or 10,
+            },
+        }
+
+        # Cache for 1 hour
+        cache.set(cache_key, data, 60 * 60)
+
+        return Response(data)
+
+
 class PropertyShareView(APIView):
+    """
+    Create shareable property links - works for both authenticated and anonymous users
+    """
     permission_classes = [AllowAny]
 
     def post(self, request, pk):
-        property = get_object_or_404(Property, pk=pk)
-        expiration = timezone.now() + timedelta(days=7)
-        
+        property_obj = get_object_or_404(Property, pk=pk, is_published=True)
+        expiration = timezone.now() + timedelta(days=30)  # Extended to 30 days
+
+        # Get user if authenticated, otherwise None
+        user = request.user if request.user.is_authenticated else None
+        session_key = request.session.session_key or ''
+
+        # Ensure session exists for anonymous users
+        if not request.session.session_key:
+            request.session.create()
+            session_key = request.session.session_key
+
         share = PropertyShare.objects.create(
-            property=property,
-            user=request.user,
-            expires_at=expiration
+            property=property_obj,
+            user=user,
+            expires_at=expiration,
+            session_key=session_key
         )
-        
+
+        # Track share interaction
+        PropertyInteraction.objects.create(
+            property=property_obj,
+            user=user,
+            interaction_type='share',
+            session_key=session_key
+        )
+
+        # Build share URL with token
+        share_url = f"{settings.FRONTEND_URL}/shared/{share.share_token}"
+
         return Response({
-            'share_link': f"{settings.FRONTEND_URL}/properties/{property.id}/"
+            'share_link': share_url,
+            'share_token': str(share.share_token),
+            'expires_at': expiration.isoformat(),
+            'property_url': f"{settings.FRONTEND_URL}/properties/{property_obj.id}/"
         })
 
 class PropertyShareRedirect(APIView):
@@ -523,10 +681,118 @@ class PropertyShareRedirect(APIView):
         share = get_object_or_404(PropertyShare, share_token=token)
         if share.expires_at < timezone.now():
             return Response({'error': 'Link expired'}, status=410)
-            
+
         serializer = PropertySerializer(share.property)
         return Response(serializer.data)
-    
+
+
+class PropertyInquiryView(APIView):
+    """
+    Create property inquiries - works for both authenticated and anonymous users
+    Sends email notification to property agent
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request, pk):
+        from django.core.validators import validate_email
+        from django.core.exceptions import ValidationError
+        from .tasks import send_email_notification
+
+        property_obj = get_object_or_404(Property, pk=pk, is_published=True)
+
+        # Get data from request
+        message = request.data.get('message', '').strip()
+        name = request.data.get('name', '').strip()
+        email = request.data.get('email', '').strip()
+        phone = request.data.get('phone', '').strip()
+
+        # Validation
+        if not message:
+            return Response({'error': 'Message is required'}, status=400)
+
+        # For anonymous users, email is required
+        user = request.user if request.user.is_authenticated else None
+        if not user:
+            if not email:
+                return Response({'error': 'Email is required for inquiries'}, status=400)
+            try:
+                validate_email(email)
+            except ValidationError:
+                return Response({'error': 'Please provide a valid email address'}, status=400)
+            if not name:
+                return Response({'error': 'Name is required for inquiries'}, status=400)
+
+        # Get or create session for anonymous users
+        session_key = ''
+        if hasattr(request, 'session'):
+            if not request.session.session_key:
+                request.session.create()
+            session_key = request.session.session_key or ''
+
+        # Create the inquiry
+        inquiry = Inquiry.objects.create(
+            property=property_obj,
+            user=user,
+            name=name if not user else (user.firstname or user.username),
+            email=email if not user else user.email,
+            phone=phone,
+            message=message
+        )
+
+        # Track inquiry interaction
+        PropertyInteraction.objects.create(
+            property=property_obj,
+            user=user,
+            interaction_type='inquiry',
+            session_key=session_key
+        )
+
+        # Send email notification to agent
+        sender_name = name if not user else (user.firstname or user.username)
+        sender_email = email if not user else user.email
+
+        # Get agent email (property.agent or fallback to admin)
+        agent_email = None
+        if hasattr(property_obj, 'agent') and property_obj.agent:
+            agent_email = property_obj.agent.email
+
+        if not agent_email:
+            agent_email = settings.DEFAULT_FROM_EMAIL
+
+        # Prepare email content
+        subject = f"New Inquiry for {property_obj.title}"
+        email_message = f"""
+New inquiry received for: {property_obj.title}
+
+From: {sender_name}
+Email: {sender_email}
+Phone: {phone or 'Not provided'}
+
+Message:
+{message}
+
+---
+View property: {settings.FRONTEND_URL}/properties/{property_obj.id}/
+Reply directly to: {sender_email}
+        """
+
+        # Send async email notification
+        try:
+            send_email_notification.delay(
+                subject=subject,
+                message=email_message,
+                recipient_list=[agent_email],
+            )
+        except Exception as e:
+            logger.error(f"Failed to queue inquiry email: {str(e)}")
+
+        return Response({
+            'success': True,
+            'message': 'Your inquiry has been sent. The agent will contact you soon.',
+            'inquiry_id': inquiry.id
+        }, status=201)
+
+
 class PropertyRecommendationViews(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -633,24 +899,77 @@ class AdminDashboardView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        from django.db.models import Count, DateField
-        from django.db.models.functions import Trunc
-        
-        # View statistics
-        view_stats = PropertyInteraction.objects.filter(
-            interaction_type='view'
-        ).annotate(
-            date=Trunc('timestamp', 'day', output_field=DateField())
-        ).values('date').annotate(
-            views=Count('id')
-        ).order_by('-date')[:7]
+        from django.db.models import Count, Sum
+        from django.db.models.functions import TruncDate
+        from datetime import date, timedelta
 
-        popular_properties = Property.objects.annotate(
-            view_count=Count('propertyinteraction')
-        ).order_by('-view_count')[:5]
-        
-        # Fix: Convert AdminActionLog objects to dictionaries
-        recent_actions = AdminActionLog.objects.filter(admin=request.user).select_related('admin', 'target_user').order_by('-timestamp')[:10]
+        # Date ranges for trend calculation
+        today = date.today()
+        seven_days_ago = today - timedelta(days=7)
+        fourteen_days_ago = today - timedelta(days=14)
+        thirty_days_ago = today - timedelta(days=30)
+
+        # Get stats from PropertyStat for the last 7 days
+        stats_last_7_days = PropertyStat.objects.filter(
+            date__gte=seven_days_ago
+        ).values('date').annotate(
+            total_views=Sum('views'),
+            total_inquiries=Sum('inquiries'),
+            total_favorites=Sum('favorites'),
+            total_shares=Sum('shares')
+        ).order_by('-date')
+
+        # Get stats for previous 7 days (for trend comparison)
+        stats_prev_7_days = PropertyStat.objects.filter(
+            date__gte=fourteen_days_ago,
+            date__lt=seven_days_ago
+        ).aggregate(
+            views=Sum('views'),
+            inquiries=Sum('inquiries'),
+            favorites=Sum('favorites'),
+            shares=Sum('shares')
+        )
+
+        # Current period totals
+        current_totals = PropertyStat.objects.filter(
+            date__gte=seven_days_ago
+        ).aggregate(
+            views=Sum('views'),
+            inquiries=Sum('inquiries'),
+            favorites=Sum('favorites'),
+            shares=Sum('shares')
+        )
+
+        # Calculate trends (percentage change)
+        def calc_trend(current, previous):
+            current = current or 0
+            previous = previous or 0
+            if previous == 0:
+                return 100 if current > 0 else 0
+            return round(((current - previous) / previous) * 100, 1)
+
+        trends = {
+            'views': calc_trend(current_totals['views'], stats_prev_7_days['views']),
+            'inquiries': calc_trend(current_totals['inquiries'], stats_prev_7_days['inquiries']),
+            'favorites': calc_trend(current_totals['favorites'], stats_prev_7_days['favorites']),
+            'shares': calc_trend(current_totals['shares'], stats_prev_7_days['shares']),
+        }
+
+        # Popular properties (from PropertyStat aggregated data)
+        popular_properties = Property.objects.filter(
+            stats__date__gte=thirty_days_ago
+        ).annotate(
+            total_views=Sum('stats__views'),
+            total_inquiries=Sum('stats__inquiries'),
+            total_favorites=Sum('stats__favorites'),
+            total_shares=Sum('stats__shares')
+        ).order_by('-total_views')[:10]
+
+        # Recent admin actions
+        recent_actions = AdminActionLog.objects.filter(
+            admin=request.user
+        ).select_related('admin', 'target_user').order_by('-timestamp')[:10]
+
         recent_actions_data = []
         for action in recent_actions:
             recent_actions_data.append({
@@ -662,33 +981,59 @@ class AdminDashboardView(APIView):
                 'ip_address': action.ip_address,
                 'timestamp': action.timestamp.isoformat(),
             })
-        
+
+        # User growth over last 7 days
+        user_growth = User.objects.filter(
+            date_joined__date__gte=seven_days_ago
+        ).annotate(
+            date=TruncDate('date_joined')
+        ).values('date').annotate(
+            count=Count('id')
+        ).order_by('-date')
+
         stats = {
-            'total_views': PropertyInteraction.objects.filter(interaction_type='view').count(),
-            'views_last_7_days': list(view_stats),
+            # Summary stats
+            'total_views': PropertyStat.objects.aggregate(total=Sum('views'))['total'] or 0,
+            'total_inquiries': PropertyStat.objects.aggregate(total=Sum('inquiries'))['total'] or 0,
+            'total_favorites': PropertyStat.objects.aggregate(total=Sum('favorites'))['total'] or 0,
+            'total_shares': PropertyStat.objects.aggregate(total=Sum('shares'))['total'] or 0,
+
+            # Period stats with daily breakdown
+            'stats_last_7_days': list(stats_last_7_days),
+
+            # Trends
+            'trends': trends,
+
+            # Popular properties
             'popular_properties': [
                 {
                     'id': p.id,
                     'title': p.title,
-                    'views': p.view_count
+                    'location': p.location,
+                    'views': p.total_views or 0,
+                    'inquiries': p.total_inquiries or 0,
+                    'favorites': p.total_favorites or 0,
+                    'shares': p.total_shares or 0,
                 } for p in popular_properties
             ],
-            'views_by_type': list(PropertyInteraction.objects.values('interaction_type')
-                              .annotate(count=Count('id'))),
+
+            # Platform stats
             'total_users': User.objects.count(),
             'active_listings': Property.objects.filter(is_published=True).count(),
-            'total_inquiries': Inquiry.objects.count(),
+            'pending_listings': Property.objects.filter(is_published=False).count(),
+            'active_admins': User.objects.filter(is_staff=True).count(),
+
+            # Location breakdown
             'popular_locations': list(Property.objects.values('location')
                              .annotate(count=Count('id'))
                              .order_by('-count')[:5]),
-            'active_admins': User.objects.filter(is_staff=True).count(),
-            'recent_actions': recent_actions_data,  # Fixed: Now serializable
-            'user_growth': list(User.objects.extra({
-                'date': "date(date_joined)"
-            }).values('date').annotate(count=Count('id')).order_by('-date')[:7]),
+
+            # Admin activity
+            'recent_actions': recent_actions_data,
+            'user_growth': list(user_growth),
             'admin_activity': list(AdminActionLog.objects.values('action_type')
                                .annotate(total=Count('id'))
-                               .order_by('-total'))
+                               .order_by('-total')),
         }
         return Response(stats)
     
@@ -709,34 +1054,78 @@ class PropertyStatsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        property = get_object_or_404(Property, pk=pk)
-        
+        from django.db.models import Sum
+        from datetime import date, timedelta
+
+        property_obj = get_object_or_404(Property, pk=pk)
+
         # Verify ownership if not admin
-        if not request.user.is_staff and property.agent != request.user:
+        if not request.user.is_staff and property_obj.agent != request.user:
             return Response({"detail": "Not authorized"}, status=403)
 
+        # Date range parameters
+        days = int(request.query_params.get('days', 30))
+        end_date = date.today()
+        start_date = end_date - timedelta(days=days)
+
+        # Get aggregated stats from PropertyStat
+        property_stats = PropertyStat.objects.filter(
+            property=property_obj,
+            date__gte=start_date
+        )
+
+        # Daily breakdown for charts
+        daily_stats = list(property_stats.values('date').order_by('date'))
+
+        # Totals for the period
+        totals = property_stats.aggregate(
+            views=Sum('views'),
+            inquiries=Sum('inquiries'),
+            favorites=Sum('favorites'),
+            shares=Sum('shares')
+        )
+
+        # All-time totals
+        all_time = PropertyStat.objects.filter(property=property_obj).aggregate(
+            views=Sum('views'),
+            inquiries=Sum('inquiries'),
+            favorites=Sum('favorites'),
+            shares=Sum('shares')
+        )
+
+        # User type breakdown from raw interactions (for detailed analytics)
+        user_types = PropertyInteraction.objects.filter(property=property_obj).annotate(
+            is_authenticated=Case(
+                When(user__isnull=False, then=Value('Registered')),
+                default=Value('Anonymous'),
+                output_field=CharField()
+            )
+        ).values('is_authenticated').annotate(count=Count('id'))
+
         stats = {
-            'total_views': PropertyInteraction.objects.filter(
-                property=property,
-                interaction_type='view'
-            ).count(),
-            'view_timeline': PropertyInteraction.objects.filter(property=property)
-                              .annotate(hour=TruncHour('timestamp'))
-                              .values('hour')
-                              .annotate(count=Count('id'))
-                              .order_by('-hour')[:24],
-            'user_types': PropertyInteraction.objects.filter(property=property)
-                           .annotate(
-                               is_authenticated=Case(
-                                   When(user__isnull=False, then=Value('Registered')),
-                                   default=Value('Anonymous'),
-                                   output_field=CharField()
-                               )
-                           )
-                           .values('is_authenticated')
-                           .annotate(count=Count('id'))
+            'property_id': property_obj.id,
+            'property_title': property_obj.title,
+            'period': {
+                'days': days,
+                'start_date': str(start_date),
+                'end_date': str(end_date),
+            },
+            'period_totals': {
+                'views': totals['views'] or 0,
+                'inquiries': totals['inquiries'] or 0,
+                'favorites': totals['favorites'] or 0,
+                'shares': totals['shares'] or 0,
+            },
+            'all_time_totals': {
+                'views': all_time['views'] or 0,
+                'inquiries': all_time['inquiries'] or 0,
+                'favorites': all_time['favorites'] or 0,
+                'shares': all_time['shares'] or 0,
+            },
+            'daily_breakdown': daily_stats,
+            'user_types': list(user_types),
         }
-        
+
         return Response(stats)
 
 class AdminUserManagementViewSet(viewsets.ModelViewSet):
@@ -814,7 +1203,64 @@ class AdminActionLogViewSet(viewsets.ReadOnlyModelViewSet):
         )[:50]
         serializer = self.get_serializer(logs, many=True)
         return Response(serializer.data)
-    
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing system notifications from CRUD operations.
+    """
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAdminUser]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['notification_type', 'read']
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']
+    pagination_class = None  # Return all notifications without pagination
+
+    def get_queryset(self):
+        # Return notifications for all admins (user is null) or specific user
+        # Limit to 100 most recent in the list action
+        return Notification.objects.filter(
+            Q(user__isnull=True) | Q(user=self.request.user)
+        )
+
+    def list(self, request, *args, **kwargs):
+        """Override list to limit results to 100 most recent"""
+        queryset = self.filter_queryset(self.get_queryset())[:100]
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def unread_count(self, request):
+        """Get count of unread notifications"""
+        count = self.get_queryset().filter(read=False).count()
+        return Response({'count': count})
+
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        """Mark all notifications as read"""
+        updated = self.get_queryset().filter(read=False).update(read=True)
+        return Response({'updated': updated})
+
+    @action(detail=True, methods=['patch'])
+    def mark_read(self, request, pk=None):
+        """Mark a specific notification as read"""
+        notification = self.get_object()
+        notification.read = True
+        notification.save()
+        return Response(self.get_serializer(notification).data)
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete a notification"""
+        return super().destroy(request, *args, **kwargs)
+
+    @action(detail=False, methods=['delete'])
+    def clear_all(self, request):
+        """Clear all notifications"""
+        deleted_count, _ = self.get_queryset().delete()
+        return Response({'deleted': deleted_count})
+
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer

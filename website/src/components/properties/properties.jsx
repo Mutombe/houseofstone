@@ -1,176 +1,75 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+// src/components/properties/properties.jsx
+// Creative, world-class property listing page
+
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { motion, AnimatePresence, useInView } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
 import {
-  Search,
-  MapPin,
-  Bed,
-  Bath,
-  Square,
-  Filter,
-  Grid,
-  List as ListIcon,
-  SlidersHorizontal,
-  X,
-  Heart,
-  Share2,
-  Star,
-  Home,
-  Building,
-  TreePine,
-  Store,
-  Car,
-  Wifi,
-  Shield,
-  Check,
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
+  Search, MapPin, Bed, Bath, Maximize, SlidersHorizontal, X, Heart, Share2,
+  Grid, LayoutList, ChevronDown, ChevronLeft, ChevronRight, Home, Building2,
+  TreePine, Warehouse, Check, AlertCircle, ArrowUpRight, Filter, Sparkles,
+  Car, Wifi, Shield, Eye, TrendingUp, Clock
 } from "lucide-react";
 import {
   fetchProperties,
-  updateFilters,
-  updateSortBy,
-  clearFilters as clearReduxFilters,
   selectMarketplace,
   selectPropertiesLoading,
   selectPropertiesError,
 } from "./../../redux/slices/propertySlice";
+import { SiFsecure } from "react-icons/si";
+import { IoCheckmarkDoneCircleOutline } from "react-icons/io5";
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
 const HARARE_REGIONS = {
-  "Harare North": [
-    "Northwood",
-    "Borrowdale",
-    "Borrowdale Brooke",
-    "Glen Lorne",
-    "Chishawesha",
-    "Emerald Hill",
-    "Mt Pleasant",
-    "Avondale",
-    "Belgravia",
-    "Highlands",
-    "Marlborough",
-    "Vainona",
-    "Cedrre Valley",
-    "Chisipiti",
-    "Mandara",
-  ],
-  "Harare East": [
-    "Greendale",
-    "Athlone",
-    "Eastlea",
-    "Eastgate",
-    "Ruwa",
-    "Zimre Park",
-    "Arcturus",
-    "Epworth",
-    "Machipisa",
-  ],
-  "Harare South": [
-    "Hatfield",
-    "Prospect",
-    "Waterfalls",
-    "Glen View",
-    "Mbare",
-    "Workington",
-    "Southerton",
-    "Willowvale",
-  ],
-  "Harare West": [
-    "Westgate",
-    "Mabelreign",
-    "Milton Park",
-    "Belvedere",
-    "Kuwadzana",
-    "Dzivarasekwa",
-    "Mufakose",
-    "Budiriro",
-  ],
-  "Harare Central": [
-    "City Centre",
-    "Avenues",
-    "Braeside",
-    "CBD",
-    "Kopje",
-    "Newlands",
-  ],
+  "Harare North": ["Northwood", "Borrowdale", "Borrowdale Brooke", "Glen Lorne", "Chishawesha", "Emerald Hill", "Mt Pleasant", "Avondale", "Belgravia", "Highlands", "Marlborough", "Vainona", "Chisipiti", "Mandara"],
+  "Harare East": ["Greendale", "Athlone", "Eastlea", "Eastgate", "Ruwa", "Zimre Park", "Arcturus", "Epworth"],
+  "Harare South": ["Hatfield", "Prospect", "Waterfalls", "Glen View", "Mbare", "Workington", "Southerton", "Willowvale"],
+  "Harare West": ["Westgate", "Mabelreign", "Milton Park", "Belvedere", "Kuwadzana", "Dzivarasekwa", "Mufakose", "Budiriro"],
+  "Harare Central": ["City Centre", "Avenues", "Braeside", "CBD", "Kopje", "Newlands"],
 };
-
-const ALL_LOCATIONS = Object.values(HARARE_REGIONS).flat();
 
 const INITIAL_FILTERS = {
   type: "all",
   priceRange: "all",
   bedrooms: "all",
   bathrooms: "all",
-  listingType: "sale",
-  amenities: [],
   sqftRange: "all",
   location: "",
-  page: 1,
-  page_size: 12,
 };
 
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 
-const getRegionFromLocation = (location) => {
-  if (!location) return null;
-  const locationLower = location.toLowerCase();
-
-  for (const [region, locations] of Object.entries(HARARE_REGIONS)) {
-    const found = locations.some(
-      (loc) =>
-        locationLower.includes(loc.toLowerCase()) ||
-        loc.toLowerCase().includes(locationLower)
-    );
-    if (found) return region;
-  }
-  return null;
-};
-
-const getPropertyTypeIcon = (type) => {
-  const icons = {
-    house: <Home className="w-4 h-4" />,
-    apartment: <Building className="w-4 h-4" />,
-    villa: <TreePine className="w-4 h-4" />,
-    commercial: <Store className="w-4 h-4" />,
-  };
-  return icons[type?.toLowerCase()] || <Home className="w-4 h-4" />;
-};
-
-const getDescriptionPreview = (description, maxLength = 150) => {
-  if (!description) return "";
-  const plainText = description
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return plainText.length > maxLength
-    ? plainText.substring(0, maxLength) + "..."
-    : plainText;
-};
-
 const formatPrice = (price) => {
+  if (!price) return "POA";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
   }).format(parseFloat(price) || 0);
+};
+
+const getPropertyIcon = (type) => {
+  const icons = {
+    house: Home,
+    apartment: Building2,
+    villa: TreePine,
+    commercial: Warehouse,
+  };
+  return icons[type?.toLowerCase()] || Home;
 };
 
 // ============================================================================
 // SUB-COMPONENTS
 // ============================================================================
 
-// Toast Notification Component
-const Toast = React.memo(({ message, type, onClose }) => {
+// Toast Notification
+const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
     return () => clearTimeout(timer);
@@ -181,297 +80,287 @@ const Toast = React.memo(({ message, type, onClose }) => {
       initial={{ opacity: 0, y: -50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -20, scale: 0.9 }}
-      className="fixed top-20 right-4 z-50 max-w-sm"
+      className="fixed top-24 right-4 z-50"
     >
-      <div
-        className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-sm ${
-          type === "success"
-            ? "bg-green-500 text-white"
-            : "bg-red-500 text-white"
-        }`}
-      >
-        {type === "success" ? (
-          <Check className="w-5 h-5 flex-shrink-0" />
-        ) : (
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-        )}
-        <p className="font-medium">{message}</p>
-        <button
-          onClick={onClose}
-          className="ml-2 hover:opacity-75 transition-opacity"
-        >
-          <X className="w-4 h-4" />
-        </button>
+      <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-sm ${
+        type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
+      }`}>
+        {type === "success" ? <IoCheckmarkDoneCircleOutline className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+        <span className="font-medium">{message}</span>
+        <button onClick={onClose} className="ml-2 hover:opacity-75"><X className="w-4 h-4" /></button>
       </div>
     </motion.div>
   );
-});
+};
 
-Toast.displayName = "Toast";
+// Property Card Skeleton - Matches PropertyCard structure exactly
+const PropertyCardSkeleton = ({ index = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.4, delay: index * 0.05 }}
+    className="group"
+  >
+    <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100">
+      {/* Image Container - matches h-64 */}
+      <div className="relative h-64 overflow-hidden bg-gradient-to-br from-[#0A1628]/5 to-[#0A1628]/10">
+        {/* Shimmer effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"
+             style={{ backgroundSize: '200% 100%' }} />
 
-// Property Skeleton Component
-const PropertySkeleton = React.memo(({ viewMode }) => {
-  const isGrid = viewMode === "grid";
+        {/* Gradient overlay like real card */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628]/40 via-transparent to-transparent" />
+
+        {/* Top badges skeleton */}
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+          <div className="flex gap-2">
+            <div className="h-7 w-20 bg-[#C9A962]/30 rounded-full animate-pulse" />
+            <div className="h-7 w-14 bg-green-500/20 rounded-full animate-pulse" />
+          </div>
+        </div>
+
+        {/* Bottom price/type skeleton */}
+        <div className="absolute bottom-4 left-4 right-4">
+          <div className="flex items-end justify-between">
+            <div>
+              <div className="h-8 w-32 bg-white/30 rounded-lg animate-pulse mb-2" />
+              <div className="h-4 w-20 bg-white/20 rounded animate-pulse" />
+            </div>
+            <div className="h-7 w-20 bg-green-500/30 rounded-full animate-pulse" />
+          </div>
+        </div>
+      </div>
+
+      {/* Content - matches p-6 structure */}
+      <div className="p-6">
+        {/* Title skeleton */}
+        <div className="h-6 bg-[#0A1628]/10 rounded-lg w-4/5 animate-pulse mb-2" />
+
+        {/* Location skeleton */}
+        <div className="flex items-center mb-4">
+          <div className="w-4 h-4 bg-[#C9A962]/30 rounded animate-pulse mr-2" />
+          <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
+        </div>
+
+        {/* Property specs grid - 3 columns */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-50">
+            <div className="w-4 h-4 bg-blue-200 rounded animate-pulse" />
+            <div className="w-6 h-4 bg-blue-200 rounded animate-pulse" />
+          </div>
+          <div className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-50">
+            <div className="w-4 h-4 bg-green-200 rounded animate-pulse" />
+            <div className="w-6 h-4 bg-green-200 rounded animate-pulse" />
+          </div>
+          <div className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-50">
+            <div className="w-4 h-4 bg-purple-200 rounded animate-pulse" />
+            <div className="w-8 h-4 bg-purple-200 rounded animate-pulse" />
+          </div>
+        </div>
+
+        {/* Amenities tags skeleton */}
+        <div className="flex gap-2 mb-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-7 w-16 bg-gray-100 rounded-full animate-pulse" />
+          ))}
+        </div>
+
+        {/* Footer skeleton */}
+        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+          <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
+          <div className="h-10 w-20 bg-[#0A1628]/10 rounded-xl animate-pulse" />
+        </div>
+      </div>
+    </div>
+  </motion.div>
+);
+
+// Premium Property Card
+const PropertyCard = ({ property, favorites, onToggleFavorite, onShare, index }) => {
+  const navigate = useNavigate();
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef(null);
+  const isInView = useInView(cardRef, { once: true, margin: "-50px" });
+
+  const primaryImage = property.images?.[0]?.image || "/hsp-fallback2.png";
+  const PropertyIcon = getPropertyIcon(property.property_type);
+
+  const daysListed = useMemo(() => {
+    if (!property.created_at) return 0;
+    return Math.floor((new Date() - new Date(property.created_at)) / (1000 * 60 * 60 * 24));
+  }, [property.created_at]);
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className={`bg-white rounded-2xl shadow-lg overflow-hidden group ${
-        isGrid ? "" : "flex flex-row"
-      }`}
+      ref={cardRef}
+      initial={{ opacity: 0, y: 50 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay: index * 0.1 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="group"
     >
-      <div className={`relative ${isGrid ? "h-64" : "w-1/3 h-48"}`}>
-        <div className="absolute inset-0 bg-stone-200 animate-pulse" />
-      </div>
-
-      <div className={`p-6 ${isGrid ? "" : "flex-1"}`}>
-        <div className="flex justify-between mb-3">
-          <div className="h-6 bg-stone-200 rounded-full w-3/4 animate-pulse" />
-          <div className="h-4 bg-stone-200 rounded-full w-1/6 animate-pulse" />
-        </div>
-
-        <div className="flex items-center mb-4">
-          <div className="h-4 bg-stone-200 rounded-full w-1/2 animate-pulse" />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-10 bg-stone-100 rounded-lg animate-pulse"
-            />
-          ))}
-        </div>
-
-        <div className="flex gap-2 mb-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-6 bg-stone-100 rounded-full w-20 animate-pulse"
-            />
-          ))}
-        </div>
-
-        <div className="flex justify-between items-center">
-          <div className="h-4 bg-stone-200 rounded-full w-1/3 animate-pulse" />
-          <div className="h-8 bg-stone-200 rounded-lg w-24 animate-pulse" />
-        </div>
-      </div>
-    </motion.div>
-  );
-});
-
-PropertySkeleton.displayName = "PropertySkeleton";
-
-// Property Card Component
-const PropertyCard = React.memo(
-  ({ property, viewMode, favorites, onToggleFavorite, onShare }) => {
-    const formattedPrice = useMemo(
-      () => formatPrice(property.price),
-      [property.price]
-    );
-
-    const daysListed = useMemo(() => {
-      if (!property.created_at) return 0;
-      const createdDate = new Date(property.created_at);
-      const today = new Date();
-      const diffTime = Math.abs(today - createdDate);
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays;
-    }, [property.created_at]);
-
-    const handleFavoriteClick = useCallback(
-      (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onToggleFavorite(property.id);
-      },
-      [property.id, onToggleFavorite]
-    );
-
-    const handleShareClick = useCallback(
-      (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onShare(property);
-      },
-      [property, onShare]
-    );
-
-    return (
       <motion.div
-        layout
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.4 }}
-        className={`bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group ${
-          viewMode === "list" ? "flex flex-row" : ""
-        }`}
+        className="bg-white rounded-3xl overflow-hidden shadow-lg cursor-pointer border border-gray-100"
+        whileHover={{ y: -12, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.15)" }}
+        transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+        onClick={() => navigate(`/properties/${property.id}`)}
       >
-        <Link
-          to={`/properties/${property.id}`}
-          className={viewMode === "list" ? "flex w-full" : "block"}
-        >
-          {/* Property Image */}
-          <div
-            className={`relative ${
-              viewMode === "list" ? "w-1/3 h-48" : "h-64"
-            }`}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-stone-500 to-stone-700">
-              {property.images && property.images.length > 0 ? (
-                <img
-                  src={property.images[0].image}
-                  alt={property.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.target.src = "/hsp-fallback2.png";
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white text-lg">
-                  🏠 No Image
-                </div>
+        {/* Image Container */}
+        <div className="relative h-64 overflow-hidden">
+          <motion.img
+            src={primaryImage}
+            alt={property.title}
+            className="w-full h-full object-cover"
+            animate={{ scale: isHovered ? 1.08 : 1 }}
+            transition={{ duration: 0.6 }}
+            onError={(e) => { e.target.src = "/hsp-fallback2.png"; }}
+          />
+
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628]/80 via-transparent to-transparent" />
+
+          {/* Top Row - Badges */}
+          <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+            <div className="flex gap-2 flex-wrap">
+              <span className="px-3 py-1.5 bg-[#C9A962] text-[#0A1628] text-xs font-bold rounded-full uppercase tracking-wider">
+                {property.category || "For Sale"}
+              </span>
+              {daysListed <= 7 && (
+                <span className="px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" /> New
+                </span>
               )}
             </div>
 
-            {/* Overlay Elements - Top Left */}
-            <div className="absolute top-4 left-4 flex gap-2">
-              <div className="bg-white px-3 py-1 rounded-full text-stone-900 font-bold text-lg">
-                {formattedPrice}
-              </div>
-              {property.category && (
-                <div className="bg-stone-900 bg-opacity-75 px-3 py-1 rounded-full text-white text-sm font-semibold capitalize">
-                  {property.category}
-                </div>
-              )}
-            </div>
-
-            {/* Overlay Elements - Top Right */}
-            <div className="absolute top-4 right-4 flex gap-2">
+            {/* Action Buttons */}
+            <motion.div
+              className="flex gap-2"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : 20 }}
+              transition={{ duration: 0.3 }}
+            >
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={handleFavoriteClick}
-                className={`p-2 rounded-full backdrop-blur-sm transition-colors ${
+                onClick={(e) => { e.stopPropagation(); onToggleFavorite(property.id); }}
+                className={`p-2.5 rounded-full backdrop-blur-md transition-all ${
                   favorites.has(property.id)
                     ? "bg-red-500 text-white"
-                    : "bg-white bg-opacity-75 text-stone-700 hover:bg-red-500 hover:text-white"
+                    : "bg-white/20 text-white hover:bg-white hover:text-[#0A1628]"
                 }`}
               >
-                <Heart
-                  className="w-4 h-4"
-                  fill={favorites.has(property.id) ? "currentColor" : "none"}
-                />
+                <Heart className={`w-4 h-4 ${favorites.has(property.id) ? "fill-current" : ""}`} />
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={handleShareClick}
-                className="p-2 rounded-full bg-white bg-opacity-75 text-stone-700 hover:bg-stone-900 hover:text-white transition-colors backdrop-blur-sm"
+                onClick={(e) => { e.stopPropagation(); onShare(property); }}
+                className="p-2.5 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white hover:text-[#0A1628] transition-all"
               >
                 <Share2 className="w-4 h-4" />
               </motion.button>
-            </div>
+            </motion.div>
+          </div>
 
-            {/* Overlay Elements - Bottom Left */}
-            <div className="absolute bottom-4 left-4 flex gap-2">
-              <div className="bg-stone-900 bg-opacity-75 px-3 py-1 rounded-full text-white text-sm flex items-center gap-1">
-                {getPropertyTypeIcon(property.property_type)}
-                {property.property_type || "Property"}
+          {/* Bottom Row - Price & Type */}
+          <div className="absolute bottom-4 left-4 right-4">
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-3xl font-bold text-white mb-1">{formatPrice(property.price)}</p>
+                <div className="flex items-center gap-2 text-white/80 text-sm">
+                  <PropertyIcon className="w-4 h-4" />
+                  <span className="capitalize">{property.property_type || "Property"}</span>
+                </div>
               </div>
-              <div className="bg-green-500 bg-opacity-90 px-3 py-1 rounded-full text-white text-sm font-semibold capitalize">
+              <div className="px-3 py-1.5 bg-green-500/90 text-white text-xs font-semibold rounded-full capitalize">
                 {property.status || "Available"}
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Property Details */}
-          <div className={`p-6 ${viewMode === "list" ? "flex-1" : ""}`}>
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="text-xl font-bold text-stone-900 group-hover:text-stone-700 transition-colors line-clamp-2">
-                {property.title}
-              </h3>
-              <div className="flex items-center text-yellow-500 flex-shrink-0 ml-2">
-                <Star className="w-4 h-4 fill-current" />
-                <span className="text-sm text-stone-600 ml-1">
-                  4.{Math.floor(Math.random() * 5 + 3)}
-                </span>
-              </div>
-            </div>
+        {/* Content */}
+        <div className="p-6">
+          <h3 className="text-xl font-bold text-[#0A1628] mb-2 line-clamp-1 group-hover:text-[#C9A962] transition-colors">
+            {property.title}
+          </h3>
 
-            <div className="flex items-center text-stone-600 mb-4">
-              <MapPin className="w-4 h-4 mr-2 text-red-500 flex-shrink-0" />
-              <span className="truncate">{property.location}</span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4 text-stone-600 mb-4">
-              <div className="flex items-center justify-center bg-stone-50 rounded-lg py-2">
-                <Bed className="w-4 h-4 mr-1 text-blue-500" />
-                <span className="font-semibold">{property.beds || 0}</span>
-              </div>
-              <div className="flex items-center justify-center bg-stone-50 rounded-lg py-2">
-                <Bath className="w-4 h-4 mr-1 text-green-500" />
-                <span className="font-semibold">{property.baths || 0}</span>
-              </div>
-              <div className="flex items-center justify-center bg-stone-50 rounded-lg py-2">
-                <Square className="w-4 h-4 mr-1 text-purple-500" />
-                <span className="font-semibold text-xs">
-                  {property.sqft || property.area_measurement || 0}
-                </span>
-              </div>
-            </div>
-
-            {/* Amenities Preview */}
-            <div className="flex gap-2 mb-4">
-              <div className="flex items-center text-xs text-stone-500 bg-stone-100 px-2 py-1 rounded-full">
-                <Car className="w-3 h-3 mr-1" /> Parking
-              </div>
-              <div className="flex items-center text-xs text-stone-500 bg-stone-100 px-2 py-1 rounded-full">
-                <Wifi className="w-3 h-3 mr-1" /> WiFi
-              </div>
-              <div className="flex items-center text-xs text-stone-500 bg-stone-100 px-2 py-1 rounded-full">
-                <Shield className="w-3 h-3 mr-1" /> Secure
-              </div>
-            </div>
-
-            {property.description && (
-              <p className="text-stone-600 text-sm line-clamp-2 mb-4">
-                {getDescriptionPreview(property.description)}
-              </p>
-            )}
-
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-stone-500">
-                Listed {daysListed === 0 ? 'today' : `${daysListed} day${daysListed !== 1 ? 's' : ''} ago`}
-              </div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="bg-stone-900 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-stone-800 transition-colors"
-              >
-                View Details
-              </motion.div>
-            </div>
+          <div className="flex items-center text-gray-500 mb-4">
+            <MapPin className="w-4 h-4 mr-2 text-[#C9A962]" />
+            <span className="text-sm truncate">{property.location}</span>
           </div>
-        </Link>
-      </motion.div>
-    );
-  },
-  (prevProps, nextProps) => {
-    return (
-      prevProps.property.id === nextProps.property.id &&
-      prevProps.property.updated_at === nextProps.property.updated_at &&
-      prevProps.viewMode === nextProps.viewMode &&
-      prevProps.favorites.has(prevProps.property.id) ===
-        nextProps.favorites.has(nextProps.property.id)
-    );
-  }
-);
 
-PropertyCard.displayName = "PropertyCard";
+          {/* Property Specs */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {[
+              { icon: Bed, value: property.beds || 0, label: "Beds", color: "bg-blue-50 text-blue-600" },
+              { icon: Bath, value: property.baths || 0, label: "Baths", color: "bg-green-50 text-green-600" },
+              { icon: Maximize, value: property.sqft || property.area_measurement || 0, label: "sqft", color: "bg-purple-50 text-purple-600" },
+            ].map((spec, idx) => (
+              <div key={idx} className={`flex items-center justify-center gap-2 py-2.5 rounded-xl ${spec.color}`}>
+                <spec.icon className="w-4 h-4" />
+                <span className="font-semibold text-sm">{spec.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Amenities Tags */}
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+            {[
+              { icon: Car, label: "Parking" },
+              { icon: Wifi, label: "WiFi" },
+              { icon: SiFsecure, label: "Security" },
+            ].map((amenity, idx) => (
+              <span key={idx} className="flex items-center gap-1 text-xs text-gray-500 bg-gray-50 px-2.5 py-1.5 rounded-full whitespace-nowrap">
+                <amenity.icon className="w-3 h-3 text-[#C9A962]" />
+                {amenity.label}
+              </span>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+            <div className="flex items-center text-gray-400 text-sm">
+              <Clock className="w-4 h-4 mr-1" />
+              {daysListed === 0 ? "Today" : `${daysListed}d ago`}
+            </div>
+            <motion.button
+              className="flex items-center gap-2 px-4 py-2 bg-[#0A1628] text-white text-sm font-semibold rounded-xl hover:bg-[#C9A962] hover:text-[#0A1628] transition-all"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Eye className="w-4 h-4" />
+              View
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// Filter Chip Component
+const FilterChip = ({ label, active, onClick, count }) => (
+  <motion.button
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
+    onClick={onClick}
+    className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+      active
+        ? "bg-[#0A1628] text-white shadow-lg"
+        : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+    }`}
+  >
+    {label}
+    {count !== undefined && (
+      <span className={`ml-2 px-1.5 py-0.5 rounded-full text-xs ${active ? "bg-[#C9A962] text-[#0A1628]" : "bg-gray-100"}`}>
+        {count}
+      </span>
+    )}
+  </motion.button>
+);
 
 // ============================================================================
 // MAIN COMPONENT
@@ -479,22 +368,17 @@ PropertyCard.displayName = "PropertyCard";
 
 const Properties = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const headerRef = useRef(null);
+  const isHeaderInView = useInView(headerRef, { once: true });
 
-  // ========================================
   // Redux State
-  // ========================================
   const marketplace = useSelector(selectMarketplace);
   const loading = useSelector(selectPropertiesLoading);
   const error = useSelector(selectPropertiesError);
+  const { results: allProperties = [] } = marketplace || {};
 
-  const {
-    results: allProperties = [],
-    count: totalBackendProperties = 0,
-  } = marketplace || {};
-
-  // ========================================
   // Local State
-  // ========================================
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
@@ -503,156 +387,90 @@ const Properties = () => {
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [currentPage, setCurrentPage] = useState(1);
-  const [toast, setToast] = useState({
-    show: false,
-    message: "",
-    type: "success",
-  });
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
   const pageSize = 12;
 
-  // ========================================
-  // Frontend Filtering & Sorting Logic
-  // ========================================
+  // Filtering & Sorting
   const filteredAndSortedProperties = useMemo(() => {
     let filtered = [...allProperties];
 
-    // Apply search filter
+    // Search
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (property) =>
-          property.title?.toLowerCase().includes(searchLower) ||
-          property.location?.toLowerCase().includes(searchLower) ||
-          property.description?.toLowerCase().includes(searchLower)
+      filtered = filtered.filter((p) =>
+        p.title?.toLowerCase().includes(searchLower) ||
+        p.location?.toLowerCase().includes(searchLower) ||
+        p.description?.toLowerCase().includes(searchLower)
       );
     }
 
-    // Apply region filter
+    // Region
     if (selectedRegion !== "all") {
       const regionLocations = HARARE_REGIONS[selectedRegion];
       if (regionLocations) {
-        filtered = filtered.filter((property) => {
-          const propertyLocation = property.location?.toLowerCase() || "";
-          return regionLocations.some((loc) =>
-            propertyLocation.includes(loc.toLowerCase())
-          );
+        filtered = filtered.filter((p) => {
+          const loc = p.location?.toLowerCase() || "";
+          return regionLocations.some((r) => loc.includes(r.toLowerCase()));
         });
       }
     }
 
-    // Apply location filter
-    if (filters.location) {
-      const locationLower = filters.location.toLowerCase();
-      filtered = filtered.filter((property) =>
-        property.location?.toLowerCase().includes(locationLower)
-      );
-    }
-
-    // Apply property type filter
+    // Type
     if (filters.type !== "all") {
-      filtered = filtered.filter(
-        (property) => property.property_type?.toLowerCase() === filters.type.toLowerCase()
-      );
+      filtered = filtered.filter((p) => p.property_type?.toLowerCase() === filters.type.toLowerCase());
     }
 
-    // Apply bedrooms filter
+    // Bedrooms
     if (filters.bedrooms !== "all") {
-      const minBeds = parseInt(filters.bedrooms);
-      filtered = filtered.filter(
-        (property) => (property.beds || 0) >= minBeds
-      );
+      filtered = filtered.filter((p) => (p.beds || 0) >= parseInt(filters.bedrooms));
     }
 
-    // Apply bathrooms filter
+    // Bathrooms
     if (filters.bathrooms !== "all") {
-      const minBaths = parseInt(filters.bathrooms);
-      filtered = filtered.filter(
-        (property) => (property.baths || 0) >= minBaths
-      );
+      filtered = filtered.filter((p) => (p.baths || 0) >= parseInt(filters.bathrooms));
     }
 
-    // Apply price range filter
+    // Price Range
     if (filters.priceRange !== "all") {
       const [min, max] = filters.priceRange.split("-").map(Number);
-      filtered = filtered.filter((property) => {
-        const price = parseFloat(property.price) || 0;
-        if (max) {
-          return price >= min && price <= max;
-        }
-        return price >= min;
+      filtered = filtered.filter((p) => {
+        const price = parseFloat(p.price) || 0;
+        return max ? (price >= min && price <= max) : price >= min;
       });
     }
 
-    // Apply square footage filter
-    if (filters.sqftRange !== "all") {
-      const [min, max] = filters.sqftRange.split("-").map(Number);
-      filtered = filtered.filter((property) => {
-        const sqft = parseFloat(property.sqft || property.area_measurement) || 0;
-        if (max && max < 999999) {
-          return sqft >= min && sqft <= max;
-        }
-        return sqft >= min;
-      });
-    }
-
-    // Apply sorting
+    // Sorting
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case "newest":
-          return new Date(b.created_at) - new Date(a.created_at);
-        case "oldest":
-          return new Date(a.created_at) - new Date(b.created_at);
-        case "price-low":
-          return (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0);
-        case "price-high":
-          return (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0);
-        case "beds":
-          return (b.beds || 0) - (a.beds || 0);
-        case "sqft":
-          return (
-            (parseFloat(b.sqft || b.area_measurement) || 0) -
-            (parseFloat(a.sqft || a.area_measurement) || 0)
-          );
-        default:
-          return 0;
+        case "newest": return new Date(b.created_at) - new Date(a.created_at);
+        case "oldest": return new Date(a.created_at) - new Date(b.created_at);
+        case "price-low": return (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0);
+        case "price-high": return (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0);
+        case "beds": return (b.beds || 0) - (a.beds || 0);
+        default: return 0;
       }
     });
 
     return filtered;
   }, [allProperties, searchTerm, selectedRegion, filters, sortBy]);
 
-  // ========================================
-  // Pagination Logic (Frontend)
-  // ========================================
+  // Pagination
   const totalProperties = filteredAndSortedProperties.length;
   const totalPages = Math.ceil(totalProperties / pageSize);
-  
   const paginatedProperties = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return filteredAndSortedProperties.slice(startIndex, endIndex);
-  }, [filteredAndSortedProperties, currentPage, pageSize]);
+    const start = (currentPage - 1) * pageSize;
+    return filteredAndSortedProperties.slice(start, start + pageSize);
+  }, [filteredAndSortedProperties, currentPage]);
 
-  // ========================================
   // Callbacks
-  // ========================================
   const showToast = useCallback((message, type = "success") => {
     setToast({ show: true, message, type });
   }, []);
 
-  const hideToast = useCallback(() => {
-    setToast((prev) => ({ ...prev, show: false }));
-  }, []);
-
   const handleFilterChange = useCallback((key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
-    setCurrentPage(1); // Reset to first page when filters change
-  }, []);
-
-  const handleSortChange = useCallback((value) => {
-    setSortBy(value);
-    setCurrentPage(1); // Reset to first page when sort changes
+    setCurrentPage(1);
   }, []);
 
   const clearFilters = useCallback(() => {
@@ -663,169 +481,93 @@ const Properties = () => {
     setCurrentPage(1);
   }, []);
 
-  const handlePageChange = useCallback((newPage) => {
-    setCurrentPage(newPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
-
-  const toggleFavorite = useCallback((propertyId) => {
+  const toggleFavorite = useCallback((id) => {
     setFavorites((prev) => {
-      const newFavorites = new Set(prev);
-      if (newFavorites.has(propertyId)) {
-        newFavorites.delete(propertyId);
-      } else {
-        newFavorites.add(propertyId);
-      }
-      return newFavorites;
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
   }, []);
 
-  const handleShare = useCallback(
-    async (property) => {
-      const shareData = {
-        title: property.title,
-        text: `Check out this property: ${property.title} - ${property.location}`,
-        url: `${window.location.origin}/properties/${property.id}`,
-      };
-
-      try {
-        if (
-          navigator.share &&
-          navigator.canShare &&
-          navigator.canShare(shareData)
-        ) {
-          await navigator.share(shareData);
-        } else {
-          const shareText = `${property.title}\n${property.location}\n\n${shareData.url}`;
-
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(shareText);
-            showToast("Link copied to clipboard!", "success");
-          } else {
-            const textArea = document.createElement("textarea");
-            textArea.value = shareText;
-            textArea.style.position = "fixed";
-            textArea.style.left = "-999999px";
-            document.body.appendChild(textArea);
-            textArea.select();
-
-            try {
-              document.execCommand("copy");
-              showToast("Link copied to clipboard!", "success");
-            } catch (err) {
-              showToast("Unable to copy link.", "error");
-            } finally {
-              document.body.removeChild(textArea);
-            }
-          }
-        }
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          showToast("Unable to share.", "error");
-        }
+  const handleShare = useCallback(async (property) => {
+    const url = `${window.location.origin}/properties/${property.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: property.title, text: property.location, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        showToast("Link copied!", "success");
       }
-    },
-    [showToast]
-  );
-
-  const getPageRange = useCallback(() => {
-    const range = [];
-    const start = Math.max(1, currentPage - 2);
-    const end = Math.min(totalPages, start + 4);
-
-    for (let i = start; i <= end; i++) {
-      range.push(i);
+    } catch (e) {
+      if (e.name !== "AbortError") showToast("Unable to share", "error");
     }
-    return range;
-  }, [currentPage, totalPages]);
+  }, [showToast]);
 
-  // ========================================
-  // Effects
-  // ========================================
-  useEffect(() => {
-    // Fetch all properties once for frontend filtering
-    // We use a large page_size to get all properties in one request
-    const backendFilters = {
-      page: 1,
-      page_size: 10000, // Large number to get all properties
-      category: "sale",
-    };
+  const handlePageChange = useCallback((page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 400, behavior: "smooth" });
+  }, []);
 
-    dispatch(fetchProperties(backendFilters));
-  }, [dispatch]);
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedRegion, filters, sortBy]);
-
-  // ========================================
-  // Computed Values
-  // ========================================
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (filters.type !== "all") count++;
     if (filters.priceRange !== "all") count++;
     if (filters.bedrooms !== "all") count++;
     if (filters.bathrooms !== "all") count++;
-    if (filters.sqftRange !== "all") count++;
-    if (filters.location) count++;
     if (selectedRegion !== "all") count++;
     if (searchTerm) count++;
     return count;
   }, [filters, selectedRegion, searchTerm]);
 
-  // ========================================
-  // Render States
-  // ========================================
+  // Effects
+  useEffect(() => {
+    dispatch(fetchProperties({ page: 1, page_size: 10000, category: "sale" }));
+  }, [dispatch]);
 
-  // Loading state
-  if (loading && allProperties.length === 0) {
-    return (
-      <div className="min-h-screen pt-8 bg-gradient-to-br from-stone-50 via-white to-stone-100">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white shadow-xl relative z-10 pt-16"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            {/* Search bar placeholder */}
-            <div className="h-16 bg-stone-200 rounded-xl animate-pulse mb-4" />
-          </div>
-        </motion.div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <PropertySkeleton key={i} viewMode={viewMode} />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedRegion, filters, sortBy]);
 
-  // Error state
+  // Determine if we're in initial loading state (show skeletons in grid)
+  const isInitialLoading = loading && allProperties.length === 0;
+
+  // Error
   if (error) {
     return (
-      <div className="min-h-screen pt-8 flex items-center justify-center bg-gradient-to-br from-red-50 to-stone-50">
+      <div className="min-h-screen bg-[#060D16] flex items-center justify-center">
+        {/* Background elements */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 opacity-[0.02]">
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `linear-gradient(#C9A962 1px, transparent 1px), linear-gradient(90deg, #C9A962 1px, transparent 1px)`,
+                backgroundSize: "60px 60px",
+              }}
+            />
+          </div>
+          <div className="absolute w-[400px] h-[400px] bg-red-500/10 rounded-full blur-3xl top-1/4 right-1/4 animate-pulse" />
+        </div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center p-8 bg-white rounded-xl shadow-lg max-w-md"
+          className="relative z-10 text-center p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl max-w-md mx-4"
         >
-          <div className="text-red-500 text-xl mb-4">
-            ⚠️ Error Loading Properties
+          <div className="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-400" />
           </div>
-          <div className="text-stone-600 mb-4">
+          <h3 className="text-xl font-bold text-white mb-2">Error Loading Properties</h3>
+          <p className="text-gray-400 mb-6">
             {typeof error === "object"
-              ? error.message || error.detail || "An error occurred"
+              ? error.message || error.detail || "An error occurred while loading properties"
               : String(error)}
-          </div>
+          </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => dispatch(fetchProperties({ page: 1, page_size: 9999, category: "sale" }))}
-            className="px-6 py-3 bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors"
+            onClick={() => dispatch(fetchProperties({ page: 1, page_size: 10000, category: "sale" }))}
+            className="px-6 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] rounded-xl font-semibold hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all duration-300"
           >
             Try Again
           </motion.button>
@@ -834,412 +576,358 @@ const Properties = () => {
     );
   }
 
-  // ========================================
-  // Main Render
-  // ========================================
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-white to-stone-100 pt-16">
-      {/* Toast Notifications */}
+    <div className="min-h-screen bg-[#FAFAFA]">
+      {/* Toast */}
       <AnimatePresence>
-        {toast.show && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={hideToast}
-          />
-        )}
+        {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast((p) => ({ ...p, show: false }))} />}
       </AnimatePresence>
 
-      {/* Search and Filter Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white shadow-xl relative z-10 pt-16"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Region Filter Bar */}
-          <div className="mb-4">
-            <div className="flex flex-wrap gap-2 justify-center">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setSelectedRegion("all")}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  selectedRegion === "all"
-                    ? "bg-stone-900 text-white shadow-lg"
-                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
-                }`}
-              >
-                All Regions
-              </motion.button>
-              {Object.keys(HARARE_REGIONS).map((region) => (
-                <motion.button
-                  key={region}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setSelectedRegion(region)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    selectedRegion === region
-                      ? "bg-stone-900 text-white shadow-lg"
-                      : "bg-stone-100 text-stone-700 hover:bg-stone-200"
-                  }`}
-                >
-                  {region}
-                </motion.button>
-              ))}
-            </div>
+      {/* Page Header */}
+      <section ref={headerRef} className="relative pt-32 pb-16 bg-gradient-to-br from-[#0A1628] via-[#0F1E32] to-[#0A1628] overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#C9A962]/10 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#C9A962]/10 rounded-full blur-[80px] -translate-x-1/2 translate-y-1/2" />
+          {/* Grid pattern */}
+          <div className="absolute inset-0 opacity-[0.03]">
+            <svg width="100%" height="100%"><defs><pattern id="propertyGrid" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M 60 0 L 0 0 0 60" fill="none" stroke="white" strokeWidth="1"/></pattern></defs><rect width="100%" height="100%" fill="url(#propertyGrid)" /></svg>
           </div>
+        </div>
 
-          {/* Main Search Bar */}
-          <div className="flex flex-col lg:flex-row gap-4 items-center mb-4">
-            <div className="flex-1 w-full relative">
+        <div className="max-w-7xl mx-auto px-6 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={isHeaderInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8 }}
+            className="text-center"
+          >
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-12 h-1 bg-[#C9A962] rounded-full" />
+              <span className="text-[#C9A962] text-sm font-semibold tracking-wider uppercase">Properties for Sale</span>
+              <div className="w-12 h-1 bg-[#C9A962] rounded-full" />
+            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
+              Find Your <span className="text-[#C9A962]">Dream Home</span>
+            </h1>
+            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+              Browse our exclusive collection of {totalProperties} premium properties in Zimbabwe's finest neighborhoods
+            </p>
+          </motion.div>
+
+          {/* Search Bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isHeaderInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="mt-10 max-w-3xl mx-auto"
+          >
+            <div className="relative">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by title, location, or description..."
-                className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 focus:border-transparent shadow-sm text-lg"
+                placeholder="Search by title, location, or keywords..."
+                className="w-full pl-16 pr-6 py-5 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-[#C9A962] focus:ring-2 focus:ring-[#C9A962]/20 text-lg transition-all"
               />
-              <Search className="absolute left-4 top-4 w-6 h-6 text-stone-400" />
               {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm("")}
-                  className="absolute right-4 top-4 text-stone-400 hover:text-stone-600 transition-colors"
-                >
-                  <X className="w-6 h-6" />
+                <button onClick={() => setSearchTerm("")} className="absolute right-6 top-1/2 -translate-y-1/2 text-white/50 hover:text-white">
+                  <X className="w-5 h-5" />
                 </button>
               )}
             </div>
+          </motion.div>
 
-            {/* Quick Filters */}
-            <div className="flex gap-2 flex-wrap lg:flex-nowrap">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-6 py-4 rounded-xl font-semibold transition-all ${
-                  showFilters
-                    ? "bg-stone-900 text-white shadow-lg"
-                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
-                }`}
-              >
-                <SlidersHorizontal className="w-5 h-5" />
-                Filters
-                {activeFiltersCount > 0 && (
-                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </motion.button>
+          {/* Region Chips */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isHeaderInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="mt-8 flex flex-wrap gap-3 justify-center"
+          >
+            <FilterChip label="All Regions" active={selectedRegion === "all"} onClick={() => setSelectedRegion("all")} />
+            {Object.keys(HARARE_REGIONS).map((region) => (
+              <FilterChip key={region} label={region} active={selectedRegion === region} onClick={() => setSelectedRegion(region)} />
+            ))}
+          </motion.div>
+        </div>
+      </section>
 
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-4 rounded-xl transition-all ${
-                    viewMode === "grid"
-                      ? "bg-stone-900 text-white"
-                      : "bg-stone-100 text-stone-700 hover:bg-stone-200"
-                  }`}
-                >
-                  <Grid className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`hidden sm:inline-block p-4 rounded-xl transition-all ${
-                    viewMode === "list"
-                      ? "bg-stone-900 text-white"
-                      : "bg-stone-100 text-stone-700 hover:bg-stone-200"
-                  }`}
-                >
-                  <ListIcon className="w-5 h-5" />
-                </button>
-              </div>
+      {/* Filters & Results */}
+      <section className="max-w-7xl mx-auto px-6 py-8">
+        {/* Toolbar */}
+        <div className="flex flex-wrap gap-4 items-center justify-between mb-8">
+          {/* Left - Filter Toggle & Count */}
+          <div className="flex items-center gap-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all ${
+                showFilters ? "bg-[#0A1628] text-white" : "bg-white text-gray-700 border border-gray-200 hover:border-[#C9A962]"
+              }`}
+            >
+              <SlidersHorizontal className="w-5 h-5" />
+              Filters
+              {activeFiltersCount > 0 && (
+                <span className="px-2 py-0.5 bg-[#C9A962] text-[#0A1628] text-xs font-bold rounded-full">{activeFiltersCount}</span>
+              )}
+            </motion.button>
+            <div className="text-gray-500">
+              {isInitialLoading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-8 h-5 bg-gray-200 rounded animate-pulse" />
+                  <span>properties loading...</span>
+                </span>
+              ) : (
+                <>
+                  <span className="font-bold text-[#0A1628]">{totalProperties}</span> properties found
+                </>
+              )}
             </div>
           </div>
 
-          {/* Advanced Filters Panel */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="border-t border-stone-200 pt-6 overflow-hidden"
+          {/* Right - View Mode & Sort */}
+          <div className="flex items-center gap-4">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-[#C9A962] cursor-pointer"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="beds">Most Bedrooms</option>
+            </select>
+
+            <div className="flex bg-white rounded-xl border border-gray-200 p-1">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2.5 rounded-lg transition-colors ${viewMode === "grid" ? "bg-[#0A1628] text-white" : "text-gray-500 hover:text-[#0A1628]"}`}
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-4">
-                  {/* Sort By */}
-                  <select
-                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
-                    value={sortBy}
-                    onChange={(e) => handleSortChange(e.target.value)}
-                  >
-                    <option value="oldest">Oldest First</option>
-                    <option value="newest">Newest First</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="beds">Most Bedrooms</option>
-                    <option value="sqft">Largest First</option>
-                  </select>
+                <Grid className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2.5 rounded-lg transition-colors hidden sm:block ${viewMode === "list" ? "bg-[#0A1628] text-white" : "text-gray-500 hover:text-[#0A1628]"}`}
+              >
+                <LayoutList className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
 
-                  {/* Price Range */}
+        {/* Filter Panel */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-white rounded-2xl p-6 mb-8 shadow-lg border border-gray-100 overflow-hidden"
+            >
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {/* Property Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Property Type</label>
                   <select
-                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
-                    value={filters.priceRange}
-                    onChange={(e) =>
-                      handleFilterChange("priceRange", e.target.value)
-                    }
-                  >
-                    <option value="all">Any Price</option>
-                    <option value="0-100000">$0 - $100K</option>
-                    <option value="100000-300000">$100K - $300K</option>
-                    <option value="300000-500000">$300K - $500K</option>
-                    <option value="500000-1000000">$500K - $1M</option>
-                    <option value="1000000-5000000">$1M+</option>
-                  </select>
-
-                  {/* Bedrooms */}
-                  <select
-                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
-                    value={filters.bedrooms}
-                    onChange={(e) =>
-                      handleFilterChange("bedrooms", e.target.value)
-                    }
-                  >
-                    <option value="all">Any Beds</option>
-                    <option value="1">1+ Bed</option>
-                    <option value="2">2+ Beds</option>
-                    <option value="3">3+ Beds</option>
-                    <option value="4">4+ Beds</option>
-                    <option value="5">5+ Beds</option>
-                  </select>
-
-                  {/* Bathrooms */}
-                  <select
-                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
-                    value={filters.bathrooms}
-                    onChange={(e) =>
-                      handleFilterChange("bathrooms", e.target.value)
-                    }
-                  >
-                    <option value="all">Any Baths</option>
-                    <option value="1">1+ Bath</option>
-                    <option value="2">2+ Baths</option>
-                    <option value="3">3+ Baths</option>
-                    <option value="4">4+ Baths</option>
-                  </select>
-
-                  {/* Square Footage */}
-                  <select
-                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
-                    value={filters.sqftRange}
-                    onChange={(e) =>
-                      handleFilterChange("sqftRange", e.target.value)
-                    }
-                  >
-                    <option value="all">Any Size</option>
-                    <option value="0-1000">Under 1K sq ft</option>
-                    <option value="1000-2000">1K - 2K sq ft</option>
-                    <option value="2000-3000">2K - 3K sq ft</option>
-                    <option value="3000-5000">3K - 5K sq ft</option>
-                    <option value="5000-999999">5K+ sq ft</option>
-                  </select>
-
-                  {/* Property Type */}
-                  <select
-                    className="px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500 bg-white"
                     value={filters.type}
-                    onChange={(e) =>
-                      handleFilterChange("type", e.target.value)
-                    }
+                    onChange={(e) => handleFilterChange("type", e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#C9A962] bg-gray-50"
                   >
-                    <option value="all">Any Type</option>
+                    <option value="all">All Types</option>
                     <option value="house">House</option>
                     <option value="apartment">Apartment</option>
-                    <option value="villa">Villa</option>
+                    <option value="flat">Flat</option>
+                    <option value="land">Land</option>
                     <option value="commercial">Commercial</option>
+                    <option value="villa">Villa</option>
+                    <option value="cluster">Cluster</option>
+                    <option value="stand">Stand</option>
+                    <option value="duplex">Duplex</option>
+                    <option value="townhouse">Townhouse</option>
                   </select>
                 </div>
 
-                {/* Location Filter & Clear */}
-                <div className="flex flex-col sm:flex-row gap-4 items-center">
-                  <div className="flex-1 w-full">
-                    <input
-                      type="text"
-                      value={filters.location}
-                      onChange={(e) =>
-                        handleFilterChange("location", e.target.value)
-                      }
-                      placeholder="Filter by location..."
-                      className="w-full px-4 py-3 rounded-lg border-2 border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-500"
-                    />
-                  </div>
+                {/* Price Range */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
+                  <select
+                    value={filters.priceRange}
+                    onChange={(e) => handleFilterChange("priceRange", e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#C9A962] bg-gray-50"
+                  >
+                    <option value="all">Any Price</option>
+                    <option value="0-100000">Under $100K</option>
+                    <option value="100000-300000">$100K - $300K</option>
+                    <option value="300000-500000">$300K - $500K</option>
+                    <option value="500000-1000000">$500K - $1M</option>
+                    <option value="1000000-99999999">$1M+</option>
+                  </select>
+                </div>
 
+                {/* Bedrooms */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Bedrooms</label>
+                  <select
+                    value={filters.bedrooms}
+                    onChange={(e) => handleFilterChange("bedrooms", e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#C9A962] bg-gray-50"
+                  >
+                    <option value="all">Any</option>
+                    <option value="1">1+</option>
+                    <option value="2">2+</option>
+                    <option value="3">3+</option>
+                    <option value="4">4+</option>
+                    <option value="5">5+</option>
+                  </select>
+                </div>
+
+                {/* Bathrooms */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Bathrooms</label>
+                  <select
+                    value={filters.bathrooms}
+                    onChange={(e) => handleFilterChange("bathrooms", e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#C9A962] bg-gray-50"
+                  >
+                    <option value="all">Any</option>
+                    <option value="1">1+</option>
+                    <option value="2">2+</option>
+                    <option value="3">3+</option>
+                    <option value="4">4+</option>
+                  </select>
+                </div>
+
+                {/* Clear Button */}
+                <div className="flex items-end">
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={clearFilters}
-                    className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
+                    className="w-full px-4 py-3 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition-colors"
                   >
                     Clear All
                   </motion.button>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Results Summary */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex flex-col sm:flex-row justify-between items-center bg-white rounded-xl p-4 shadow-sm"
-        >
-          <div className="text-stone-700 mb-2 sm:mb-0">
-            Showing{" "}
-            <span className="font-bold text-stone-900">
-              {totalProperties > 0 ? (currentPage - 1) * pageSize + 1 : 0}
-            </span>{" "}
-            to{" "}
-            <span className="font-bold text-stone-900">
-              {Math.min(currentPage * pageSize, totalProperties)}
-            </span>{" "}
-            of{" "}
-            <span className="font-bold text-stone-900">{totalProperties}</span>{" "}
-            properties
+        {/* Properties Grid */}
+        {isInitialLoading ? (
+          /* Show skeleton cards while loading - only this dynamic section */
+          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" : "space-y-6"}>
+            {[...Array(6)].map((_, index) => (
+              <PropertyCardSkeleton key={index} index={index} />
+            ))}
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-stone-500">
-              <Filter className="w-4 h-4" />
-              {activeFiltersCount > 0
-                ? `${activeFiltersCount} filters applied`
-                : "No filters"}
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Properties Display */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {paginatedProperties.length === 0 ? (
+        ) : paginatedProperties.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-16 bg-white rounded-xl shadow-sm"
+            className="text-center py-20 bg-white rounded-3xl shadow-lg"
           >
-            <div className="text-6xl mb-4">🏠</div>
-            <h3 className="text-2xl font-bold text-stone-900 mb-2">
-              No Properties Found
-            </h3>
-            <p className="text-stone-600 mb-6">
-              Try adjusting your search criteria or filters
-            </p>
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Home className="w-10 h-10 text-gray-400" />
+            </div>
+            <h3 className="text-2xl font-bold text-[#0A1628] mb-2">No Properties Found</h3>
+            <p className="text-gray-600 mb-6">Try adjusting your search or filters</p>
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={clearFilters}
-              className="px-8 py-3 bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors font-semibold"
+              className="px-8 py-3 bg-[#0A1628] text-white rounded-xl font-semibold"
             >
               Reset Filters
             </motion.button>
           </motion.div>
         ) : (
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                : "space-y-6"
-            }
-          >
-            <AnimatePresence mode="popLayout">
-              {paginatedProperties.map((property) => (
-                <PropertyCard
-                  key={property.id}
-                  property={property}
-                  viewMode={viewMode}
-                  favorites={favorites}
-                  onToggleFavorite={toggleFavorite}
-                  onShare={handleShare}
-                />
-              ))}
-            </AnimatePresence>
+          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" : "space-y-6"}>
+            {paginatedProperties.map((property, index) => (
+              <PropertyCard
+                key={property.id}
+                property={property}
+                favorites={favorites}
+                onToggleFavorite={toggleFavorite}
+                onShare={handleShare}
+                index={index}
+              />
+            ))}
           </div>
         )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="mt-10 flex justify-center px-4">
-            <div className="flex items-center gap-1 sm:gap-2">
-              {/* Previous Button */}
+        {/* Pagination - hide during initial loading */}
+        {!isInitialLoading && totalPages > 1 && (
+          <div className="mt-12 flex justify-center">
+            <div className="flex items-center gap-2">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 disabled={currentPage === 1}
                 onClick={() => handlePageChange(currentPage - 1)}
-                className={`px-2 sm:px-4 py-2 rounded-lg border transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
-                  currentPage === 1
-                    ? "border-stone-200 text-stone-400 cursor-not-allowed"
-                    : "border-stone-300 text-stone-700 hover:bg-stone-50 active:bg-stone-100"
+                className={`p-3 rounded-xl border transition-colors ${
+                  currentPage === 1 ? "border-gray-200 text-gray-300 cursor-not-allowed" : "border-gray-300 text-gray-700 hover:border-[#C9A962] hover:text-[#C9A962]"
                 }`}
-                aria-label="Previous page"
               >
-                <ChevronLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Previous</span>
+                <ChevronLeft className="w-5 h-5" />
               </motion.button>
 
-              {/* Page Numbers */}
-              <div className="flex items-center gap-1 sm:gap-2">
-                {getPageRange().map((page) => (
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let page;
+                if (totalPages <= 5) page = i + 1;
+                else if (currentPage <= 3) page = i + 1;
+                else if (currentPage >= totalPages - 2) page = totalPages - 4 + i;
+                else page = currentPage - 2 + i;
+                return (
                   <motion.button
                     key={page}
-                    whileHover={{ scale: 1.1 }}
+                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handlePageChange(page)}
-                    className={`min-w-[36px] sm:min-w-[40px] h-9 sm:h-10 px-2 rounded-lg font-medium transition-colors text-sm sm:text-base ${
-                      page === currentPage
-                        ? "bg-stone-900 text-white shadow-lg"
-                        : "border border-stone-300 text-stone-700 hover:bg-stone-50 active:bg-stone-100"
+                    className={`w-12 h-12 rounded-xl font-medium transition-colors ${
+                      page === currentPage ? "bg-[#C9A962] text-[#0A1628]" : "bg-white border border-gray-200 text-gray-700 hover:border-[#C9A962]"
                     }`}
-                    aria-label={`Page ${page}`}
-                    aria-current={page === currentPage ? "page" : undefined}
                   >
                     {page}
                   </motion.button>
-                ))}
-              </div>
+                );
+              })}
 
-              {/* Next Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 disabled={currentPage === totalPages}
                 onClick={() => handlePageChange(currentPage + 1)}
-                className={`px-2 sm:px-4 py-2 rounded-lg border transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
-                  currentPage === totalPages
-                    ? "border-stone-200 text-stone-400 cursor-not-allowed"
-                    : "border-stone-300 text-stone-700 hover:bg-stone-50 active:bg-stone-100"
+                className={`p-3 rounded-xl border transition-colors ${
+                  currentPage === totalPages ? "border-gray-200 text-gray-300 cursor-not-allowed" : "border-gray-300 text-gray-700 hover:border-[#C9A962] hover:text-[#C9A962]"
                 }`}
-                aria-label="Next page"
               >
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-5 h-5" />
               </motion.button>
             </div>
           </div>
         )}
-      </div>
+      </section>
 
-      {/* Floating Action Button for Mobile Filters */}
+      {/* Mobile Filter FAB */}
       <motion.button
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setShowFilters(!showFilters)}
-        className="fixed bottom-6 right-6 md:hidden bg-stone-900 text-white p-4 rounded-full shadow-2xl z-50"
+        className="fixed bottom-24 right-6 md:hidden w-14 h-14 bg-[#C9A962] text-[#0A1628] rounded-full shadow-2xl flex items-center justify-center z-50"
       >
         <SlidersHorizontal className="w-6 h-6" />
+        {activeFiltersCount > 0 && (
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#0A1628] text-white text-xs font-bold rounded-full flex items-center justify-center">
+            {activeFiltersCount}
+          </span>
+        )}
       </motion.button>
     </div>
   );

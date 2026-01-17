@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { motion, AnimatePresence } from "framer-motion";
 import { selectAllProperties } from "../../redux/selectors";
 import {
   createProperty,
@@ -45,63 +46,105 @@ import {
   TrendingUp,
   Home,
   DollarSign,
+  Activity,
+  Clock,
 } from "lucide-react";
 import LeadForm from "./leadform";
 import PropertyAnalyticsModal from "./agentpropertystats";
 import PropertyForm from "./propertyForm";
+import {
+  PropertyRowSkeleton,
+  TableRowSkeleton,
+  LoadingSpinner,
+} from "../ui/Skeleton";
+import { showSuccess, showError } from "../../redux/slices/toastSlice";
+import { FaRegCircleUser } from "react-icons/fa6";
+import { MdHouseSiding } from "react-icons/md";
 
-const COLORS = {
-  primary: "#8B7355", // Stone brown as primary brand color
-  secondary: "#D2B48C", // Tan/light stone color
-  accent: "#5D4037", // Dark stone color for accents
-  light: "#F5F5DC", // Beige/off-white for light backgrounds
-  dark: "#3E2723", // Very dark brown for text
-  white: "#FFFFFF",
-  black: "#000000",
-  gray: {
-    50: "#F9F7F5",
-    100: "#F0EBE5",
-    200: "#E0D5C9",
-    300: "#C9B8A8",
-    400: "#B39E89",
-    500: "#8B7355",
-    600: "#6D5A43",
-    700: "#4F4132",
-    800: "#332B21",
-    900: "#1A1610",
-  },
-};
 
-const StatsCard = ({ stat }) => {
-  return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-500 mb-1">{stat.title}</p>
-          <h3 className="text-2xl font-bold">{stat.value}</h3>
-          {stat.change && (
-            <p
-              className={`text-xs mt-1 ${
-                stat.change.startsWith("+") ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {stat.change} from last period
-            </p>
-          )}
-        </div>
-        <div
-          className="w-12 h-12 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: `${stat.color}20` }}
-        >
-          <div style={{ color: stat.color }}>{stat.icon}</div>
-        </div>
+// Properties List Skeleton - Only shows skeleton rows inside the list container
+const PropertiesListSkeleton = () => (
+  <div className="divide-y divide-white/5">
+    {[...Array(5)].map((_, i) => (
+      <PropertyRowSkeleton key={i} />
+    ))}
+  </div>
+);
+
+// Leads Table Skeleton - Shows skeleton rows inside the table, header remains visible
+const LeadsTableSkeleton = () => (
+  <div className="overflow-x-auto">
+    <table className="w-full">
+      <thead>
+        <tr className="border-b border-white/10">
+          {["Property", "Contact", "Source", "Status", "Date", "Actions"].map((header, i) => (
+            <th key={i} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              {header}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-white/5">
+        {[...Array(5)].map((_, i) => (
+          <TableRowSkeleton key={i} columns={6} />
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+// Stats Card Component
+const StatsCard = ({ stat, index }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: index * 0.1 }}
+    className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-[#C9A962]/30 transition-all duration-300"
+  >
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm text-gray-400 font-medium mb-1">{stat.title}</p>
+        <h3 className="text-2xl font-bold text-white">{stat.value}</h3>
+        {stat.change && (
+          <p
+            className={`text-xs mt-1 flex items-center gap-1 ${
+              stat.change.startsWith("+") ? "text-green-400" : "text-red-400"
+            }`}
+          >
+            {stat.change.startsWith("+") ? (
+              <ArrowUp className="w-3 h-3" />
+            ) : (
+              <ArrowDown className="w-3 h-3" />
+            )}
+            {stat.change} from last period
+          </p>
+        )}
+      </div>
+      <div
+        className="w-12 h-12 rounded-xl flex items-center justify-center"
+        style={{ backgroundColor: `${stat.color}20` }}
+      >
+        <div style={{ color: stat.color }}>{stat.icon}</div>
       </div>
     </div>
-  );
-};
+  </motion.div>
+);
+
+// Tab Button Component
+const TabButton = ({ active, onClick, children }) => (
+  <button
+    onClick={onClick}
+    className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
+      active
+        ? "bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628]"
+        : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10"
+    }`}
+  >
+    {children}
+  </button>
+);
 
 const AgentDashboard = () => {
-  
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const agents = useSelector((state) => state.agent.agents);
@@ -124,7 +167,13 @@ const AgentDashboard = () => {
   );
 
   const leadSources = useSelector((state) => state.properties.leadSources);
-  const loading = useSelector((state) => state.properties.loading);
+  const propertiesStatus = useSelector((state) => state.properties.status);
+  const leadsStatus = useSelector((state) => state.properties.leadsStatus || "idle");
+  const agentsStatus = useSelector((state) => state.agent.status);
+
+  // Computed loading states - Only for data sections, not the whole page
+  const isPropertiesLoading = propertiesStatus === "loading";
+  const isLeadsLoading = leadsStatus === "loading";
 
   const [activeTab, setActiveTab] = useState("properties");
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -135,12 +184,10 @@ const AgentDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedPropertyId, setExpandedPropertyId] = useState(null);
 
-  // Stats state
   const [statsPeriod, setStatsPeriod] = useState("7days");
   const [leadStatsPeriod, setLeadStatsPeriod] = useState("30days");
 
   useEffect(() => {
-    // Fetch all agents and properties on mount
     dispatch(fetchAgents());
     dispatch(fetchProperties());
     dispatch(fetchLeads());
@@ -159,7 +206,6 @@ const AgentDashboard = () => {
       setExpandedPropertyId(null);
     } else {
       setExpandedPropertyId(propertyId);
-      // Fetch stats when expanding
       dispatch(fetchPropertyStats(propertyId));
     }
   };
@@ -176,9 +222,14 @@ const AgentDashboard = () => {
     setShowLeadForm(true);
   };
 
-  const handleDeleteLead = (leadId) => {
+  const handleDeleteLead = async (leadId) => {
     if (window.confirm("Are you sure you want to delete this lead?")) {
-      dispatch(deleteLead(leadId));
+      try {
+        await dispatch(deleteLead(leadId)).unwrap();
+        dispatch(showSuccess("Lead deleted successfully!", "Delete Lead"));
+      } catch (error) {
+        dispatch(showError("Unable to delete lead. Please try again.", "Delete Failed"));
+      }
     }
   };
 
@@ -186,132 +237,154 @@ const AgentDashboard = () => {
     {
       title: "Total Properties",
       value: properties.length,
-      icon: <Home size={24} />,
-      color: COLORS.primary,
+      icon: <Home className="w-6 h-6" />,
+      color: "#C9A962",
       change: "+2%",
     },
     {
       title: "Active Leads",
       value: agentStats.active_leads || 0,
-      icon: <Users size={24} />,
-      color: "#4CAF50",
+      icon: <Users className="w-6 h-6" />,
+      color: "#10B981",
       change: "+5%",
     },
     {
       title: "Lead Conversion",
       value: "12%",
-      icon: <TrendingUp size={24} />,
-      color: "#2196F3",
+      icon: <TrendingUp className="w-6 h-6" />,
+      color: "#3B82F6",
       change: "+1.2%",
     },
     {
       title: "Avg. Response Time",
       value: "2.4h",
-      icon: <Bell size={24} />,
-      color: "#9C27B0",
+      icon: <Clock className="w-6 h-6" />,
+      color: "#8B5CF6",
       change: "-0.5h",
     },
   ];
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen bg-[#060D16] pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Agent Dashboard</h1>
-          {currentAgent && (
-            <p className="text-gray-600">
-              Welcome back, {currentAgent.first_name} {currentAgent.surname}
-            </p>
-          )}
-        </div>
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+          <div>
+            <motion.h1
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-3xl font-bold text-white"
+            >
+              Agent Dashboard
+            </motion.h1>
+            {currentAgent && (
+              <motion.p
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-gray-400 mt-1"
+              >
+                Welcome back,{" "}
+                <span className="text-[#C9A962]">
+                  {currentAgent.first_name} {currentAgent.surname}
+                </span>
+              </motion.p>
+            )}
+          </div>
 
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Agent Dashboard</h1>
-          <div className="flex space-x-4">
-            <button
+          {/* Tab Navigation */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex gap-3"
+          >
+            <TabButton
+              active={activeTab === "properties"}
               onClick={() => setActiveTab("properties")}
-              className={`px-4 py-2 rounded-md ${
-                activeTab === "properties"
-                  ? "bg-primary text-white"
-                  : "bg-white text-gray-700"
-              }`}
             >
               My Properties
-            </button>
-            <button
+            </TabButton>
+            <TabButton
+              active={activeTab === "leads"}
               onClick={() => setActiveTab("leads")}
-              className={`px-4 py-2 rounded-md ${
-                activeTab === "leads"
-                  ? "bg-primary text-white"
-                  : "bg-white text-gray-700"
-              }`}
             >
               Leads
-            </button>
-            <button
+            </TabButton>
+            <TabButton
+              active={activeTab === "analytics"}
               onClick={() => setActiveTab("analytics")}
-              className={`px-4 py-2 rounded-md ${
-                activeTab === "analytics"
-                  ? "bg-primary text-white"
-                  : "bg-white text-gray-700"
-              }`}
             >
               Analytics
-            </button>
-          </div>
+            </TabButton>
+          </motion.div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Always visible, computed from local data */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {dashboardStats.map((stat, index) => (
-            <StatsCard key={index} stat={stat} />
+            <StatsCard key={index} stat={stat} index={index} />
           ))}
         </div>
 
         {/* Properties Tab */}
         {activeTab === "properties" && (
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-lg font-medium text-gray-900">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden"
+          >
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-[#C9A962]" />
                 My Properties
               </h2>
-              <div className="flex space-x-3">
+              <div className="flex gap-3">
                 <div className="relative">
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
                   <input
                     type="text"
                     placeholder="Search properties..."
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors w-64"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     setSelectedProperty(null);
                     setShowPropertyForm(true);
                   }}
-                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all duration-300"
                 >
-                  <Plus size={18} />
-                  <span>Add Property</span>
-                </button>
+                  <Plus className="w-4 h-4" />
+                  Add Property
+                </motion.button>
               </div>
             </div>
 
-            <div className="divide-y divide-gray-200">
-              {filteredProperties.length > 0 ? (
-                filteredProperties.map((property) => (
-                  <div key={property.id} className="hover:bg-gray-50">
+            {/* Properties List */}
+            <div className="divide-y divide-white/5">
+              {isPropertiesLoading && filteredProperties.length === 0 ? (
+                <PropertiesListSkeleton />
+              ) : filteredProperties.length > 0 ? (
+                filteredProperties.map((property, index) => (
+                  <motion.div
+                    key={property.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="hover:bg-white/5 transition-colors"
+                  >
+                    {/* Property Row */}
                     <div
                       className="px-6 py-4 flex justify-between items-center cursor-pointer"
                       onClick={() => togglePropertyExpand(property.id)}
                     >
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-gray-200 rounded-md overflow-hidden">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-xl bg-white/10 overflow-hidden flex-shrink-0">
                           {property.images?.[0]?.image && (
                             <img
                               src={property.images[0].image}
@@ -321,452 +394,477 @@ const AgentDashboard = () => {
                           )}
                         </div>
                         <div>
-                          <h3 className="text-lg font-medium text-gray-900">
+                          <h3 className="text-lg font-medium text-white">
                             {property.title}
                           </h3>
-                          <p className="text-sm text-gray-500 flex items-center">
-                            <MapPin size={14} className="mr-1" />
+                          <p className="text-sm text-gray-400 flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-[#C9A962]" />
                             {property.location}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <span className="text-lg font-semibold">
+                      <div className="flex items-center gap-4">
+                        <span className="text-lg font-semibold text-[#C9A962]">
                           ${property.price.toLocaleString()}
                         </span>
                         <span
-                          className={`px-2 py-1 text-xs rounded-full ${
+                          className={`px-3 py-1 text-xs font-medium rounded-full ${
                             property.status === "available"
-                              ? "bg-green-100 text-green-800"
+                              ? "bg-green-500/20 text-green-400"
                               : property.status === "pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-gray-100 text-gray-800"
+                              ? "bg-yellow-500/20 text-yellow-400"
+                              : "bg-gray-500/20 text-gray-400"
                           }`}
                         >
                           {property.status}
                         </span>
                         {expandedPropertyId === property.id ? (
-                          <ChevronUp size={20} />
+                          <ChevronUp className="w-5 h-5 text-gray-400" />
                         ) : (
-                          <ChevronDown size={20} />
+                          <ChevronDown className="w-5 h-5 text-gray-400" />
                         )}
                       </div>
                     </div>
 
-                    {expandedPropertyId === property.id && (
-                      <div className="px-6 py-4 bg-gray-50">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-500 mb-2">
-                              Property Details
-                            </h4>
-                            <div className="space-y-2">
-                              <p className="text-sm">
-                                <span className="font-medium">Type:</span>{" "}
-                                {property.property_type}
-                              </p>
-                              <p className="text-sm">
-                                <span className="font-medium">Beds:</span>{" "}
-                                {property.beds || "-"}
-                              </p>
-                              <p className="text-sm">
-                                <span className="font-medium">Baths:</span>{" "}
-                                {property.baths || "-"}
-                              </p>
-                              <p className="text-sm">
-                                <span className="font-medium">Size:</span>{" "}
-                                {property.sqft ? `${property.sqft} sqft` : "-"}
-                              </p>
+                    {/* Expanded Details */}
+                    <AnimatePresence>
+                      {expandedPropertyId === property.id && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="px-6 pb-6 overflow-hidden"
+                        >
+                          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                              {/* Property Details */}
+                              <div>
+                                <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
+                                  <Home className="w-4 h-4 text-[#C9A962]" />
+                                  Property Details
+                                </h4>
+                                <div className="space-y-2">
+                                  <p className="text-sm text-white">
+                                    <span className="text-gray-500">Type:</span>{" "}
+                                    <span className="capitalize">{property.property_type}</span>
+                                  </p>
+                                  <p className="text-sm text-white">
+                                    <span className="text-gray-500">Beds:</span>{" "}
+                                    {property.beds || "-"}
+                                  </p>
+                                  <p className="text-sm text-white">
+                                    <span className="text-gray-500">Baths:</span>{" "}
+                                    {property.baths || "-"}
+                                  </p>
+                                  <p className="text-sm text-white">
+                                    <span className="text-gray-500">Size:</span>{" "}
+                                    {property.sqft ? `${property.sqft} sqft` : "-"}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Leads Summary */}
+                              <div>
+                                <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
+                                  <FaRegCircleUser className="w-4 h-4 text-[#C9A962]" />
+                                  Leads Summary
+                                </h4>
+                                <div className="space-y-2">
+                                  <p className="text-sm text-white">
+                                    <span className="text-gray-500">Total:</span>{" "}
+                                    {property.leads_count || 0}
+                                  </p>
+                                  <p className="text-sm text-white">
+                                    <span className="text-gray-500">New:</span>{" "}
+                                    {property.leads?.filter((l) => l.status === "new").length || 0}
+                                  </p>
+                                  <p className="text-sm text-white">
+                                    <span className="text-gray-500">Contacted:</span>{" "}
+                                    {property.leads?.filter((l) => l.status === "contacted").length || 0}
+                                  </p>
+                                  <p className="text-sm text-white">
+                                    <span className="text-gray-500">Converted:</span>{" "}
+                                    {property.leads?.filter((l) => l.status === "converted").length || 0}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Quick Actions */}
+                              <div>
+                                <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
+                                  <Activity className="w-4 h-4 text-[#C9A962]" />
+                                  Quick Actions
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleAddLead(property);
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] text-sm font-medium rounded-lg hover:shadow-lg transition-all"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                    Add Lead
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedProperty(property);
+                                      setShowAnalytics(true);
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white text-sm font-medium rounded-lg hover:bg-white/20 transition-all"
+                                  >
+                                    <BarChart2 className="w-3 h-3" />
+                                    View Stats
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedProperty(property);
+                                      setShowPropertyForm(true);
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white text-sm font-medium rounded-lg hover:bg-white/20 transition-all"
+                                  >
+                                    <Edit className="w-3 h-3" />
+                                    Edit
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Recent Leads Table */}
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-400 mb-3">
+                                Recent Leads
+                              </h4>
+                              {property.leads?.length > 0 ? (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full">
+                                    <thead>
+                                      <tr className="border-b border-white/10">
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                          Name
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                          Contact
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                          Source
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                          Status
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                          Date
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                          Actions
+                                        </th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                      {property.leads.slice(0, 3).map((lead) => (
+                                        <tr key={lead.id} className="hover:bg-white/5">
+                                          <td className="px-4 py-3 text-sm font-medium text-white">
+                                            {lead.contact_name}
+                                          </td>
+                                          <td className="px-4 py-3 text-sm text-gray-400">
+                                            <div className="flex items-center gap-1">
+                                              <Mail className="w-3 h-3 text-gray-500" />
+                                              {lead.contact_email}
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                              <Phone className="w-3 h-3 text-gray-500" />
+                                              {lead.contact_phone}
+                                            </div>
+                                          </td>
+                                          <td className="px-4 py-3 text-sm text-gray-400">
+                                            {lead.source?.name || "Unknown"}
+                                          </td>
+                                          <td className="px-4 py-3">
+                                            <span
+                                              className={`px-2 py-1 text-xs rounded-full ${
+                                                lead.status === "new"
+                                                  ? "bg-blue-500/20 text-blue-400"
+                                                  : lead.status === "contacted"
+                                                  ? "bg-yellow-500/20 text-yellow-400"
+                                                  : lead.status === "converted"
+                                                  ? "bg-green-500/20 text-green-400"
+                                                  : "bg-gray-500/20 text-gray-400"
+                                              }`}
+                                            >
+                                              {lead.status}
+                                            </span>
+                                          </td>
+                                          <td className="px-4 py-3 text-sm text-gray-400">
+                                            {new Date(lead.created_at).toLocaleDateString()}
+                                          </td>
+                                          <td className="px-4 py-3">
+                                            <div className="flex gap-2">
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleEditLead(lead);
+                                                }}
+                                                className="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
+                                              >
+                                                <Edit className="w-4 h-4" />
+                                              </button>
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleDeleteLead(lead.id);
+                                                }}
+                                                className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                              >
+                                                <Trash2 className="w-4 h-4" />
+                                              </button>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : (
+                                <p className="text-center py-4 text-sm text-gray-500">
+                                  No leads yet for this property
+                                </p>
+                              )}
                             </div>
                           </div>
-
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-500 mb-2">
-                              Leads Summary
-                            </h4>
-                            <div className="space-y-2">
-                              <p className="text-sm">
-                                <span className="font-medium">
-                                  Total Leads:
-                                </span>{" "}
-                                {property.leads_count || 0}
-                              </p>
-                              <p className="text-sm">
-                                <span className="font-medium">New:</span>{" "}
-                                {property.leads?.filter(
-                                  (l) => l.status === "new"
-                                ).length || 0}
-                              </p>
-                              <p className="text-sm">
-                                <span className="font-medium">Contacted:</span>{" "}
-                                {property.leads?.filter(
-                                  (l) => l.status === "contacted"
-                                ).length || 0}
-                              </p>
-                              <p className="text-sm">
-                                <span className="font-medium">Converted:</span>{" "}
-                                {property.leads?.filter(
-                                  (l) => l.status === "converted"
-                                ).length || 0}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-500 mb-2">
-                              Quick Actions
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              <button
-                                onClick={() => handleAddLead(property)}
-                                className="flex items-center px-3 py-1.5 bg-primary text-white text-sm rounded-md hover:bg-primary-dark"
-                              >
-                                <Plus size={14} className="mr-1" />
-                                Add Lead
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setSelectedProperty(property);
-                                  setShowAnalytics(true);
-                                }}
-                                className="flex items-center px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300"
-                              >
-                                <BarChart2 size={14} className="mr-1" />
-                                View Stats
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setSelectedProperty(property);
-                                  setShowPropertyForm(true);
-                                }}
-                                className="flex items-center px-3 py-1.5 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300"
-                              >
-                                <Edit size={14} className="mr-1" />
-                                Edit
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Recent Leads for this property */}
-                        <div className="mt-6">
-                          <h4 className="text-sm font-medium text-gray-500 mb-3">
-                            Recent Leads
-                          </h4>
-                          {property.leads?.length > 0 ? (
-                            <div className="overflow-x-auto">
-                              <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-100">
-                                  <tr>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      Name
-                                    </th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      Contact
-                                    </th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      Source
-                                    </th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      Status
-                                    </th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      Date
-                                    </th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      Actions
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                  {property.leads.slice(0, 3).map((lead) => (
-                                    <tr key={lead.id}>
-                                      <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {lead.contact_name}
-                                      </td>
-                                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                                        <div className="flex items-center">
-                                          <Mail
-                                            size={14}
-                                            className="mr-1 text-gray-400"
-                                          />
-                                          {lead.contact_email}
-                                        </div>
-                                        <div className="flex items-center">
-                                          <Phone
-                                            size={14}
-                                            className="mr-1 text-gray-400"
-                                          />
-                                          {lead.contact_phone}
-                                        </div>
-                                      </td>
-                                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                                        {lead.source?.name || "Unknown"}
-                                      </td>
-                                      <td className="px-4 py-2 whitespace-nowrap">
-                                        <span
-                                          className={`px-2 py-1 text-xs rounded-full ${
-                                            lead.status === "new"
-                                              ? "bg-blue-100 text-blue-800"
-                                              : lead.status === "contacted"
-                                              ? "bg-yellow-100 text-yellow-800"
-                                              : lead.status === "converted"
-                                              ? "bg-green-100 text-green-800"
-                                              : "bg-gray-100 text-gray-800"
-                                          }`}
-                                        >
-                                          {lead.status}
-                                        </span>
-                                      </td>
-                                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                                        {new Date(
-                                          lead.created_at
-                                        ).toLocaleDateString()}
-                                      </td>
-                                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                                        <div className="flex space-x-2">
-                                          <button
-                                            onClick={() => handleEditLead(lead)}
-                                            className="text-blue-600 hover:text-blue-800"
-                                          >
-                                            <Edit size={16} />
-                                          </button>
-                                          <button
-                                            onClick={() =>
-                                              handleDeleteLead(lead.id)
-                                            }
-                                            className="text-red-600 hover:text-red-800"
-                                          >
-                                            <Trash2 size={16} />
-                                          </button>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          ) : (
-                            <div className="text-center py-4 text-sm text-gray-500">
-                              No leads yet for this property
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
                 ))
               ) : (
-                <div className="px-6 py-12 text-center">
-                  <Building2 className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                <div className="px-6 py-16 text-center">
+                  <Building2 className="mx-auto h-12 w-12 text-gray-600 mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">
                     No properties found
                   </h3>
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="text-sm text-gray-400 mb-6">
                     Get started by adding your first property
                   </p>
-                  <div className="mt-6">
-                    <button
-                      onClick={() => {
-                        setSelectedProperty(null);
-                        setShowPropertyForm(true);
-                      }}
-                      className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md shadow-sm text-sm font-medium hover:bg-primary-dark"
-                    >
-                      <Plus className="-ml-1 mr-2 h-5 w-5" />
-                      Add Property
-                    </button>
-                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setSelectedProperty(null);
+                      setShowPropertyForm(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Add Property
+                  </motion.button>
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Leads Tab */}
         {activeTab === "leads" && (
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-lg font-medium text-gray-900">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden"
+          >
+            <div className="px-6 py-4 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <FaRegCircleUser className="w-5 h-5 text-[#C9A962]" />
                 Leads Management
               </h2>
-              <div className="flex space-x-3">
+              <div className="flex gap-3">
                 <select
                   value={leadStatsPeriod}
                   onChange={(e) => setLeadStatsPeriod(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#C9A962]/50"
                 >
-                  <option value="7days">Last 7 Days</option>
-                  <option value="30days">Last 30 Days</option>
-                  <option value="90days">Last 90 Days</option>
-                  <option value="all">All Time</option>
+                  <option value="7days" className="bg-[#0A1628]">Last 7 Days</option>
+                  <option value="30days" className="bg-[#0A1628]">Last 30 Days</option>
+                  <option value="90days" className="bg-[#0A1628]">Last 90 Days</option>
+                  <option value="all" className="bg-[#0A1628]">All Time</option>
                 </select>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     setSelectedProperty(null);
                     setSelectedLead(null);
                     setShowLeadForm(true);
                   }}
-                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl"
                 >
-                  <Plus size={18} />
-                  <span>Add Lead</span>
-                </button>
+                  <Plus className="w-4 h-4" />
+                  Add Lead
+                </motion.button>
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Property
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Contact
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Source
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {leads.length > 0 ? (
-                    leads.map((lead) => (
-                      <tr key={lead.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+            {isLeadsLoading && leads.length === 0 ? (
+              <LeadsTableSkeleton />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Property
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Contact
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Source
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {leads.length > 0 ? (
+                    leads.map((lead, index) => (
+                      <motion.tr
+                        key={lead.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="hover:bg-white/5 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-white">
                             {lead.property?.title || "Property Deleted"}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-[#C9A962]">
                             ${lead.property?.price?.toLocaleString() || "N/A"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {lead.contact_name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {lead.contact_email}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {lead.contact_phone}
-                          </div>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-white">{lead.contact_name}</div>
+                          <div className="text-sm text-gray-400">{lead.contact_email}</div>
+                          <div className="text-sm text-gray-400">{lead.contact_phone}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 text-sm text-gray-400">
                           {lead.source?.name || "Unknown"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4">
                           <span
-                            className={`px-2 py-1 text-xs rounded-full ${
+                            className={`px-3 py-1 text-xs font-medium rounded-full ${
                               lead.status === "new"
-                                ? "bg-blue-100 text-blue-800"
+                                ? "bg-blue-500/20 text-blue-400"
                                 : lead.status === "contacted"
-                                ? "bg-yellow-100 text-yellow-800"
+                                ? "bg-yellow-500/20 text-yellow-400"
                                 : lead.status === "converted"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-gray-500/20 text-gray-400"
                             }`}
                           >
                             {lead.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 text-sm text-gray-400">
                           {new Date(lead.created_at).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="flex space-x-2">
+                        <td className="px-6 py-4">
+                          <div className="flex gap-2">
                             <button
                               onClick={() => handleEditLead(lead)}
-                              className="text-blue-600 hover:text-blue-800"
+                              className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
                             >
-                              <Edit size={16} />
+                              <Edit className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteLead(lead.id)}
-                              className="text-red-600 hover:text-red-800"
+                              className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                             >
-                              <Trash2 size={16} />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
-                      </tr>
+                      </motion.tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="px-6 py-12 text-center">
-                        <User className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">
-                          No leads found
-                        </h3>
-                        <p className="mt-1 text-sm text-gray-500">
+                      <td colSpan="6" className="px-6 py-16 text-center">
+                        <User className="mx-auto h-12 w-12 text-gray-600 mb-4" />
+                        <h3 className="text-lg font-medium text-white mb-2">No leads found</h3>
+                        <p className="text-sm text-gray-400 mb-6">
                           Get started by adding your first lead
                         </p>
-                        <div className="mt-6">
-                          <button
-                            onClick={() => {
-                              setSelectedProperty(null);
-                              setSelectedLead(null);
-                              setShowLeadForm(true);
-                            }}
-                            className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md shadow-sm text-sm font-medium hover:bg-primary-dark"
-                          >
-                            <Plus className="-ml-1 mr-2 h-5 w-5" />
-                            Add Lead
-                          </button>
-                        </div>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            setSelectedProperty(null);
+                            setSelectedLead(null);
+                            setShowLeadForm(true);
+                          }}
+                          className="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl"
+                        >
+                          <Plus className="w-5 h-5" />
+                          Add Lead
+                        </motion.button>
                       </td>
                     </tr>
                   )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </motion.div>
         )}
 
         {/* Analytics Tab */}
         {activeTab === "analytics" && (
-          <div className="space-y-6">
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                <h2 className="text-lg font-medium text-gray-900">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            {/* Performance Section */}
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-white/10 flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <BarChart2 className="w-5 h-5 text-[#C9A962]" />
                   Property Performance
                 </h2>
                 <select
                   value={statsPeriod}
                   onChange={(e) => setStatsPeriod(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#C9A962]/50"
                 >
-                  <option value="7days">Last 7 Days</option>
-                  <option value="30days">Last 30 Days</option>
-                  <option value="90days">Last 90 Days</option>
-                  <option value="all">All Time</option>
+                  <option value="7days" className="bg-[#0A1628]">Last 7 Days</option>
+                  <option value="30days" className="bg-[#0A1628]">Last 30 Days</option>
+                  <option value="90days" className="bg-[#0A1628]">Last 90 Days</option>
+                  <option value="all" className="bg-[#0A1628]">All Time</option>
                 </select>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="text-sm font-medium text-gray-500 mb-4">
+                  {/* Top Properties */}
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                    <h3 className="text-sm font-medium text-gray-400 mb-4 flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-[#C9A962]" />
                       Top Performing Properties
                     </h3>
                     <div className="space-y-4">
                       {(Array.isArray(properties) ? properties : [])
-                        .sort(
-                          (a, b) => (b.leads_count || 0) - (a.leads_count || 0)
-                        )
+                        .sort((a, b) => (b.leads_count || 0) - (a.leads_count || 0))
                         .slice(0, 3)
-                        .map((property) => (
-                          <div key={property.id} className="flex items-start">
-                            <div className="flex-shrink-0 h-12 w-12 bg-gray-200 rounded-md overflow-hidden">
+                        .map((property, index) => (
+                          <div key={property.id} className="flex items-start gap-3">
+                            <div className="flex-shrink-0 h-12 w-12 rounded-lg bg-white/10 overflow-hidden">
                               {property.images?.[0]?.image && (
                                 <img
                                   src={property.images[0].image}
@@ -775,22 +873,20 @@ const AgentDashboard = () => {
                                 />
                               )}
                             </div>
-                            <div className="ml-4 flex-1">
-                              <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-medium text-gray-900">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <h4 className="text-sm font-medium text-white truncate">
                                   {property.title}
                                 </h4>
-                                <span className="text-sm font-semibold">
+                                <span className="text-sm font-semibold text-[#C9A962]">
                                   {property.leads_count || 0} leads
                                 </span>
                               </div>
-                              <p className="text-sm text-gray-500">
-                                {property.location}
-                              </p>
-                              <div className="mt-1">
-                                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                              <p className="text-xs text-gray-500 truncate">{property.location}</p>
+                              <div className="mt-2">
+                                <div className="w-full bg-white/10 rounded-full h-1.5">
                                   <div
-                                    className="bg-primary h-1.5 rounded-full"
+                                    className="bg-gradient-to-r from-[#C9A962] to-[#E8D5A3] h-1.5 rounded-full"
                                     style={{
                                       width: `${Math.min(
                                         100,
@@ -798,11 +894,7 @@ const AgentDashboard = () => {
                                           Math.max(
                                             1,
                                             properties.reduce(
-                                              (max, p) =>
-                                                Math.max(
-                                                  max,
-                                                  p.leads_count || 0
-                                                ),
+                                              (max, p) => Math.max(max, p.leads_count || 0),
                                               0
                                             )
                                           )) *
@@ -818,25 +910,18 @@ const AgentDashboard = () => {
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="text-sm font-medium text-gray-500 mb-4">
+                  {/* Lead Sources */}
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                    <h3 className="text-sm font-medium text-gray-400 mb-4 flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-[#C9A962]" />
                       Lead Sources
                     </h3>
                     <div className="space-y-3">
                       {leadSources.slice(0, 5).map((source) => (
-                        <div
-                          key={source.id}
-                          className="flex items-center justify-between"
-                        >
-                          <span className="text-sm font-medium text-gray-900">
-                            {source.name}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {
-                              leads.filter((l) => l.source?.id === source.id)
-                                .length
-                            }{" "}
-                            leads
+                        <div key={source.id} className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-white">{source.name}</span>
+                          <span className="text-sm text-[#C9A962]">
+                            {leads.filter((l) => l.source?.id === source.id).length} leads
                           </span>
                         </div>
                       ))}
@@ -846,77 +931,65 @@ const AgentDashboard = () => {
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">
+            {/* Lead Conversion Section */}
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-white/10">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-[#C9A962]" />
                   Lead Conversion
                 </h2>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-green-50 p-4 rounded-lg text-center">
-                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                      <Smile className="h-6 w-6 text-green-600" />
+                  {/* Converted */}
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-5 text-center">
+                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-500/20 mb-3">
+                      <Smile className="h-6 w-6 text-green-400" />
                     </div>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">
-                      Converted
-                    </h3>
-                    <p className="mt-1 text-3xl font-semibold text-green-600">
-                      {leads?.filter((l) => l.status === "converted").length ||
-                        0}
+                    <h3 className="text-sm font-medium text-white mb-1">Converted</h3>
+                    <p className="text-3xl font-bold text-green-400">
+                      {leads?.filter((l) => l.status === "converted").length || 0}
                     </p>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="text-sm text-gray-400 mt-1">
                       {leads?.length > 0
                         ? `${Math.round(
-                            (leads.filter((l) => l.status === "converted")
-                              .length /
-                              leads.length) *
-                              100
+                            (leads.filter((l) => l.status === "converted").length / leads.length) * 100
                           )}% conversion rate`
                         : "No leads yet"}
                     </p>
                   </div>
 
-                  <div className="bg-yellow-50 p-4 rounded-lg text-center">
-                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
-                      <Bell className="h-6 w-6 text-yellow-600" />
+                  {/* In Progress */}
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-5 text-center">
+                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-500/20 mb-3">
+                      <Bell className="h-6 w-6 text-yellow-400" />
                     </div>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">
-                      In Progress
-                    </h3>
-                    <p className="mt-1 text-3xl font-semibold text-yellow-600">
-                      {leads?.filter(
-                        (l) =>
-                          l.status === "contacted" || l.status === "qualified"
-                      ).length || 0}
+                    <h3 className="text-sm font-medium text-white mb-1">In Progress</h3>
+                    <p className="text-3xl font-bold text-yellow-400">
+                      {leads?.filter((l) => l.status === "contacted" || l.status === "qualified").length || 0}
                     </p>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Leads being worked on
-                    </p>
+                    <p className="text-sm text-gray-400 mt-1">Leads being worked on</p>
                   </div>
 
-                  <div className="bg-red-50 p-4 rounded-lg text-center">
-                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                      <Frown className="h-6 w-6 text-red-600" />
+                  {/* Lost */}
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-5 text-center">
+                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-500/20 mb-3">
+                      <Frown className="h-6 w-6 text-red-400" />
                     </div>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">
-                      Lost
-                    </h3>
-                    <p className="mt-1 text-3xl font-semibold text-red-600">
+                    <h3 className="text-sm font-medium text-white mb-1">Lost</h3>
+                    <p className="text-3xl font-bold text-red-400">
                       {leads?.filter((l) => l.status === "lost").length || 0}
                     </p>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Unsuccessful leads
-                    </p>
+                    <p className="text-sm text-gray-400 mt-1">Unsuccessful leads</p>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
 
-      {/* Property Form Modal */}
+      {/* Modals */}
       {showPropertyForm && (
         <PropertyForm
           property={selectedProperty}
@@ -926,10 +999,8 @@ const AgentDashboard = () => {
           }}
           onSave={(property) => {
             if (selectedProperty) {
-              // Update existing property
               dispatch(updateProperty(property));
             } else {
-              // Add new property
               dispatch(createProperty(property));
             }
             setShowPropertyForm(false);
@@ -938,7 +1009,6 @@ const AgentDashboard = () => {
         />
       )}
 
-      {/* Lead Form Modal */}
       {showLeadForm && (
         <LeadForm
           lead={selectedLead}
@@ -951,10 +1021,8 @@ const AgentDashboard = () => {
           }}
           onSave={(lead) => {
             if (selectedLead) {
-              // Update existing lead
               dispatch(updateLead(lead));
             } else {
-              // Add new lead
               dispatch(createLead(lead));
             }
             setShowLeadForm(false);
@@ -964,7 +1032,6 @@ const AgentDashboard = () => {
         />
       )}
 
-      {/* Analytics Modal */}
       {showAnalytics && selectedProperty && (
         <PropertyAnalyticsModal
           property={selectedProperty}

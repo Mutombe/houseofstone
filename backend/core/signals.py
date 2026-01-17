@@ -17,8 +17,8 @@ from django.urls import reverse
 from django.utils import timezone
 from datetime import datetime
 from .models import (
-    Property, Agent, PropertyShare, Profile, 
-    PropertyAgent, Inquiry, AdminActionLog
+    Property, Agent, PropertyShare, Profile,
+    PropertyAgent, Inquiry, AdminActionLog, Notification
 )
 import logging
 logger = logging.getLogger(__name__)
@@ -81,6 +81,19 @@ def get_admin_emails():
 def property_created_notification(sender, instance, created, **kwargs):
     """Send notification when a new property is created"""
     if created:
+        # Create in-app notification
+        Notification.objects.create(
+            notification_type='property_created',
+            title='New Property Listed',
+            message=f'Property "{instance.title}" has been listed for ${instance.price:,.2f}' if instance.price else f'Property "{instance.title}" has been listed',
+            data={
+                'property_id': instance.id,
+                'property_title': instance.title,
+                'property_location': instance.location,
+                'category': instance.category,
+            }
+        )
+
         context = {
             'property': instance,
             'site_name': settings.SITE_NAME,
@@ -88,7 +101,7 @@ def property_created_notification(sender, instance, created, **kwargs):
             'property_url': f"{settings.FRONTEND_URL}/properties/{instance.id}",
             'timestamp': timezone.now()
         }
-        
+
         # Notify admins
         admin_emails = get_admin_emails()
         if admin_emails:
@@ -98,12 +111,12 @@ def property_created_notification(sender, instance, created, **kwargs):
                 context=context,
                 recipient_list=admin_emails
             )
-        
+
         # Notify assigned agent if exists
         if instance.user and instance.user.email:
             agent_context = context.copy()
             agent_context['agent_name'] = instance.user.get_full_name()
-            
+
             send_notification_email(
                 subject=f"Property Assigned to You: {instance.title}",
                 template_name='property_assigned_agent',
@@ -152,6 +165,19 @@ def property_status_change_notification(sender, instance, **kwargs):
 def property_updated_notification(sender, instance, created, **kwargs):
     """Send notification when property details are updated"""
     if not created:  # Only for updates, not creation
+        # Create in-app notification
+        Notification.objects.create(
+            notification_type='property_updated',
+            title='Property Updated',
+            message=f'Property "{instance.title}" has been updated',
+            data={
+                'property_id': instance.id,
+                'property_title': instance.title,
+                'property_location': instance.location,
+                'updated_by': getattr(instance, '_updated_by', 'System'),
+            }
+        )
+
         context = {
             'property': instance,
             'site_name': settings.SITE_NAME,
@@ -159,7 +185,7 @@ def property_updated_notification(sender, instance, created, **kwargs):
             'updated_by': getattr(instance, '_updated_by', 'System'),
             'timestamp': timezone.now()
         }
-        
+
         # Notify admins
         admin_emails = get_admin_emails()
         if admin_emails:
@@ -176,13 +202,25 @@ def property_updated_notification(sender, instance, created, **kwargs):
 def user_registration_notification(sender, instance, created, **kwargs):
     """Send notification when a new user registers"""
     if created:
+        # Create in-app notification
+        Notification.objects.create(
+            notification_type='user_created',
+            title='New User Registration',
+            message=f'{instance.username} has registered as a new user',
+            data={
+                'user_id': instance.id,
+                'username': instance.username,
+                'email': instance.email,
+            }
+        )
+
         context = {
             'user': instance,
             'site_name': settings.SITE_NAME,
             'admin_url': f"https://{settings.ADMIN_BASE_URL}",
             'timestamp': timezone.now()
         }
-        
+
         # Welcome email to user
         if instance.email:
             send_notification_email(
@@ -191,7 +229,7 @@ def user_registration_notification(sender, instance, created, **kwargs):
                 context=context,
                 recipient_list=[instance.email]
             )
-        
+
         # Notify admins
         admin_emails = get_admin_emails()
         if admin_emails:
@@ -208,13 +246,26 @@ def user_registration_notification(sender, instance, created, **kwargs):
 def agent_created_notification(sender, instance, created, **kwargs):
     """Send notification when a new agent is created"""
     if created:
+        # Create in-app notification
+        Notification.objects.create(
+            notification_type='agent_created',
+            title='New Agent Added',
+            message=f'{instance.full_name} has been added as an agent',
+            data={
+                'agent_id': instance.id,
+                'agent_name': instance.full_name,
+                'agent_email': instance.email,
+                'position': instance.position,
+            }
+        )
+
         context = {
             'agent': instance,
             'site_name': settings.SITE_NAME,
             'admin_url': f"https://{settings.ADMIN_BASE_URL}",
             'timestamp': timezone.now()
         }
-        
+
         # Welcome email to agent
         if instance.email:
             send_notification_email(
@@ -223,7 +274,7 @@ def agent_created_notification(sender, instance, created, **kwargs):
                 context=context,
                 recipient_list=[instance.email]
             )
-        
+
         # Notify admins
         admin_emails = get_admin_emails()
         if admin_emails:
@@ -237,13 +288,24 @@ def agent_created_notification(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=Agent)
 def agent_deleted_notification(sender, instance, **kwargs):
     """Send notification when an agent is deleted"""
+    # Create in-app notification
+    Notification.objects.create(
+        notification_type='agent_deleted',
+        title='Agent Removed',
+        message=f'{instance.full_name} has been removed from the system',
+        data={
+            'agent_name': instance.full_name,
+            'agent_email': instance.email,
+        }
+    )
+
     context = {
         'agent_name': instance.full_name,
         'agent_email': instance.email,
         'site_name': settings.SITE_NAME,
         'timestamp': timezone.now()
     }
-    
+
     # Notify admins
     admin_emails = get_admin_emails()
     if admin_emails:
@@ -258,12 +320,24 @@ def agent_deleted_notification(sender, instance, **kwargs):
 def agent_updated_notification(sender, instance, created, **kwargs):
     """Send notification when agent details are updated"""
     if not created:  # Only for updates
+        # Create in-app notification
+        Notification.objects.create(
+            notification_type='agent_updated',
+            title='Agent Profile Updated',
+            message=f'{instance.full_name}\'s profile has been updated',
+            data={
+                'agent_id': instance.id,
+                'agent_name': instance.full_name,
+                'agent_email': instance.email,
+            }
+        )
+
         context = {
             'agent': instance,
             'site_name': settings.SITE_NAME,
             'timestamp': timezone.now()
         }
-        
+
         # Notify agent of their profile update
         if instance.email:
             send_notification_email(
@@ -272,7 +346,7 @@ def agent_updated_notification(sender, instance, created, **kwargs):
                 context=context,
                 recipient_list=[instance.email]
             )
-        
+
         # Notify admins
         admin_emails = get_admin_emails()
         if admin_emails:
@@ -289,6 +363,20 @@ def agent_updated_notification(sender, instance, created, **kwargs):
 def property_shared_notification(sender, instance, created, **kwargs):
     """Send notification when a property is shared"""
     if created:
+        # Create in-app notification
+        shared_by_name = instance.user.username if instance.user else 'Anonymous'
+        Notification.objects.create(
+            notification_type='property_shared',
+            title='Property Shared',
+            message=f'Property "{instance.property.title}" was shared by {shared_by_name}',
+            data={
+                'property_id': instance.property.id,
+                'property_title': instance.property.title,
+                'shared_by': shared_by_name,
+                'share_token': str(instance.share_token),
+            }
+        )
+
         context = {
             'property': instance.property,
             'shared_by': instance.user,
@@ -296,7 +384,7 @@ def property_shared_notification(sender, instance, created, **kwargs):
             'site_name': settings.SITE_NAME,
             'timestamp': timezone.now()
         }
-        
+
         # Notify admins
         admin_emails = get_admin_emails()
         if admin_emails:
@@ -322,6 +410,21 @@ def property_shared_notification(sender, instance, created, **kwargs):
 def property_inquiry_notification(sender, instance, created, **kwargs):
     """Send notification when someone inquires about a property"""
     if created:
+        # Create in-app notification
+        inquirer_name = instance.user.get_full_name() or instance.user.username if instance.user else 'Anonymous'
+        Notification.objects.create(
+            notification_type='inquiry_received',
+            title='New Inquiry Received',
+            message=f'{inquirer_name} inquired about "{instance.property.title}"',
+            data={
+                'inquiry_id': instance.id,
+                'property_id': instance.property.id,
+                'property_title': instance.property.title,
+                'inquirer_name': inquirer_name,
+                'inquirer_email': instance.user.email if instance.user else None,
+            }
+        )
+
         context = {
             'inquiry': instance,
             'property': instance.property,
@@ -330,7 +433,7 @@ def property_inquiry_notification(sender, instance, created, **kwargs):
             'admin_url': f"https://{settings.ADMIN_BASE_URL}",
             'timestamp': timezone.now()
         }
-        
+
         # Notify property agent
         if instance.property.agent and instance.property.agent.email:
             send_notification_email(
@@ -339,7 +442,7 @@ def property_inquiry_notification(sender, instance, created, **kwargs):
                 context=context,
                 recipient_list=[instance.property.agent.email]
             )
-        
+
         # Notify admins
         admin_emails = get_admin_emails()
         if admin_emails:
@@ -349,7 +452,7 @@ def property_inquiry_notification(sender, instance, created, **kwargs):
                 context=context,
                 recipient_list=admin_emails
             )
-        
+
         # Send confirmation to inquirer
         if instance.user.email:
             send_notification_email(
@@ -534,13 +637,27 @@ def add_watermark_to_image(sender, instance, created, **kwargs):
         return
     
     try:
+        # Skip watermarking for cloud storage (DigitalOcean Spaces, S3, etc.)
+        # Cloud storage doesn't support local file paths
+        from django.core.files.storage import default_storage
+        if not hasattr(default_storage, 'path') or 'S3' in default_storage.__class__.__name__ or 'Boto' in default_storage.__class__.__name__:
+            logger.info(f"Skipping watermark for image {instance.id} - using cloud storage")
+            return
+
+        # Try to get the path - this will fail for cloud storage
+        try:
+            image_path = instance.image.path
+        except NotImplementedError:
+            logger.info(f"Skipping watermark for image {instance.id} - cloud storage detected")
+            return
+
         print(f"DEBUG: Signal triggered for PropertyImage ID: {instance.id}")
-        print(f"DEBUG: Image path: {instance.image.path}")
-        
+        print(f"DEBUG: Image path: {image_path}")
+
         # Check if image exists
-        if not os.path.exists(instance.image.path):
-            print(f"ERROR: Image file does not exist at {instance.image.path}")
-            logger.error(f"Image file not found: {instance.image.path}")
+        if not os.path.exists(image_path):
+            print(f"ERROR: Image file does not exist at {image_path}")
+            logger.error(f"Image file not found: {image_path}")
             return
         
         watermark_path = os.path.join(settings.MEDIA_ROOT, 'logo', 'logo2.webp')
@@ -557,7 +674,7 @@ def add_watermark_to_image(sender, instance, created, **kwargs):
         
         # Apply watermark and get bytes
         watermarked_bytes = apply_watermark(
-            image_path=instance.image.path,
+            image_path=image_path,
             watermark_path=watermark_path,
             position='center',
             size_ratio=0.20,

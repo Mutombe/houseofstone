@@ -142,15 +142,35 @@ export const checkAuth = createAsyncThunk(
   }
 );
 
+// Get initial auth state from localStorage
+const getInitialAuthState = () => {
+  try {
+    const auth = JSON.parse(localStorage.getItem("auth"));
+    if (auth?.access && !isTokenExpired(auth.access)) {
+      return {
+        user: auth.user || null,
+        tokens: { access: auth.access, refresh: auth.refresh },
+        isAuthenticated: true,
+      };
+    }
+  } catch (e) {
+    console.error("Error parsing auth from localStorage:", e);
+  }
+  return {
+    user: null,
+    tokens: null,
+    isAuthenticated: false,
+  };
+};
+
+const initialAuthState = getInitialAuthState();
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
-    user: null,
-    tokens: JSON.parse(localStorage.getItem("auth")),
-    isAuthenticated: (() => {
-      const auth = JSON.parse(localStorage.getItem("auth"));
-      return !!(auth?.access && !isTokenExpired(auth.access));
-    })(),
+    user: initialAuthState.user,
+    tokens: initialAuthState.tokens,
+    isAuthenticated: initialAuthState.isAuthenticated,
     status: "idle",
     error: null,
     sessionExpired: false,

@@ -1,7 +1,7 @@
 import json
 from rest_framework import serializers
 from django.contrib.auth.models import User  
-from .models import BlogPost, Profile, Property, PropertyFeature, Neighborhood, SavedSearch, FavoriteProperty, Inquiry, PropertyImage, PropertyAlert, AdminActionLog, Agent, PropertyAgent
+from .models import BlogPost, Profile, Property, PropertyFeature, Neighborhood, SavedSearch, FavoriteProperty, Inquiry, PropertyImage, PropertyAlert, AdminActionLog, Agent, PropertyAgent, Notification
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -165,15 +165,19 @@ class PropertySerializer(serializers.ModelSerializer):
     class Meta:
         model = Property
         fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at', 'user']
+        extra_kwargs = {
+            'features': {'required': False},
+            'agents': {'required': False},
+        }
 
     def create(self, validated_data):
         from django.db import transaction
-        
+
         features_data = []
         agents_data = []
         request = self.context.get('request')
-        
+
         with transaction.atomic():
             if request:
                 # Handle features
@@ -183,7 +187,7 @@ class PropertySerializer(serializers.ModelSerializer):
                         validated_data.pop('features', None)
                     except json.JSONDecodeError:
                         raise serializers.ValidationError("Invalid features format")
-                
+
                 # Handle agents
                 if 'agents' in request.data:
                     try:
@@ -205,7 +209,7 @@ class PropertySerializer(serializers.ModelSerializer):
                         )
                 if features_to_create:
                     PropertyFeature.objects.bulk_create(features_to_create)
-            
+
             # Bulk create property agents
             if agents_data:
                 agents_to_create = []
@@ -227,17 +231,24 @@ class PropertySerializer(serializers.ModelSerializer):
             
             # Process images with order
             self._process_images(request, property_instance)
-            
+
+        # Refresh instance to include related objects in response
+        property_instance.refresh_from_db()
+        # Prefetch related for serializer output
+        property_instance = Property.objects.prefetch_related(
+            'images', 'features', 'property_agents__agent'
+        ).get(pk=property_instance.pk)
+
         return property_instance
 
     def update(self, instance, validated_data):
         from django.db import transaction
-        
+
         with transaction.atomic():
             features_data = []
             agents_data = []
             request = self.context.get('request')
-            
+
             if request:
                 if 'features' in request.data:
                     try:
@@ -324,8 +335,12 @@ class PropertySerializer(serializers.ModelSerializer):
         
         # Refresh the instance to get updated related objects
         instance.refresh_from_db()
+        # Prefetch related for serializer output
+        instance = Property.objects.prefetch_related(
+            'images', 'features', 'property_agents__agent'
+        ).get(pk=instance.pk)
         return instance
-    
+
     def _process_images(self, request, property_instance):
         """Helper method to process images with order support"""
         if not request:
@@ -481,3 +496,14 @@ class AdminActionLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdminActionLog
         fields = '__all__'
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    """Serializer for system notifications"""
+    type = serializers.CharField(source='notification_type', read_only=True)
+    time = serializers.DateTimeField(source='created_at', read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = ['id', 'type', 'notification_type', 'title', 'message', 'data', 'read', 'time', 'created_at']
+        read_only_fields = ['id', 'type', 'notification_type', 'title', 'message', 'data', 'time', 'created_at']
