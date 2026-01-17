@@ -68,9 +68,16 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
     'https://hsp.co.zw',
+    'https://www.hsp.co.zw',
     'https://houseofstone.onrender.com',
+    'https://houseofstone-frontend.onrender.com',
     'https://houseofstone-backend.onrender.com',
+    'https://houseofstone-backend1.onrender.com',
 ]
+
+# Allow all origins for debugging (can be removed later if not needed)
+# This helps with mobile browsers that may have different origin headers
+CORS_ALLOW_ALL_ORIGINS = True
 
 # MIDDLEWARE CONFIGURATION
 MIDDLEWARE = [

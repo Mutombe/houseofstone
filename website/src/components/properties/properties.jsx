@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import {
   Search, MapPin, Bed, Bath, Maximize, SlidersHorizontal, X, Heart, Share2,
   Grid, LayoutList, ChevronDown, ChevronLeft, ChevronRight, Home, Building2,
@@ -369,7 +369,10 @@ const FilterChip = ({ label, active, onClick, count }) => (
 const Properties = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const headerRef = useRef(null);
+  const searchInputRef = useRef(null);
   const isHeaderInView = useInView(headerRef, { once: true });
 
   // Redux State
@@ -529,6 +532,36 @@ const Properties = () => {
     setCurrentPage(1);
   }, [searchTerm, selectedRegion, filters, sortBy]);
 
+  // Handle search focus from mobile nav
+  useEffect(() => {
+    const handleFocusSearch = () => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+        // Scroll to search input smoothly
+        searchInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+
+    window.addEventListener('focusPropertySearch', handleFocusSearch);
+    return () => window.removeEventListener('focusPropertySearch', handleFocusSearch);
+  }, []);
+
+  // Handle focus=search URL parameter
+  useEffect(() => {
+    if (searchParams.get('focus') === 'search') {
+      // Small delay to ensure component is mounted
+      setTimeout(() => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+          searchInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      // Clear the parameter after handling
+      searchParams.delete('focus');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   // Determine if we're in initial loading state (show skeletons in grid)
   const isInitialLoading = loading && allProperties.length === 0;
 
@@ -625,6 +658,7 @@ const Properties = () => {
             <div className="relative">
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400" />
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

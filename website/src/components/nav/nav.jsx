@@ -691,6 +691,21 @@ const Navbar = () => {
     setIsMenuOpen(false);
   }, [location]);
 
+  // Listen for auth modal events from MobileBottomNav
+  useEffect(() => {
+    const handleOpenAuthModal = (event) => {
+      const modalType = event.detail;
+      if (modalType === 'login' || modalType === 'register') {
+        setAuthModal(modalType);
+      }
+    };
+
+    window.addEventListener('openAuthModal', handleOpenAuthModal);
+    return () => {
+      window.removeEventListener('openAuthModal', handleOpenAuthModal);
+    };
+  }, []);
+
   const handleLogout = () => {
     dispatch(logout());
   };

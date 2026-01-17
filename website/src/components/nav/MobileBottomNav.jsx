@@ -28,6 +28,17 @@ const MobileBottomNav = () => {
   const isAdmin = user?.is_staff || user?.is_superuser;
   const isAgent = user?.is_agent;
 
+  // Handle search button click
+  const handleSearchClick = () => {
+    if (location.pathname === '/properties' || location.pathname.startsWith('/properties')) {
+      // Already on properties page, emit event to focus search input
+      window.dispatchEvent(new CustomEvent('focusPropertySearch'));
+    } else {
+      // Navigate to properties with search focus flag
+      navigate('/properties?focus=search');
+    }
+  };
+
   const mainNavItems = [
     {
       path: '/',
@@ -38,6 +49,7 @@ const MobileBottomNav = () => {
       path: '/properties',
       icon: Search,
       label: 'Search',
+      onClick: handleSearchClick,
     },
     {
       path: '/saved',
