@@ -2439,7 +2439,10 @@ const PropertyDashboard = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-emerald-500/5"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 py-4 w-12">
+                          <div className="w-5 h-5 bg-emerald-500/20 rounded animate-pulse" />
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-lg bg-emerald-500/20 animate-pulse" />
                             <div className="space-y-2">
@@ -2448,19 +2451,19 @@ const PropertyDashboard = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
                           <div className="h-4 w-20 bg-emerald-500/20 rounded animate-pulse" />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
                           <div className="h-4 w-28 bg-white/10 rounded animate-pulse" />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
                           <div className="h-6 w-20 bg-white/10 rounded-lg animate-pulse" />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap">
                           <div className="h-6 w-16 bg-emerald-500/20 rounded-full animate-pulse" />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-1">
                             <Loader className="w-3 h-3 text-emerald-400 animate-spin" />
                             <span className="text-xs text-emerald-400 font-medium">Creating...</span>
@@ -2471,7 +2474,7 @@ const PropertyDashboard = () => {
                     {isDataLoading && filteredProperties.length === 0
                       ? // Show skeleton rows when loading and no data
                         [...Array(pageSize)].map((_, i) => (
-                          <TableRowSkeleton key={i} columns={6} />
+                          <TableRowSkeleton key={i} columns={7} />
                         ))
                       : filteredProperties.length > 0
                       ? filteredProperties.map((property) =>
@@ -2484,7 +2487,10 @@ const PropertyDashboard = () => {
                               transition={{ duration: 1.5, repeat: Infinity }}
                               className="bg-[#C9A962]/5"
                             >
-                              <td className="px-6 py-4 whitespace-nowrap">
+                              <td className="px-3 py-4 w-12">
+                                <div className="w-5 h-5 bg-[#C9A962]/20 rounded animate-pulse" />
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
                                 <div className="flex items-center gap-3">
                                   <div className="w-12 h-12 rounded-lg bg-[#C9A962]/20 animate-pulse" />
                                   <div className="space-y-2">
@@ -2493,20 +2499,21 @@ const PropertyDashboard = () => {
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
+                              <td className="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
                                 <div className="h-4 w-20 bg-[#C9A962]/20 rounded animate-pulse" />
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
+                              <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
                                 <div className="h-4 w-28 bg-white/10 rounded animate-pulse" />
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
+                              <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
                                 <div className="h-6 w-20 bg-white/10 rounded-lg animate-pulse" />
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
+                              <td className="px-4 py-4 whitespace-nowrap">
                                 <div className="h-6 w-16 bg-[#C9A962]/20 rounded-full animate-pulse" />
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
+                              <td className="px-4 py-4 whitespace-nowrap">
                                 <div className="flex items-center gap-1">
+                                  <Loader className="w-3 h-3 text-[#C9A962] animate-spin" />
                                   <span className="text-xs text-[#C9A962] font-medium">Updating...</span>
                                 </div>
                               </td>
