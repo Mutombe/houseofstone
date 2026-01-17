@@ -572,7 +572,7 @@ const AllPropertiesMap = ({ height = '80vh', showFilters = true }) => {
         </div>
       </div>
 
-      {/* View All Button */}
+      {/* View All Button 
       <div className="absolute bottom-4 right-4 z-[1000]">
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -583,7 +583,7 @@ const AllPropertiesMap = ({ height = '80vh', showFilters = true }) => {
           View All Properties
           <ArrowRight className="w-4 h-4" />
         </motion.button>
-      </div>
+      </div>*/}
 
       {/* Gradient overlays */}
       <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#0A1628] to-transparent pointer-events-none z-[999]" />
