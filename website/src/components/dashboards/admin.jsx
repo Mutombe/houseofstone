@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import StatisticsDashboard from "./stats";
 import NotificationPanel from "./NotificationPanel";
 import { selectUnreadCount } from "../../redux/slices/notificationSlice";
 import { TableRowSkeleton } from "../ui/Skeleton";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import {
   BarChart,
   Bar,
@@ -53,8 +55,14 @@ import {
   ChevronsLeft,
   ChevronsRight,
   ExternalLink,
+  Printer,
+  CheckSquare,
+  Square,
+  FileDown,
+  Mail,
+  Share2,
 } from "lucide-react";
-import { FaRegCircleUser } from "react-icons/fa6";
+import { FaRegCircleUser, FaWhatsapp } from "react-icons/fa6";
 import { fetchUsers } from "../../redux/slices/userSlice";
 import { fetchAdminStats } from "../../redux/slices/adminSlice";
 import {
@@ -995,23 +1003,27 @@ const StatsCard = ({ card, index }) => (
 );
 
 // Sidebar Navigation Item
-const SidebarItem = ({ icon: Icon, label, active, onClick, badge }) => (
+const SidebarItem = ({ icon: Icon, label, active, onClick, badge, collapsed }) => (
   <button
     onClick={onClick}
-    className={`flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all duration-300 ${
+    title={collapsed ? label : undefined}
+    className={`relative flex items-center ${collapsed ? 'justify-center' : 'justify-between'} w-full ${collapsed ? 'px-3' : 'px-4'} py-3 rounded-xl transition-all duration-300 ${
       active
         ? "bg-[#C9A962]/10 text-[#C9A962] border border-[#C9A962]/20"
         : "text-gray-400 hover:bg-white/5 hover:text-white"
     }`}
   >
-    <div className="flex items-center gap-3">
-      <Icon className="w-5 h-5" />
-      <span className="font-medium">{label}</span>
+    <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
+      <Icon className="w-5 h-5 flex-shrink-0" />
+      {!collapsed && <span className="font-medium">{label}</span>}
     </div>
-    {badge && (
+    {badge && !collapsed && (
       <span className="px-2 py-0.5 bg-[#C9A962] text-[#0A1628] text-xs font-bold rounded-full">
         {badge}
       </span>
+    )}
+    {badge && collapsed && (
+      <span className="absolute top-1 right-1 w-2 h-2 bg-[#C9A962] rounded-full" />
     )}
   </button>
 );
@@ -1100,6 +1112,7 @@ const PropertyDashboard = () => {
 
   const [activeTab, setActiveTab] = useState("properties");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Collapsed by default on desktop
   const [currentForm, setCurrentForm] = useState(null);
   const [selectedAgent, setSelectedAgent] = useState(null);
 
@@ -1128,6 +1141,319 @@ const PropertyDashboard = () => {
     confirmStyle: "danger",
   });
   const [propertyDetailView, setPropertyDetailView] = useState(null);
+
+  // Selection state for bulk operations
+  const [selectedPropertyIds, setSelectedPropertyIds] = useState(new Set());
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  // Toggle single property selection
+  const togglePropertySelection = (propertyId) => {
+    setSelectedPropertyIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(propertyId)) {
+        newSet.delete(propertyId);
+      } else {
+        newSet.add(propertyId);
+      }
+      return newSet;
+    });
+  };
+
+  // Toggle all properties selection
+  const toggleAllSelection = () => {
+    if (selectedPropertyIds.size === filteredProperties.length) {
+      setSelectedPropertyIds(new Set());
+    } else {
+      setSelectedPropertyIds(new Set(filteredProperties.map(p => p.id)));
+    }
+  };
+
+  // Print single property PDF
+  const printPropertyPDF = async (property) => {
+    setIsPrinting(true);
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 15;
+      let y = margin;
+
+      // Colors
+      const navy = [10, 22, 40];
+      const gold = [201, 169, 98];
+      const white = [255, 255, 255];
+      const gray = [107, 114, 128];
+
+      // Header
+      pdf.setFillColor(...navy);
+      pdf.rect(0, 0, pageWidth, 40, 'F');
+      pdf.setFillColor(...gold);
+      pdf.rect(0, 0, pageWidth, 5, 'F');
+
+      pdf.setTextColor(...gold);
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('House of Stone Properties', margin, 25);
+
+      y = 55;
+
+      // Property Title
+      pdf.setTextColor(...navy);
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      const titleLines = pdf.splitTextToSize(property.title || 'Property', pageWidth - margin * 2);
+      pdf.text(titleLines, margin, y);
+      y += titleLines.length * 7 + 5;
+
+      // Price
+      pdf.setTextColor(...gold);
+      pdf.setFontSize(20);
+      pdf.text(`$${parseFloat(property.price || 0).toLocaleString()}`, margin, y);
+      y += 12;
+
+      // Location
+      pdf.setTextColor(...gray);
+      pdf.setFontSize(11);
+      pdf.text(property.location || 'Location not specified', margin, y);
+      y += 15;
+
+      // Property Details Box
+      pdf.setFillColor(248, 250, 252);
+      pdf.roundedRect(margin, y, pageWidth - margin * 2, 50, 3, 3, 'F');
+
+      pdf.setTextColor(...navy);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Property Details', margin + 5, y + 12);
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      const details = [
+        ['Type', property.property_type || 'N/A'],
+        ['Status', property.status || 'N/A'],
+        ['Bedrooms', property.beds || 'N/A'],
+        ['Bathrooms', property.baths || 'N/A'],
+        ['Size', property.sqft ? `${property.sqft} sqft` : 'N/A'],
+        ['Year Built', property.year_built || 'N/A'],
+      ];
+
+      let detailY = y + 22;
+      details.forEach((detail, i) => {
+        const col = i % 3;
+        const row = Math.floor(i / 3);
+        const x = margin + 5 + col * 60;
+        const dy = detailY + row * 12;
+        pdf.setTextColor(...gray);
+        pdf.text(detail[0] + ':', x, dy);
+        pdf.setTextColor(...navy);
+        pdf.text(String(detail[1]), x + 25, dy);
+      });
+      y += 60;
+
+      // Description
+      if (property.description) {
+        pdf.setTextColor(...navy);
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Description', margin, y);
+        y += 8;
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(10);
+        pdf.setTextColor(...gray);
+        const cleanDesc = property.description.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        const descLines = pdf.splitTextToSize(cleanDesc, pageWidth - margin * 2);
+        pdf.text(descLines.slice(0, 8), margin, y);
+        y += Math.min(descLines.length, 8) * 5 + 10;
+      }
+
+      // Footer
+      const footerY = pdf.internal.pageSize.getHeight() - 15;
+      pdf.setFillColor(...gold);
+      pdf.rect(0, footerY - 5, pageWidth, 20, 'F');
+      pdf.setTextColor(...navy);
+      pdf.setFontSize(9);
+      pdf.text('House of Stone Properties | info@hsp.co.zw | +263 867 717 3442', pageWidth / 2, footerY + 3, { align: 'center' });
+
+      pdf.save(`${(property.title || 'property').replace(/[^a-z0-9]/gi, '_')}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
+  // Print multiple properties list
+  const printPropertiesList = async (propertiesToPrint) => {
+    setIsPrinting(true);
+    try {
+      const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape for list view
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      let y = margin;
+
+      // Colors
+      const navy = [10, 22, 40];
+      const gold = [201, 169, 98];
+      const gray = [107, 114, 128];
+
+      // Header
+      pdf.setFillColor(...navy);
+      pdf.rect(0, 0, pageWidth, 25, 'F');
+      pdf.setFillColor(...gold);
+      pdf.rect(0, 0, pageWidth, 4, 'F');
+
+      pdf.setTextColor(...gold);
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('House of Stone Properties - Property List', margin, 16);
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(9);
+      pdf.text(`Generated: ${new Date().toLocaleDateString()} | Total: ${propertiesToPrint.length} properties`, pageWidth - margin, 16, { align: 'right' });
+
+      y = 35;
+
+      // Table Header
+      const cols = [
+        { header: 'Title', width: 70 },
+        { header: 'Location', width: 50 },
+        { header: 'Type', width: 25 },
+        { header: 'Price', width: 35 },
+        { header: 'Beds', width: 15 },
+        { header: 'Baths', width: 15 },
+        { header: 'Size', width: 25 },
+        { header: 'Status', width: 25 },
+      ];
+
+      pdf.setFillColor(...gold);
+      pdf.rect(margin, y, pageWidth - margin * 2, 8, 'F');
+      pdf.setTextColor(...navy);
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'bold');
+
+      let x = margin + 2;
+      cols.forEach(col => {
+        pdf.text(col.header, x, y + 5.5);
+        x += col.width;
+      });
+      y += 10;
+
+      // Table Rows
+      pdf.setFont('helvetica', 'normal');
+      propertiesToPrint.forEach((property, index) => {
+        if (y > pageHeight - 20) {
+          pdf.addPage();
+          y = margin;
+          // Repeat header on new page
+          pdf.setFillColor(...gold);
+          pdf.rect(margin, y, pageWidth - margin * 2, 8, 'F');
+          pdf.setTextColor(...navy);
+          pdf.setFont('helvetica', 'bold');
+          x = margin + 2;
+          cols.forEach(col => {
+            pdf.text(col.header, x, y + 5.5);
+            x += col.width;
+          });
+          y += 10;
+          pdf.setFont('helvetica', 'normal');
+        }
+
+        // Alternate row colors
+        if (index % 2 === 0) {
+          pdf.setFillColor(248, 250, 252);
+          pdf.rect(margin, y, pageWidth - margin * 2, 7, 'F');
+        }
+
+        pdf.setTextColor(...navy);
+        pdf.setFontSize(7);
+        x = margin + 2;
+
+        const rowData = [
+          (property.title || '').substring(0, 35),
+          (property.location || '').substring(0, 25),
+          property.property_type || '-',
+          property.price ? `$${parseFloat(property.price).toLocaleString()}` : 'POA',
+          property.beds || '-',
+          property.baths || '-',
+          property.sqft ? `${property.sqft}` : '-',
+          property.status || '-',
+        ];
+
+        rowData.forEach((data, i) => {
+          pdf.text(String(data), x, y + 5);
+          x += cols[i].width;
+        });
+        y += 7;
+      });
+
+      // Footer
+      const footerY = pageHeight - 8;
+      pdf.setTextColor(...gray);
+      pdf.setFontSize(7);
+      pdf.text('House of Stone Properties | www.hsp.co.zw', pageWidth / 2, footerY, { align: 'center' });
+
+      pdf.save(`properties_list_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
+  // Print selected or all properties
+  const handlePrintSelected = () => {
+    const selectedProps = filteredProperties.filter(p => selectedPropertyIds.has(p.id));
+    if (selectedProps.length > 0) {
+      printPropertiesList(selectedProps);
+    }
+  };
+
+  const handlePrintAll = () => {
+    printPropertiesList(filteredProperties);
+  };
+
+  // Generate shareable content from selected properties
+  const generateShareContent = (properties) => {
+    const baseUrl = 'https://hsp.co.zw';
+    let content = `🏠 House of Stone Properties\n\nCheck out these amazing properties:\n\n`;
+
+    properties.forEach((property, index) => {
+      const price = property.price ? `$${property.price.toLocaleString()}` : 'Price on request';
+      const location = property.location || 'Zimbabwe';
+      const beds = property.beds ? `${property.beds} beds` : '';
+      const baths = property.baths ? `${property.baths} baths` : '';
+      const specs = [beds, baths].filter(Boolean).join(' • ');
+
+      content += `${index + 1}. ${property.title}\n`;
+      content += `   📍 ${location}\n`;
+      content += `   💰 ${price}${specs ? ` • ${specs}` : ''}\n`;
+      content += `   🔗 ${baseUrl}/properties/${property.id}\n\n`;
+    });
+
+    content += `\nView all properties at ${baseUrl}`;
+    return content;
+  };
+
+  // Share selected properties via WhatsApp
+  const handleShareWhatsApp = () => {
+    const selectedProps = filteredProperties.filter(p => selectedPropertyIds.has(p.id));
+    if (selectedProps.length === 0) return;
+
+    const content = generateShareContent(selectedProps);
+    const encodedContent = encodeURIComponent(content);
+    window.open(`https://wa.me/?text=${encodedContent}`, '_blank');
+  };
+
+  // Share selected properties via Email
+  const handleShareEmail = () => {
+    const selectedProps = filteredProperties.filter(p => selectedPropertyIds.has(p.id));
+    if (selectedProps.length === 0) return;
+
+    const subject = `House of Stone Properties - ${selectedProps.length} Selected Properties`;
+    const body = generateShareContent(selectedProps);
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
+  };
 
   const handleAddAgent = () => {
     setSelectedAgent(null);
@@ -1644,23 +1970,42 @@ const PropertyDashboard = () => {
         </button>
       </div>
 
-      {/* Sidebar */}
+      {/* Sidebar - Fixed position, doesn't scroll with content */}
       <motion.div
         initial={false}
-        animate={{ x: sidebarOpen ? 0 : -280 }}
-        className={`fixed lg:relative inset-y-0 left-0 z-20 w-[280px] bg-[#0A1628] border-r border-white/10 flex flex-col pt-24`}
+        animate={{
+          x: sidebarOpen ? 0 : -280,
+          width: sidebarCollapsed ? 80 : 280
+        }}
+        transition={{ duration: 0.2, ease: "easeInOut" }}
+        className={`fixed inset-y-0 left-0 z-20 bg-[#0A1628] border-r border-white/10 flex flex-col pt-24`}
+        style={{ width: sidebarCollapsed ? 80 : 280 }}
       >
-        <div className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        {/* Desktop Collapse Toggle */}
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="hidden lg:flex absolute -right-3 top-28 w-6 h-6 bg-[#0A1628] border border-white/10 rounded-full items-center justify-center text-gray-400 hover:text-white hover:bg-[#1a2942] transition-colors z-30"
+        >
+          {sidebarCollapsed ? (
+            <ChevronRight className="w-4 h-4" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
+        </button>
+
+        <div className={`flex-1 ${sidebarCollapsed ? 'px-2' : 'px-4'} py-6 space-y-2 overflow-y-auto`}>
           {/* Logo */}
-          <div className="px-4 pb-6 mb-4 border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#C9A962]/10 rounded-xl flex items-center justify-center">
+          <div className={`${sidebarCollapsed ? 'px-0 justify-center' : 'px-4'} pb-6 mb-4 border-b border-white/10`}>
+            <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+              <div className="w-10 h-10 bg-[#C9A962]/10 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Home className="w-5 h-5 text-[#C9A962]" />
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-white">House of Stone</h1>
-                <p className="text-xs text-gray-500">Admin Dashboard</p>
-              </div>
+              {!sidebarCollapsed && (
+                <div>
+                  <h1 className="text-lg font-bold text-white">House of Stone</h1>
+                  <p className="text-xs text-gray-500">Admin Dashboard</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1671,18 +2016,21 @@ const PropertyDashboard = () => {
             active={activeTab === "properties"}
             onClick={() => setActiveTab("properties")}
             badge={pagination?.count || filteredProperties.length}
+            collapsed={sidebarCollapsed}
           />
           <SidebarItem
             icon={FaUsersGear}
             label="Users"
             active={activeTab === "users"}
             onClick={() => setActiveTab("users")}
+            collapsed={sidebarCollapsed}
           />
           <SidebarItem
             icon={UserCheck}
             label="Agents"
             active={activeTab === "agents"}
             onClick={() => setActiveTab("agents")}
+            collapsed={sidebarCollapsed}
           />
           <SidebarItem
             icon={BellRing}
@@ -1690,65 +2038,104 @@ const PropertyDashboard = () => {
             active={activeTab === "notifications"}
             onClick={() => setActiveTab("notifications")}
             badge={notificationCount > 0 ? String(notificationCount) : null}
+            collapsed={sidebarCollapsed}
           />
           <SidebarItem
             icon={BarChart2}
             label="Statistics"
             active={activeTab === "stats"}
             onClick={() => setActiveTab("stats")}
+            collapsed={sidebarCollapsed}
           />
         </div>
 
         {/* User Profile */}
-        <div className="p-4 border-t border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#C9A962] to-[#B8985A] flex items-center justify-center text-[#0A1628] font-bold">
+        <div className={`${sidebarCollapsed ? 'p-2' : 'p-4'} border-t border-white/10`}>
+          <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#C9A962] to-[#B8985A] flex items-center justify-center text-[#0A1628] font-bold flex-shrink-0">
               A
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
-                Admin User
-              </p>
-              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  Admin User
+                </p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
 
-      {/* Main content - Scrollable area */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden pt-24 lg:ml-0 custom-scrollbar">
+      {/* Main content - Scrollable area with dynamic margin for sidebar on desktop */}
+      <div
+        className={`flex-1 overflow-y-auto overflow-x-hidden pt-24 custom-scrollbar transition-[margin] duration-200 ease-in-out ${
+          sidebarCollapsed ? 'lg:ml-[80px]' : 'lg:ml-[280px]'
+        }`}
+      >
         {/* Header - Sticky at top */}
         <header className="sticky top-0 z-10 bg-[#060D16]/95 backdrop-blur-xl border-b border-white/10">
-          <div className="px-6 py-4 flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                {activeTab === "properties" && "Property Management"}
-                {activeTab === "users" && "User Management"}
-                {activeTab === "agents" && "Agent Management"}
+          <div className="px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold text-white truncate">
+                {activeTab === "properties" && "Properties"}
+                {activeTab === "users" && "Users"}
+                {activeTab === "agents" && "Agents"}
                 {activeTab === "notifications" && "Notifications"}
-                {activeTab === "stats" && "Statistics Dashboard"}
+                {activeTab === "stats" && "Statistics"}
               </h1>
-              <p className="text-sm text-gray-400 mt-1 flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                {new Date().toLocaleDateString("en-US", {
+              <p className="text-xs sm:text-sm text-gray-400 mt-0.5 sm:mt-1 flex items-center gap-1 sm:gap-2">
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">{new Date().toLocaleDateString("en-US", {
                   weekday: "long",
                   year: "numeric",
                   month: "short",
                   day: "numeric",
-                })}
+                })}</span>
+                <span className="xs:hidden">{new Date().toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}</span>
               </p>
             </div>
 
             {activeTab === "properties" && (
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setCurrentForm("add")}
-                className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all duration-300"
-              >
-                <Plus className="w-5 h-5" />
-                Add Property
-              </motion.button>
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Print Buttons */}
+                {selectedPropertyIds.size > 0 && (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handlePrintSelected}
+                    disabled={isPrinting}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white/10 border border-white/20 text-white font-medium rounded-xl hover:bg-white/20 transition-all duration-300 text-sm"
+                  >
+                    {isPrinting ? <Loader className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
+                    <span className="hidden sm:inline">Print Selected ({selectedPropertyIds.size})</span>
+                    <span className="sm:hidden">{selectedPropertyIds.size}</span>
+                  </motion.button>
+                )}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handlePrintAll}
+                  disabled={isPrinting || !filteredProperties?.length}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 text-white/70 font-medium rounded-xl hover:bg-white/10 hover:text-white transition-all duration-300 text-sm"
+                >
+                  <FileDown className="w-4 h-4" />
+                  <span className="hidden sm:inline">Export All</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setCurrentForm("add")}
+                  className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all duration-300"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span className="hidden sm:inline">Add Property</span>
+                  <span className="sm:hidden">Add</span>
+                </motion.button>
+              </div>
             )}
 
             {activeTab === "agents" && (
@@ -1765,10 +2152,10 @@ const PropertyDashboard = () => {
           </div>
         </header>
 
-        <main className="p-6">
+        <main className="p-3 sm:p-6">
           {/* Stats Overview */}
           {activeTab !== "stats" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
               {statsCards.map((card, index) => (
                 <StatsCard key={index} card={card} index={index} />
               ))}
@@ -1779,120 +2166,219 @@ const PropertyDashboard = () => {
           {activeTab === "properties" && (
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
               {/* Search and Filters */}
-              <div className="p-6 border-b border-white/10">
-                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+              <div className="p-4 sm:p-6 border-b border-white/10">
+                {/* Desktop: All in one row */}
+                <div className="hidden lg:flex items-center gap-4">
                   {/* Search */}
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+                  <div className="relative flex-1 max-w-xs">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
                     <input
                       type="text"
-                      placeholder="Search properties..."
-                      className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
+                      placeholder="Search..."
+                      className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
                       value={searchTerm}
                       onChange={handleSearch}
                     />
                   </div>
 
-                  {/* Filters */}
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 text-gray-400">
-                      <Filter className="w-4 h-4" />
-                      <span className="text-sm">Filters:</span>
-                    </div>
+                  {/* Filters inline */}
+                  <select
+                    name="propertyType"
+                    value={filterCriteria.propertyType}
+                    onChange={handleFilterChange}
+                    className="px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#C9A962]/50"
+                  >
+                    <option value="" className="bg-[#0A1628]">All Types</option>
+                    <option value="house" className="bg-[#0A1628]">House</option>
+                    <option value="apartment" className="bg-[#0A1628]">Apartment</option>
+                    <option value="flat" className="bg-[#0A1628]">Flat</option>
+                    <option value="land" className="bg-[#0A1628]">Land</option>
+                    <option value="commercial" className="bg-[#0A1628]">Commercial</option>
+                    <option value="villa" className="bg-[#0A1628]">Villa</option>
+                    <option value="cluster" className="bg-[#0A1628]">Cluster</option>
+                    <option value="stand" className="bg-[#0A1628]">Stand</option>
+                    <option value="duplex" className="bg-[#0A1628]">Duplex</option>
+                    <option value="townhouse" className="bg-[#0A1628]">Townhouse</option>
+                  </select>
 
-                    <select
-                      name="propertyType"
-                      value={filterCriteria.propertyType}
-                      onChange={handleFilterChange}
-                      className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#C9A962]/50"
-                    >
-                      <option value="" className="bg-[#0A1628]">
-                        All Types
-                      </option>
-                      <option value="house" className="bg-[#0A1628]">
-                        House
-                      </option>
-                      <option value="apartment" className="bg-[#0A1628]">
-                        Apartment
-                      </option>
-                      <option value="flat" className="bg-[#0A1628]">
-                        Flat
-                      </option>
-                      <option value="land" className="bg-[#0A1628]">
-                        Land
-                      </option>
-                      <option value="commercial" className="bg-[#0A1628]">
-                        Commercial
-                      </option>
-                      <option value="villa" className="bg-[#0A1628]">
-                        Villa
-                      </option>
-                      <option value="cluster" className="bg-[#0A1628]">
-                        Cluster
-                      </option>
-                      <option value="stand" className="bg-[#0A1628]">
-                        Stand
-                      </option>
-                      <option value="duplex" className="bg-[#0A1628]">
-                        Duplex
-                      </option>
-                      <option value="townhouse" className="bg-[#0A1628]">
-                        Townhouse
-                      </option>
-                    </select>
-
-                    <input
-                      type="number"
-                      name="priceMin"
-                      placeholder="Min Price"
-                      value={filterCriteria.priceMin}
-                      onChange={handleFilterChange}
-                      className="w-28 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50"
-                    />
-
-                    <input
-                      type="number"
-                      name="priceMax"
-                      placeholder="Max Price"
-                      value={filterCriteria.priceMax}
-                      onChange={handleFilterChange}
-                      className="w-28 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50"
-                    />
-                  </div>
+                  <input
+                    type="number"
+                    name="priceMin"
+                    placeholder="Min $"
+                    value={filterCriteria.priceMin}
+                    onChange={handleFilterChange}
+                    className="w-24 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50"
+                  />
+                  <input
+                    type="number"
+                    name="priceMax"
+                    placeholder="Max $"
+                    value={filterCriteria.priceMax}
+                    onChange={handleFilterChange}
+                    className="w-24 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50"
+                  />
 
                   {/* Sort Buttons */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 border-l border-white/10 pl-4">
                     {["price", "created_at", "location"].map((field) => (
                       <button
                         key={field}
                         onClick={() => handleSort(field)}
-                        className={`px-3 py-2 text-sm rounded-lg transition-all duration-300 flex items-center gap-1 ${
+                        className={`px-2 py-1.5 text-xs rounded-lg transition-all duration-300 flex items-center gap-1 ${
                           filterCriteria.sortBy === field
                             ? "bg-[#C9A962]/20 text-[#C9A962]"
                             : "text-gray-400 hover:text-white hover:bg-white/5"
                         }`}
                       >
-                        {field === "created_at"
-                          ? "Date"
-                          : field.charAt(0).toUpperCase() + field.slice(1)}
+                        {field === "created_at" ? "Date" : field.charAt(0).toUpperCase() + field.slice(1)}
                         {filterCriteria.sortBy === field &&
-                          (filterCriteria.sortDirection === "asc" ? (
-                            <ArrowUp className="w-3 h-3" />
-                          ) : (
-                            <ArrowDown className="w-3 h-3" />
-                          ))}
+                          (filterCriteria.sortDirection === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Mobile: Stacked layout */}
+                <div className="lg:hidden flex flex-col gap-3">
+                  <div className="relative w-full">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50 transition-colors"
+                      value={searchTerm}
+                      onChange={handleSearch}
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      name="propertyType"
+                      value={filterCriteria.propertyType}
+                      onChange={handleFilterChange}
+                      className="flex-1 min-w-[120px] px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#C9A962]/50"
+                    >
+                      <option value="" className="bg-[#0A1628]">All Types</option>
+                      <option value="house" className="bg-[#0A1628]">House</option>
+                      <option value="apartment" className="bg-[#0A1628]">Apartment</option>
+                      <option value="flat" className="bg-[#0A1628]">Flat</option>
+                      <option value="land" className="bg-[#0A1628]">Land</option>
+                      <option value="commercial" className="bg-[#0A1628]">Commercial</option>
+                    </select>
+                    <input
+                      type="number"
+                      name="priceMin"
+                      placeholder="Min $"
+                      value={filterCriteria.priceMin}
+                      onChange={handleFilterChange}
+                      className="w-20 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50"
+                    />
+                    <input
+                      type="number"
+                      name="priceMax"
+                      placeholder="Max $"
+                      value={filterCriteria.priceMax}
+                      onChange={handleFilterChange}
+                      className="w-20 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#C9A962]/50"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {["price", "created_at"].map((field) => (
+                      <button
+                        key={field}
+                        onClick={() => handleSort(field)}
+                        className={`px-2 py-1.5 text-xs rounded-lg transition-all flex items-center gap-1 ${
+                          filterCriteria.sortBy === field ? "bg-[#C9A962]/20 text-[#C9A962]" : "text-gray-400 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        {field === "created_at" ? "Date" : "Price"}
+                        {filterCriteria.sortBy === field && (filterCriteria.sortDirection === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
                       </button>
                     ))}
                   </div>
                 </div>
               </div>
 
+              {/* Bulk Actions Bar - appears when properties are selected */}
+              {selectedPropertyIds.size > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="px-4 sm:px-6 py-3 bg-[#C9A962]/10 border-b border-[#C9A962]/20 flex flex-wrap items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-white font-medium">
+                      {selectedPropertyIds.size} selected
+                    </span>
+                    <button
+                      onClick={() => setSelectedPropertyIds(new Set())}
+                      className="text-xs text-gray-400 hover:text-white transition-colors"
+                    >
+                      Clear selection
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Share Actions */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleShareWhatsApp}
+                      className="flex items-center gap-2 px-3 py-2 bg-[#25D366]/20 border border-[#25D366]/30 text-[#25D366] font-medium rounded-lg hover:bg-[#25D366]/30 transition-all text-sm"
+                      title="Share via WhatsApp"
+                    >
+                      <FaWhatsapp className="w-4 h-4" />
+                      <span className="hidden sm:inline">WhatsApp</span>
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleShareEmail}
+                      className="flex items-center gap-2 px-3 py-2 bg-blue-500/20 border border-blue-500/30 text-blue-400 font-medium rounded-lg hover:bg-blue-500/30 transition-all text-sm"
+                      title="Share via Email"
+                    >
+                      <Mail className="w-4 h-4" />
+                      <span className="hidden sm:inline">Email</span>
+                    </motion.button>
+
+                    {/* Separator */}
+                    <div className="hidden sm:block w-px h-6 bg-white/10 mx-1" />
+
+                    {/* Print/Export Actions */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handlePrintSelected}
+                      disabled={isPrinting}
+                      className="flex items-center gap-2 px-3 py-2 bg-white/10 border border-white/20 text-white font-medium rounded-lg hover:bg-white/20 transition-all text-sm"
+                      title="Print Selected"
+                    >
+                      {isPrinting ? <Loader className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
+                      <span className="hidden sm:inline">Print</span>
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        const selectedProps = filteredProperties.filter(p => selectedPropertyIds.has(p.id));
+                        if (selectedProps.length === 1) {
+                          printPropertyPDF(selectedProps[0]);
+                        } else {
+                          printPropertiesList(selectedProps);
+                        }
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 bg-[#C9A962] text-[#0A1628] font-medium rounded-lg hover:bg-[#B8985A] transition-all text-sm"
+                      title="Export as PDF"
+                    >
+                      <FileDown className="w-4 h-4" />
+                      <span className="hidden sm:inline">Export PDF</span>
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Helpful tip */}
-              <div className="px-6 py-2 bg-[#C9A962]/5 border-b border-white/10 flex items-center gap-2">
+              <div className="px-4 sm:px-6 py-2 bg-[#C9A962]/5 border-b border-white/10 flex items-center gap-2">
                 <span className="text-xs text-gray-400">
-                  💡 <span className="text-[#C9A962]">Tip:</span> Click on any
-                  row to view property details. Use filters to narrow down
-                  results.
+                  💡 <span className="text-[#C9A962]">Tip:</span> Use checkboxes to select properties for bulk actions.
                 </span>
               </div>
 
@@ -1909,25 +2395,38 @@ const PropertyDashboard = () => {
                     </div>
                   </div>
                 )}
-                <table className="w-full">
+                <table className="w-full min-w-[800px]">
                   <thead>
                     <tr className="border-b border-white/10">
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {/* Checkbox column */}
+                      <th className="px-3 py-4 text-left w-12">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleAllSelection(); }}
+                          className="p-1 hover:bg-white/10 rounded transition-colors"
+                        >
+                          {selectedPropertyIds.size === filteredProperties?.length && filteredProperties?.length > 0 ? (
+                            <CheckSquare className="w-5 h-5 text-[#C9A962]" />
+                          ) : (
+                            <Square className="w-5 h-5 text-gray-500" />
+                          )}
+                        </button>
+                      </th>
+                      <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Property
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                         Price
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                         Location
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                         Type
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -2017,12 +2516,25 @@ const PropertyDashboard = () => {
                             key={property.id}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="hover:bg-white/5 transition-colors cursor-pointer group"
+                            className={`hover:bg-white/5 transition-colors cursor-pointer group ${selectedPropertyIds.has(property.id) ? 'bg-[#C9A962]/5' : ''}`}
                             onClick={() => setPropertyDetailView(property)}
                           >
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            {/* Checkbox */}
+                            <td className="px-3 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={() => togglePropertySelection(property.id)}
+                                className="p-1 hover:bg-white/10 rounded transition-colors"
+                              >
+                                {selectedPropertyIds.has(property.id) ? (
+                                  <CheckSquare className="w-5 h-5 text-[#C9A962]" />
+                                ) : (
+                                  <Square className="w-5 h-5 text-gray-500 group-hover:text-gray-400" />
+                                )}
+                              </button>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap">
                               <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-lg bg-white/10 overflow-hidden ring-2 ring-transparent group-hover:ring-[#C9A962]/30 transition-all">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-white/10 overflow-hidden ring-2 ring-transparent group-hover:ring-[#C9A962]/30 transition-all flex-shrink-0">
                                   {property.images?.[0]?.image ? (
                                     <img
                                       src={property.images[0].image}
@@ -2034,26 +2546,30 @@ const PropertyDashboard = () => {
                                     />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center">
-                                      <MdHouseSiding className="w-5 h-5 text-white/30" />
+                                      <MdHouseSiding className="w-4 h-4 sm:w-5 sm:h-5 text-white/30" />
                                     </div>
                                   )}
                                 </div>
                                 <div className="min-w-0">
-                                  <span className="text-sm font-medium text-white truncate block max-w-[200px] group-hover:text-[#C9A962] transition-colors">
+                                  <span className="text-xs sm:text-sm font-medium text-white truncate block max-w-[120px] sm:max-w-[200px] group-hover:text-[#C9A962] transition-colors">
                                     {property.title}
                                   </span>
                                   <span className="text-xs text-gray-500">
                                     #{property.id}
                                   </span>
+                                  {/* Show price on mobile */}
+                                  <span className="sm:hidden block text-xs text-[#C9A962] font-semibold mt-0.5">
+                                    ${property.price?.toLocaleString() || "POA"}
+                                  </span>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
                               <span className="text-sm text-[#C9A962] font-semibold">
                                 ${property.price?.toLocaleString() || "POA"}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
                               <div className="flex items-center gap-1 text-sm text-gray-400">
                                 <MapPin className="w-3 h-3 text-[#C9A962]" />
                                 <span className="truncate max-w-[150px]">
@@ -2061,14 +2577,14 @@ const PropertyDashboard = () => {
                                 </span>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
                               <span className="text-sm text-white capitalize px-2 py-1 bg-white/5 rounded-lg">
                                 {property.property_type}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4 whitespace-nowrap">
                               <span
-                                className={`px-3 py-1 text-xs font-medium rounded-full ${
+                                className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-full ${
                                   property.is_published
                                     ? "bg-green-500/20 text-green-400"
                                     : "bg-gray-500/20 text-gray-400"
@@ -2078,19 +2594,30 @@ const PropertyDashboard = () => {
                               </span>
                             </td>
                             <td
-                              className="px-6 py-4 whitespace-nowrap"
+                              className="px-4 py-4 whitespace-nowrap"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-0.5 sm:gap-1">
+                                {/* Print single property */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    printPropertyPDF(property);
+                                  }}
+                                  className="p-1.5 sm:p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                                  title="Print PDF"
+                                >
+                                  <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                </button>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setPropertyDetailView(property);
                                   }}
-                                  className="p-2 text-[#C9A962] hover:text-[#E8D5A3] hover:bg-[#C9A962]/10 rounded-lg transition-all"
+                                  className="p-1.5 sm:p-2 text-[#C9A962] hover:text-[#E8D5A3] hover:bg-[#C9A962]/10 rounded-lg transition-all"
                                   title="View Details"
                                 >
-                                  <Eye className="w-4 h-4" />
+                                  <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                 </button>
                                 <button
                                   onClick={(e) => {

@@ -742,11 +742,51 @@ const PropertyDetail = () => {
     { icon: Home, label: "Lounges", value: property.lounges },
   ].filter(stat => stat.value !== null && stat.value !== undefined && stat.value !== '' && stat.value !== 0);
 
+  // Helper to convert image URL to base64 for PDF generation
+  const imageToBase64 = async (url) => {
+    try {
+      // Use a proxy approach - create an image and draw to canvas
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth || 400;
+            canvas.height = img.naturalHeight || 300;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
+          } catch (e) {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        // Add timestamp to bypass cache and try direct load
+        img.src = url;
+        // Timeout fallback
+        setTimeout(() => resolve(null), 5000);
+      });
+    } catch (e) {
+      return null;
+    }
+  };
+
   // Generate PDF brochure using html2canvas for better image support
   const generateBrochure = async () => {
     setIsGeneratingBrochure(true);
 
     try {
+      // Preload images as base64 to avoid CORS issues
+      const imagePromises = (property.images || []).slice(0, 5).map(async (img) => {
+        const base64 = await imageToBase64(img.image);
+        return base64 || img.image; // Fallback to original URL if conversion fails
+      });
+      const preloadedImages = await Promise.all(imagePromises);
+
+      // Preload logo
+      const logoBase64 = await imageToBase64('/logo.png') || '/logo.png';
+
       // Create a hidden container for the brochure
       const brochureContainer = document.createElement('div');
       brochureContainer.style.position = 'fixed';
@@ -1058,7 +1098,7 @@ const PropertyDetail = () => {
             <div class="content-width">
               <div class="logo-section">
                 <div class="logo-container">
-                  <img src="/logo.png" alt="House of Stone Properties" class="logo" crossorigin="anonymous" onerror="this.style.display='none'"/>
+                  <img src="${logoBase64}" alt="House of Stone Properties" class="logo"/>
                 </div>
                 <div class="company-tagline">Your Property, Our Priority</div>
               </div>
@@ -1077,8 +1117,8 @@ const PropertyDetail = () => {
           <div class="content-wrapper">
             <div class="content-width">
               <div class="property-images">
-                ${(property.images || []).slice(0, 5).map((img, index) => `
-                  <img src="${img.image}" alt="Property Image ${index + 1}" class="${index === 0 ? 'main-image' : ''}" crossorigin="anonymous" onerror="this.style.display='none'"/>
+                ${preloadedImages.map((imgSrc, index) => `
+                  <img src="${imgSrc}" alt="Property Image ${index + 1}" class="${index === 0 ? 'main-image' : ''}" style="${!imgSrc || imgSrc === 'null' ? 'display:none' : ''}"/>
                 `).join('')}
               </div>
 
@@ -1115,17 +1155,15 @@ const PropertyDetail = () => {
                 </div>
               ` : ''}
 
-              ${primaryAgent ? `
-                <div class="agent-info">
-                  <h3>Contact Our Primary Agent</h3>
-                  <div class="agent-details">
-                    <div class="agent-detail"><strong>Name:</strong> ${primaryAgent.agent.first_name}</div>
-                    <div class="agent-detail"><strong>Email:</strong> ${primaryAgent.agent.email || 'info@hsp.co.zw'}</div>
-                    <div class="agent-detail"><strong>Phone:</strong> ${primaryAgent.agent.cell_number || '+263 772 329 569'}</div>
-                    <div class="agent-detail"><strong>Office:</strong> +263 867 717 3442</div>
-                  </div>
+              <div class="agent-info">
+                <h3>Contact Our Agent</h3>
+                <div class="agent-details">
+                  <div class="agent-detail"><strong>Name:</strong> ${primaryAgent?.agent?.first_name || 'Lionita'}</div>
+                  <div class="agent-detail"><strong>Email:</strong> ${primaryAgent?.agent?.email || 'info@hsp.co.zw'}</div>
+                  <div class="agent-detail"><strong>Phone:</strong> ${primaryAgent?.agent?.cell_number || '+263 772 329 569'}</div>
+                  <div class="agent-detail"><strong>Office:</strong> +263 867 717 3442</div>
                 </div>
-              ` : ''}
+              </div>
             </div>
           </div>
 
@@ -1214,6 +1252,18 @@ const PropertyDetail = () => {
           name="description"
           content={property.description?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().substring(0, 160)}
         />
+        {/* Open Graph meta tags for social sharing */}
+        <meta property="og:title" content={`${property.title} | House of Stone Properties`} />
+        <meta property="og:description" content={property.description?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().substring(0, 160) || `Beautiful ${property.property_type} in ${property.location}`} />
+        <meta property="og:image" content={property.images?.[0]?.image || 'https://hsp.co.zw/logo.png'} />
+        <meta property="og:url" content={`https://hsp.co.zw/properties/${property.id}`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="House of Stone Properties" />
+        {/* Twitter Card meta tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${property.title} | House of Stone Properties`} />
+        <meta name="twitter:description" content={property.description?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().substring(0, 160) || `Beautiful ${property.property_type} in ${property.location}`} />
+        <meta name="twitter:image" content={property.images?.[0]?.image || 'https://hsp.co.zw/logo.png'} />
       </Helmet>
 
       {/* Hero Section */}
@@ -1432,10 +1482,10 @@ const PropertyDetail = () => {
                   About This Property
                 </h2>
                 <div
-                  className="prose prose-invert max-w-none text-white/80 leading-relaxed text-lg font-description
-                    [&>div]:mb-3 [&>p]:mb-3 [&>b]:text-white [&>div>b]:text-white
+                  className="prose prose-invert max-w-none text-white/80 leading-relaxed text-xl sm:text-2xl font-description
+                    [&>div]:mb-4 [&>p]:mb-4 [&>b]:text-white [&>div>b]:text-white
                     [&>div>span]:bg-transparent [&_span]:!bg-transparent
-                    first-letter:text-4xl first-letter:font-bold first-letter:text-[#C9A962] first-letter:mr-1 first-letter:float-left first-letter:leading-none"
+                    first-letter:text-5xl first-letter:font-bold first-letter:text-[#C9A962] first-letter:mr-1 first-letter:float-left first-letter:leading-none"
                   dangerouslySetInnerHTML={{ __html: property.description }}
                 />
               </motion.div>
