@@ -605,3 +605,11 @@ Email sent successfully: Property Updated: Demo to ['simbamtombe@gmail.com', 'in
 Email sent successfully: New Property Created: Demo to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
 Skipping watermark for image 2064 - cloud storage detected
 Email sent successfully: Property Updated: Demo to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Email sent successfully: Property Updated: Demo to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Email sent successfully: New Property Created: Demo to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Skipping watermark for image 2065 - cloud storage detected
+Email sent successfully: Property Updated: Demo to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Email sent successfully: New Property Created: Demo to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
+Skipping watermark for image 2066 - cloud storage detected
+Failed to send email: Property Unassigned: Demo - Error: {'brace@hsp.co.zw': (550, b'No Such User Here"')}
+Email sent successfully: Agent Unassigned from Property: Demo to ['simbamtombe@gmail.com', 'info@hsp.co.zw']
