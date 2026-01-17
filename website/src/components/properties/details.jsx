@@ -1454,12 +1454,6 @@ const PropertyDetail = () => {
             <div className="relative">
               {/* Map Header Overlay */}
               <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-[#0A1628] to-transparent h-24 pointer-events-none" />
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 px-6 py-3 bg-[#0A1628]/90 backdrop-blur-md rounded-full border border-[#C9A962]/30">
-                <div className="w-8 h-8 rounded-lg bg-[#C9A962]/10 flex items-center justify-center">
-                  <MapPin className="w-4 h-4 text-[#C9A962]" />
-                </div>
-                <span className="text-white font-medium">{property.location}</span>
-              </div>
 
               {/* Map */}
               <div className="h-[50vh] min-h-[400px]">
