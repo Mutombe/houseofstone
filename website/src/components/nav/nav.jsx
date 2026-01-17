@@ -292,7 +292,7 @@ const MobileMenu = ({ isOpen, onClose, navItems, dropdowns, isAuthenticated, use
               <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
                 <Link to="/" onClick={onClose}>
                   <img
-                    src="/clogo.png"
+                    src="/logo.png"
                     alt="HSP"
                     className="h-8 sm:h-10"
                     onError={(e) => {
