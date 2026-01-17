@@ -558,6 +558,7 @@ export const PropertyForm = ({
             {
               agent_id: agent.id,
               name: agent.full_name,
+              profile_image: agent.profile_image,
               is_primary: formData.agents.length === 0,
             },
           ],
@@ -1097,8 +1098,16 @@ export const PropertyForm = ({
                             className="flex items-center justify-between bg-white/5 border border-white/10 px-4 py-3 rounded-xl"
                           >
                             <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-[#C9A962]/10 rounded-full flex items-center justify-center">
-                                <FaRegCircleUser className="w-5 h-5 text-[#C9A962]" />
+                              <div className="w-10 h-10 bg-[#C9A962]/10 rounded-full flex items-center justify-center overflow-hidden">
+                                {agent.profile_image ? (
+                                  <img
+                                    src={agent.profile_image}
+                                    alt={agent.name}
+                                    className="w-full h-full object-cover object-top"
+                                  />
+                                ) : (
+                                  <FaRegCircleUser className="w-5 h-5 text-[#C9A962]" />
+                                )}
                               </div>
                               <span className="text-white font-medium">{agent.name}</span>
                               {agent.is_primary && (

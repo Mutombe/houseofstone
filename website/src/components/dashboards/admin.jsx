@@ -617,6 +617,8 @@ const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
     address: "21 Harare Drive Borrowdale, Harare",
     is_active: true,
   });
+  const [profileImage, setProfileImage] = useState(null);
+  const [profileImagePreview, setProfileImagePreview] = useState(null);
 
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -640,6 +642,14 @@ const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
         address: selectedAgent.address,
         is_active: selectedAgent.is_active,
       });
+      // Set existing profile image preview
+      if (selectedAgent.profile_image) {
+        setProfileImagePreview(selectedAgent.profile_image);
+      }
+    } else {
+      // Reset for new agent
+      setProfileImage(null);
+      setProfileImagePreview(null);
     }
   }, [currentForm, selectedAgent]);
 
@@ -651,6 +661,18 @@ const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
     });
   };
 
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfileImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -658,6 +680,11 @@ const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
     Object.keys(formData).forEach((key) => {
       agentFormData.append(key, formData[key]);
     });
+
+    // Add profile image if selected
+    if (profileImage) {
+      agentFormData.append('profile_image', profileImage);
+    }
 
     try {
       if (currentForm === "edit" && selectedAgent) {
@@ -730,6 +757,37 @@ const AgentForm = ({ currentForm, setCurrentForm, selectedAgent }) => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Profile Image Upload */}
+                <div className="flex flex-col items-center gap-4 pb-4 border-b border-white/10">
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-full bg-white/5 border-2 border-dashed border-white/20 flex items-center justify-center overflow-hidden">
+                      {profileImagePreview ? (
+                        <img
+                          src={profileImagePreview}
+                          alt="Profile preview"
+                          className="w-full h-full object-cover object-top"
+                        />
+                      ) : (
+                        <User className="w-10 h-10 text-gray-500" />
+                      )}
+                    </div>
+                    <label
+                      htmlFor="profile_image"
+                      className="absolute bottom-0 right-0 w-8 h-8 bg-[#C9A962] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#B8985A] transition-colors"
+                    >
+                      <Camera className="w-4 h-4 text-[#0A1628]" />
+                    </label>
+                    <input
+                      type="file"
+                      id="profile_image"
+                      accept="image/*"
+                      onChange={handleProfileImageChange}
+                      className="hidden"
+                    />
+                  </div>
+                  <p className="text-sm text-gray-400">Click the camera icon to upload profile photo</p>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* First Name */}
                   <div>
@@ -3035,8 +3093,16 @@ const PropertyDashboard = () => {
                             >
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center gap-3">
-                                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#C9A962] to-[#B8985A] flex items-center justify-center text-[#0A1628] font-bold">
-                                    {agent.full_name?.charAt(0) || "A"}
+                                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#C9A962] to-[#B8985A] flex items-center justify-center text-[#0A1628] font-bold overflow-hidden">
+                                    {agent.profile_image ? (
+                                      <img
+                                        src={agent.profile_image}
+                                        alt={agent.full_name}
+                                        className="w-full h-full object-cover object-top"
+                                      />
+                                    ) : (
+                                      agent.full_name?.charAt(0) || "A"
+                                    )}
                                   </div>
                                   <span className="text-sm font-medium text-white">
                                     {agent.full_name}

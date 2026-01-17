@@ -82,12 +82,12 @@ class PropertyFeatureSerializer(serializers.ModelSerializer):
 
 class AgentSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = Agent
-        fields = ['id', 'first_name', 'middle_name', 'surname', 'full_name', 
-                 'cell_number', 'email', 'position', 'permissions', 
-                 'agency_name', 'branch', 'address', 'is_active']
+        fields = ['id', 'first_name', 'middle_name', 'surname', 'full_name',
+                 'cell_number', 'email', 'position', 'permissions',
+                 'agency_name', 'branch', 'address', 'is_active', 'profile_image']
 
 
 class PropertyAgentSerializer(serializers.ModelSerializer):

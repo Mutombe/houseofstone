@@ -660,35 +660,14 @@ const PropertyDetail = () => {
     }
   }, [property, properties, id]);
 
-  // Agent image mapping - matches first names to their profile pictures
-  const agentImageMap = {
-    'Leonita': 'leo.jpeg',
-    'Nairgel': '/ngl.jpeg',
-    'Winnifilda': 'winnie.jpeg',
-    'Winnie': 'winnie.jpeg',
-    'James': 'james.jpeg',
-    'Arthur': 'arthur.jpeg',
-    'Sarah': 'sarah.jpeg',
-    'Tsitsi': 'tsitsi.jpeg',
-    'Chomu': 'chomu.jpeg',
-    'Emily': 'emily.jpeg',
-    'Tanaka': 'tanaka.jpeg',
-    'Prince': 'prnc.jpeg',
-    'Heather': 'heather.jpeg',
-    'Michael': 'mic.jpeg',
-    'Tatenda': 'Tatenda.jpeg',
-    'Lloyd': 'caretaker.jpeg',
-  };
-
-  const getAgentImage = (firstName) => {
-    if (!firstName) return null;
-    // Try exact match first
-    if (agentImageMap[firstName]) return agentImageMap[firstName];
-    // Try case-insensitive match
-    const key = Object.keys(agentImageMap).find(
-      k => k.toLowerCase() === firstName.toLowerCase()
-    );
-    return key ? agentImageMap[key] : null;
+  // Get agent profile image - uses API profile_image field
+  const getAgentImage = (agent) => {
+    // Use profile_image from API if available
+    if (agent?.profile_image) {
+      return agent.profile_image;
+    }
+    // No image available
+    return null;
   };
 
   // Helper functions
@@ -1597,18 +1576,18 @@ const PropertyDetail = () => {
 
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-16 h-16 rounded-2xl overflow-hidden bg-[#C9A962]/10 flex items-center justify-center">
-                      {getAgentImage(getPrimaryAgent(property).agent.first_name) ? (
+                      {getAgentImage(getPrimaryAgent(property).agent) ? (
                         <img
-                          src={getAgentImage(getPrimaryAgent(property).agent.first_name)}
+                          src={getAgentImage(getPrimaryAgent(property).agent)}
                           alt={getPrimaryAgent(property).agent.first_name}
-                          className="w-full h-full object-cover object-top "
+                          className="w-full h-full object-cover object-top"
                           onError={(e) => {
                             e.target.style.display = 'none';
                             e.target.nextSibling.style.display = 'flex';
                           }}
                         />
                       ) : null}
-                      <div className={`w-full h-full items-center justify-center ${getAgentImage(getPrimaryAgent(property).agent.first_name) ? 'hidden' : 'flex'}`}>
+                      <div className={`w-full h-full items-center justify-center ${getAgentImage(getPrimaryAgent(property).agent) ? 'hidden' : 'flex'}`}>
                         <FaRegCircleUser className="w-8 h-8 text-[#C9A962]" />
                       </div>
                     </div>

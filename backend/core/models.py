@@ -50,7 +50,10 @@ class Agent(models.Model):
     agency_name = models.CharField(max_length=200, default='House of Stone Properties')
     branch = models.CharField(max_length=100, default='Borrowdale')
     address = models.TextField(default='21 Harare Drive Borrowdale, Harare')
-    
+
+    # Profile picture
+    profile_image = models.ImageField(upload_to='agents/', blank=True, null=True)
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
