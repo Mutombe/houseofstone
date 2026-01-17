@@ -234,13 +234,8 @@ const PropertyCard = ({ property, savedPropertyIds, onToggleFavorite, onShare, i
               )}
             </div>
 
-            {/* Action Buttons */}
-            <motion.div
-              className="flex gap-2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : 20 }}
-              transition={{ duration: 0.3 }}
-            >
+            {/* Action Buttons - Always visible */}
+            <div className="flex gap-2">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -248,7 +243,7 @@ const PropertyCard = ({ property, savedPropertyIds, onToggleFavorite, onShare, i
                 className={`p-2.5 rounded-full backdrop-blur-md transition-all ${
                   savedPropertyIds.has(property.id)
                     ? "bg-red-500 text-white"
-                    : "bg-white/20 text-white hover:bg-white hover:text-[#0A1628]"
+                    : "bg-black/30 text-white hover:bg-white hover:text-[#0A1628]"
                 }`}
               >
                 <Heart className={`w-4 h-4 ${savedPropertyIds.has(property.id) ? "fill-current" : ""}`} />
@@ -257,11 +252,11 @@ const PropertyCard = ({ property, savedPropertyIds, onToggleFavorite, onShare, i
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={(e) => { e.stopPropagation(); onShare(property); }}
-                className="p-2.5 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white hover:text-[#0A1628] transition-all"
+                className="p-2.5 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-white hover:text-[#0A1628] transition-all"
               >
                 <Share2 className="w-4 h-4" />
               </motion.button>
-            </motion.div>
+            </div>
           </div>
 
           {/* Bottom Row - Price & Type */}

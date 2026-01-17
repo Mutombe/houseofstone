@@ -2,18 +2,27 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Search, Heart, User, Building2, Menu, X, Phone, Info } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { Home, Search, Heart, User, Building2, Menu, X, Phone, Info, LogOut, Settings, UserCircle } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
 import { LuCircleUser } from "react-icons/lu";
+import { logout } from '../../redux/slices/authSlice';
 
 const MobileBottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const { savedProperties } = useSelector((state) => state.localSaves);
   const savedCount = savedProperties?.length || 0;
   const [showMore, setShowMore] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  // Handle logout
+  const handleLogout = () => {
+    dispatch(logout());
+    setShowMore(false);
+    navigate('/');
+  };
 
   // Check screen size for extra-small phones
   useEffect(() => {
@@ -59,12 +68,10 @@ const MobileBottomNav = () => {
       badge: savedCount,
     },
     {
-      path: isAuthenticated
-        ? (isAdmin ? '/admin' : isAgent ? '/agent-dashboard' : '/saved')
-        : null,
+      path: null,
       icon: LuCircleUser,
       label: isAuthenticated ? 'Account' : 'Login',
-      onClick: !isAuthenticated ? () => setShowMore(true) : undefined,
+      onClick: () => setShowMore(true),
     },
   ];
 
@@ -131,7 +138,43 @@ const MobileBottomNav = () => {
                   })}
                 </div>
 
-                {!isAuthenticated && (
+                {isAuthenticated ? (
+                  <div className="mt-2 p-2 border-t border-white/10">
+                    {/* User Info */}
+                    <div className="flex items-center gap-3 p-2 mb-2">
+                      <div className="w-10 h-10 rounded-full bg-[#C9A962]/20 flex items-center justify-center">
+                        <UserCircle className="w-6 h-6 text-[#C9A962]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium text-sm truncate">{user?.username || user?.email || 'User'}</p>
+                        <p className="text-gray-500 text-xs truncate">
+                          {isAdmin ? 'Administrator' : isAgent ? 'Agent' : 'Member'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Account Links */}
+                    <div className="space-y-1 mb-2">
+                      <Link
+                        to={isAdmin ? '/admin' : isAgent ? '/agent-dashboard' : '/saved'}
+                        onClick={() => setShowMore(false)}
+                        className="flex items-center gap-3 p-3 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition-colors"
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span className="text-sm">Dashboard</span>
+                      </Link>
+                    </div>
+
+                    {/* Logout Button */}
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-red-500/10 text-red-400 rounded-lg xs:rounded-xl font-semibold text-sm active:bg-red-500/20 border border-red-500/20"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                ) : (
                   <div className="mt-2 p-2 border-t border-white/10">
                     <p className="text-[10px] xs:text-xs text-gray-500 text-center mb-2 xs:mb-3">Sign in to access your account</p>
                     <div className="flex gap-2">

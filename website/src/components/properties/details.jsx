@@ -53,6 +53,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { propertyAPI } from "./../../utils/api";
 import { fetchProperty } from "./../../redux/slices/propertySlice";
+import { toggleSaveProperty, selectSavedProperties } from "./../../redux/slices/localSavesSlice";
 
 // Premium Skeleton Loader - Matches actual property detail layout with colored backgrounds
 const PropertyDetailSkeleton = () => {
@@ -539,7 +540,6 @@ const PropertyDetail = () => {
   const [similarProperties, setSimilarProperties] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-  const [isFavorited, setIsFavorited] = useState(false);
   const [isGeneratingBrochure, setIsGeneratingBrochure] = useState(false);
 
   const isSharedRoute = !!token;
@@ -551,6 +551,10 @@ const PropertyDetail = () => {
     itemLoading,
     itemErrors,
   } = useSelector((state) => state.properties);
+
+  // Saved properties from Redux
+  const savedProperties = useSelector(selectSavedProperties);
+  const isFavorited = savedProperties.some(p => p.id === parseInt(id));
 
   const property = isSharedRoute
     ? sharedProperty
@@ -748,7 +752,7 @@ const PropertyDetail = () => {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setIsFavorited(!isFavorited)}
+            onClick={() => property && dispatch(toggleSaveProperty(property))}
             className={`p-3 rounded-full backdrop-blur-sm transition-colors ${
               isFavorited
                 ? "bg-red-500 text-white"
@@ -1127,7 +1131,7 @@ const PropertyDetail = () => {
       <FloatingActionBar
         property={property}
         onShare={() => setIsShareModalOpen(true)}
-        onFavorite={() => setIsFavorited(!isFavorited)}
+        onFavorite={() => property && dispatch(toggleSaveProperty(property))}
         isFavorited={isFavorited}
         onInquiry={() => setIsInquiryModalOpen(true)}
       />
