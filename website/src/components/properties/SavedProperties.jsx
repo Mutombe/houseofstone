@@ -74,9 +74,9 @@ const SavedPropertyCard = ({ property, onRemove }) => {
       <div className="flex flex-col sm:flex-row">
         {/* Image */}
         <div className="relative w-full sm:w-48 h-48 sm:h-auto flex-shrink-0">
-          {property.images?.[0]?.image ? (
+          {(property.primaryImage || property.images?.[0]?.image) ? (
             <img
-              src={property.images[0].image}
+              src={property.primaryImage || property.images[0].image}
               alt={property.title}
               className="w-full h-full object-cover"
             />

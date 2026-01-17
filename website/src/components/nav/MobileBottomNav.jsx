@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Search, Heart, User, Building2, Menu, X, Phone, Info } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { LuCircleUser } from "react-icons/lu";
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -61,7 +62,7 @@ const MobileBottomNav = () => {
       path: isAuthenticated
         ? (isAdmin ? '/admin' : isAgent ? '/agent-dashboard' : '/saved')
         : null,
-      icon: User,
+      icon: LuCircleUser,
       label: isAuthenticated ? 'Account' : 'Login',
       onClick: !isAuthenticated ? () => setShowMore(true) : undefined,
     },

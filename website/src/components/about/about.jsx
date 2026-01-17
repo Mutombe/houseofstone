@@ -385,9 +385,9 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#060D16]">
+    <div className="min-h-screen bg-[#060D16] pb-24 lg:pb-0">
       {/* Hero Section */}
-      <section ref={heroRef} className="relative h-screen overflow-hidden">
+      <section ref={heroRef} className="relative min-h-screen overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -423,7 +423,7 @@ const About = () => {
                 </span>
               </motion.div>
 
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-[0.9]">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold mb-4 sm:mb-6 leading-[0.9]">
                 <span className="text-white">About</span>
                 <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C9A962] via-[#DCC471] to-[#C9A962]">
@@ -431,26 +431,26 @@ const About = () => {
                 </span>
               </h1>
 
-              <p className="text-xl md:text-2xl text-gray-300 mb-8 leading-relaxed">
+              <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-6 sm:mb-8 leading-relaxed">
                 Your Property, Our Priority
                 <span className="text-[#C9A962]"> — </span>
                 Takavimbika ~ Sithembekile
               </p>
 
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Link
                   to="/contact"
-                  className="group inline-flex items-center px-8 py-4 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/20 transition-all"
+                  className="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/20 transition-all text-sm sm:text-base"
                 >
                   Get in Touch
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link
                   to="/sale"
-                  className="group inline-flex items-center px-8 py-4 bg-white/5 backdrop-blur-xl border border-white/20 text-white font-semibold rounded-xl hover:bg-white/10 hover:border-[#C9A962]/30 transition-all"
+                  className="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-white/5 backdrop-blur-xl border border-white/20 text-white font-semibold rounded-xl hover:bg-white/10 hover:border-[#C9A962]/30 transition-all text-sm sm:text-base"
                 >
                   View Properties
-                  <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
             </motion.div>
@@ -595,7 +595,7 @@ const About = () => {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {values.map((value, index) => (
               <ValueCard key={index} {...value} index={index} />
             ))}
@@ -711,10 +711,10 @@ const About = () => {
             className="relative"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-[#C9A962]/10 to-transparent rounded-3xl blur-2xl" />
-            <div className="relative bg-[#060D16] border border-white/10 rounded-3xl overflow-hidden">
-              <div className="grid md:grid-cols-3 gap-0">
+            <div className="relative bg-[#060D16] border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
                 {/* Image */}
-                <div className="relative h-80 md:h-auto md:min-h-[500px]">
+                <div className="relative h-64 sm:h-80 md:h-auto md:min-h-[500px]">
                   <img
                     src="/icon.png"
                     alt="Leonita Mhishi"
@@ -734,12 +734,12 @@ const About = () => {
                 </div>
 
                 {/* Content */}
-                <div className="md:col-span-2 p-8 md:p-12">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Crown className="w-6 h-6 text-[#C9A962]" />
-                    <span className="text-[#C9A962] font-medium">CEO & Founder</span>
+                <div className="md:col-span-2 p-5 sm:p-8 md:p-12">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                    <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-[#C9A962]" />
+                    <span className="text-[#C9A962] font-medium text-sm sm:text-base">CEO & Founder</span>
                   </div>
-                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
                     Leonita Mhishi
                   </h3>
                   <p className="text-gray-400 mb-6">Principal Registered Estate Agent</p>
@@ -824,7 +824,7 @@ const About = () => {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {management.map((member, index) => (
               <TeamMemberCard key={index} {...member} delay={index * 0.1} />
             ))}

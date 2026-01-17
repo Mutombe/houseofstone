@@ -17,6 +17,7 @@ import {
   selectPropertiesLoading,
   selectPropertiesError,
 } from "./../../redux/slices/propertySlice";
+import { toggleSaveProperty, selectSavedProperties } from "./../../redux/slices/localSavesSlice";
 import { SiFsecure } from "react-icons/si";
 import { IoCheckmarkDoneCircleOutline } from "react-icons/io5";
 
@@ -176,7 +177,7 @@ const PropertyCardSkeleton = ({ index = 0 }) => (
 );
 
 // Premium Property Card
-const PropertyCard = ({ property, favorites, onToggleFavorite, onShare, index }) => {
+const PropertyCard = ({ property, savedPropertyIds, onToggleFavorite, onShare, index }) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef(null);
@@ -243,14 +244,14 @@ const PropertyCard = ({ property, favorites, onToggleFavorite, onShare, index })
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={(e) => { e.stopPropagation(); onToggleFavorite(property.id); }}
+                onClick={(e) => { e.stopPropagation(); onToggleFavorite(property); }}
                 className={`p-2.5 rounded-full backdrop-blur-md transition-all ${
-                  favorites.has(property.id)
+                  savedPropertyIds.has(property.id)
                     ? "bg-red-500 text-white"
                     : "bg-white/20 text-white hover:bg-white hover:text-[#0A1628]"
                 }`}
               >
-                <Heart className={`w-4 h-4 ${favorites.has(property.id) ? "fill-current" : ""}`} />
+                <Heart className={`w-4 h-4 ${savedPropertyIds.has(property.id) ? "fill-current" : ""}`} />
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -381,12 +382,15 @@ const Properties = () => {
   const error = useSelector(selectPropertiesError);
   const { results: allProperties = [] } = marketplace || {};
 
+  // Redux saved properties
+  const savedProperties = useSelector(selectSavedProperties);
+  const savedPropertyIds = useMemo(() => new Set(savedProperties.map(p => p.id)), [savedProperties]);
+
   // Local State
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState("newest");
-  const [favorites, setFavorites] = useState(new Set());
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [currentPage, setCurrentPage] = useState(1);
@@ -484,14 +488,15 @@ const Properties = () => {
     setCurrentPage(1);
   }, []);
 
-  const toggleFavorite = useCallback((id) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+  const toggleFavorite = useCallback((property) => {
+    dispatch(toggleSaveProperty(property));
+    const isSaved = savedPropertyIds.has(property.id);
+    setToast({
+      show: true,
+      message: isSaved ? "Removed from saved" : "Added to saved",
+      type: "success"
     });
-  }, []);
+  }, [dispatch, savedPropertyIds]);
 
   const handleShare = useCallback(async (property) => {
     const url = `${window.location.origin}/properties/${property.id}`;
@@ -885,7 +890,7 @@ const Properties = () => {
               <PropertyCard
                 key={property.id}
                 property={property}
-                favorites={favorites}
+                savedPropertyIds={savedPropertyIds}
                 onToggleFavorite={toggleFavorite}
                 onShare={handleShare}
                 index={index}

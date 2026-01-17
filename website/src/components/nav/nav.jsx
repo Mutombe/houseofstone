@@ -41,6 +41,7 @@ import { GiHouseKeys } from "react-icons/gi";
 import { SiFsecure } from "react-icons/si";
 import { MdOutlineDashboard } from "react-icons/md";
 import { LiaPeopleCarrySolid } from "react-icons/lia";
+import { TiThMenuOutline } from "react-icons/ti";
 
 
 
@@ -882,7 +883,7 @@ const Navbar = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Menu className="w-5 h-5" />
+              <TiThMenuOutline className="w-5 h-5" />
             </motion.button>
           </div>
         </div>

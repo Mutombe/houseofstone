@@ -547,7 +547,7 @@ const AgentDetailModal = ({ agent, isOpen, onClose }) => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.3 }}
-          className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-[#0A1628] to-[#060D16] border border-white/10 rounded-3xl"
+          className="relative w-full max-w-4xl max-h-[85vh] overflow-y-auto bg-gradient-to-br from-[#0A1628] to-[#060D16] border border-white/10 rounded-2xl sm:rounded-3xl mx-2 sm:mx-4"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button */}
@@ -594,9 +594,9 @@ const AgentDetailModal = ({ agent, isOpen, onClose }) => {
             </div>
 
             {/* Content Section */}
-            <div className="p-8 md:p-10">
+            <div className="p-5 sm:p-8 md:p-10">
               {/* Header */}
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="flex items-center gap-1 px-2 py-1 bg-[#C9A962]/10 rounded-full">
                     <MdStarPurple500 className="w-4 h-4 text-[#C9A962] fill-current" />
@@ -604,23 +604,23 @@ const AgentDetailModal = ({ agent, isOpen, onClose }) => {
                   </div>
                   <span className="text-gray-400 text-sm">{agent.reviews} reviews</span>
                 </div>
-                <h2 className="text-3xl font-bold text-white mb-1">{agent.name}</h2>
-                <p className="text-[#C9A962] font-medium">{agent.title}</p>
+                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1">{agent.name}</h2>
+                <p className="text-[#C9A962] font-medium text-sm sm:text-base">{agent.title}</p>
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-white mb-1">{agent.propertiesSold}</div>
-                  <div className="text-gray-400 text-xs">Properties Sold</div>
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
+                <div className="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-2 sm:p-4 text-center">
+                  <div className="text-lg sm:text-2xl font-bold text-white mb-0.5 sm:mb-1">{agent.propertiesSold}</div>
+                  <div className="text-gray-400 text-[10px] sm:text-xs">Properties Sold</div>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-white mb-1">{agent.experience}</div>
-                  <div className="text-gray-400 text-xs">Experience</div>
+                <div className="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-2 sm:p-4 text-center">
+                  <div className="text-lg sm:text-2xl font-bold text-white mb-0.5 sm:mb-1">{agent.experience}</div>
+                  <div className="text-gray-400 text-[10px] sm:text-xs">Experience</div>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-white mb-1">{agent.reviews}</div>
-                  <div className="text-gray-400 text-xs">Reviews</div>
+                <div className="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-2 sm:p-4 text-center">
+                  <div className="text-lg sm:text-2xl font-bold text-white mb-0.5 sm:mb-1">{agent.reviews}</div>
+                  <div className="text-gray-400 text-[10px] sm:text-xs">Reviews</div>
                 </div>
               </div>
 
@@ -817,9 +817,9 @@ const AgentsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#060D16]">
+    <div className="min-h-screen bg-[#060D16] pb-24 lg:pb-0">
       {/* Hero Section */}
-      <section ref={heroRef} className="relative min-h-[70vh] overflow-hidden">
+      <section ref={heroRef} className="relative min-h-[60vh] sm:min-h-[70vh] overflow-hidden">
         <motion.div style={{ y: heroY }} className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-[#0A1628] via-[#0A1628] to-[#1a2a3a]" />
         </motion.div>
@@ -848,7 +848,7 @@ const AgentsPage = () => {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.1 }}
-                className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
+                className="text-3xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 leading-tight"
               >
                 <span className="text-white">Our Professional</span>
                 <br />
@@ -861,7 +861,7 @@ const AgentsPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-xl text-gray-300 max-w-3xl mx-auto mb-12"
+                className="text-base sm:text-xl text-gray-300 max-w-3xl mx-auto mb-8 sm:mb-12 px-2 sm:px-0"
               >
                 Dedicated professionals who make your real estate dreams come true. Our experienced
                 team guides you through every step of your property journey.
@@ -906,7 +906,7 @@ const AgentsPage = () => {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {featuredAgents.map((agent) => (
               <FeaturedAgentCard key={agent.id} agent={agent} onClick={handleViewDetails} />
             ))}
@@ -1058,7 +1058,7 @@ const AgentsPage = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {features.map((feature, index) => (
               <FeatureCard key={index} {...feature} index={index} />
             ))}
@@ -1085,27 +1085,27 @@ const AgentsPage = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-[#0A1628] mb-6">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#0A1628] mb-4 sm:mb-6 px-2 sm:px-0">
               Ready to Work with Our Expert Team?
             </h2>
-            <p className="text-xl text-[#0A1628]/80 mb-10 max-w-2xl mx-auto">
+            <p className="text-base sm:text-xl text-[#0A1628]/80 mb-6 sm:mb-10 max-w-2xl mx-auto px-4 sm:px-0">
               Contact us today and let our experienced agents help you find your perfect property
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
               <Link
                 to="/contact"
-                className="group inline-flex items-center justify-center px-8 py-4 bg-[#0A1628] text-white font-semibold rounded-xl hover:bg-[#1a2a3a] transition-all"
+                className="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-[#0A1628] text-white font-semibold rounded-xl hover:bg-[#1a2a3a] transition-all text-sm sm:text-base"
               >
-                <Phone className="mr-2 w-5 h-5" />
+                <Phone className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
                 Contact Us Today
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 to="/sale"
-                className="group inline-flex items-center justify-center px-8 py-4 bg-white text-[#0A1628] font-semibold rounded-xl hover:bg-gray-100 transition-all"
+                className="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-white text-[#0A1628] font-semibold rounded-xl hover:bg-gray-100 transition-all text-sm sm:text-base"
               >
-                <Building className="mr-2 w-5 h-5" />
+                <Building className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
                 Browse Properties
               </Link>
             </div>
