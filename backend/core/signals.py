@@ -620,97 +620,143 @@ def save_user_profile(sender, instance, **kwargs):
 def add_watermark_to_image(sender, instance, created, **kwargs):
     """
     Signal to add watermark to property images after they're saved.
-    Uses Django's file handling to properly save the watermarked image.
+    Supports both local storage and cloud storage (DigitalOcean Spaces, S3).
     """
+    from .utils import apply_watermark, apply_watermark_from_bytes
+    from io import BytesIO
+    import requests
+
     # Only process newly created images that haven't been watermarked yet
     if not created or not instance.image:
         return
-    
+
     # Prevent recursive signal calls
     if hasattr(instance, '_watermarking'):
         return
-    
+
     # Check if already watermarked (if field exists)
     if hasattr(instance, 'is_watermarked') and instance.is_watermarked:
-        print(f"DEBUG: Image {instance.id} already watermarked, skipping")
         logger.info(f"Image {instance.id} already watermarked, skipping")
         return
-    
+
     try:
-        # Skip watermarking for cloud storage (DigitalOcean Spaces, S3, etc.)
-        # Cloud storage doesn't support local file paths
         from django.core.files.storage import default_storage
-        if not hasattr(default_storage, 'path') or 'S3' in default_storage.__class__.__name__ or 'Boto' in default_storage.__class__.__name__:
-            logger.info(f"Skipping watermark for image {instance.id} - using cloud storage")
-            return
-
-        # Try to get the path - this will fail for cloud storage
-        try:
-            image_path = instance.image.path
-        except NotImplementedError:
-            logger.info(f"Skipping watermark for image {instance.id} - cloud storage detected")
-            return
-
-        print(f"DEBUG: Signal triggered for PropertyImage ID: {instance.id}")
-        print(f"DEBUG: Image path: {image_path}")
-
-        # Check if image exists
-        if not os.path.exists(image_path):
-            print(f"ERROR: Image file does not exist at {image_path}")
-            logger.error(f"Image file not found: {image_path}")
-            return
-        
-        watermark_path = os.path.join(settings.MEDIA_ROOT, 'logo', 'logo2.webp')
-        print(f"DEBUG: Watermark path: {watermark_path}")
-        
-        # Check if watermark exists
-        if not os.path.exists(watermark_path):
-            logger.error(f"Watermark not found at: {watermark_path}")
-            print(f"ERROR: Watermark not found at {watermark_path}")
-            return
-        
-        # Get the original filename
-        original_name = instance.image.name
-        
-        # Apply watermark and get bytes
-        watermarked_bytes = apply_watermark(
-            image_path=image_path,
-            watermark_path=watermark_path,
-            position='center',
-            size_ratio=0.20,
-            opacity=0.55
+        is_cloud_storage = (
+            'S3' in default_storage.__class__.__name__ or
+            'Boto' in default_storage.__class__.__name__ or
+            not hasattr(default_storage, 'path')
         )
-        
+
+        original_name = instance.image.name
+        watermarked_bytes = None
+
+        if is_cloud_storage:
+            # === CLOUD STORAGE: Download, watermark, re-upload ===
+            logger.info(f"Processing watermark for cloud image {instance.id}")
+
+            try:
+                # Download image from cloud storage
+                image_url = instance.image.url
+                logger.info(f"Downloading image from: {image_url}")
+
+                response = requests.get(image_url, timeout=30)
+                if response.status_code != 200:
+                    logger.error(f"Failed to download image: HTTP {response.status_code}")
+                    return
+
+                image_bytes = BytesIO(response.content)
+
+                # Try to get watermark from cloud storage or local
+                watermark_bytes = None
+
+                # First try cloud storage watermark
+                try:
+                    if default_storage.exists('logo/logo2.webp'):
+                        with default_storage.open('logo/logo2.webp', 'rb') as wm_file:
+                            watermark_bytes = BytesIO(wm_file.read())
+                except Exception as e:
+                    logger.warning(f"Could not load watermark from cloud: {e}")
+
+                # Fallback to local watermark
+                if watermark_bytes is None:
+                    local_watermark_path = os.path.join(settings.BASE_DIR, 'media', 'logo', 'logo2.webp')
+                    if os.path.exists(local_watermark_path):
+                        with open(local_watermark_path, 'rb') as wm_file:
+                            watermark_bytes = BytesIO(wm_file.read())
+                    else:
+                        # Try static folder
+                        static_watermark = os.path.join(settings.BASE_DIR, 'static', 'logo2.webp')
+                        if os.path.exists(static_watermark):
+                            with open(static_watermark, 'rb') as wm_file:
+                                watermark_bytes = BytesIO(wm_file.read())
+
+                if watermark_bytes is None:
+                    logger.error("Watermark not found in cloud or local storage")
+                    return
+
+                # Apply watermark from bytes (smaller size: 0.12 instead of 0.20)
+                watermarked_bytes = apply_watermark_from_bytes(
+                    image_bytes=image_bytes,
+                    watermark_bytes=watermark_bytes,
+                    position='center',
+                    size_ratio=0.12,  # Smaller watermark
+                    opacity=0.45      # Slightly more subtle
+                )
+
+            except requests.RequestException as e:
+                logger.error(f"Network error downloading image: {e}")
+                return
+
+        else:
+            # === LOCAL STORAGE: Use file paths ===
+            try:
+                image_path = instance.image.path
+            except NotImplementedError:
+                logger.info(f"Skipping watermark for image {instance.id} - path not available")
+                return
+
+            if not os.path.exists(image_path):
+                logger.error(f"Image file not found: {image_path}")
+                return
+
+            watermark_path = os.path.join(settings.MEDIA_ROOT, 'logo', 'logo2.webp')
+            if not os.path.exists(watermark_path):
+                logger.error(f"Watermark not found at: {watermark_path}")
+                return
+
+            # Apply watermark (smaller size: 0.12 instead of 0.20)
+            watermarked_bytes = apply_watermark(
+                image_path=image_path,
+                watermark_path=watermark_path,
+                position='center',
+                size_ratio=0.12,  # Smaller watermark
+                opacity=0.45      # Slightly more subtle
+            )
+
+        # Save watermarked image
         if watermarked_bytes:
-            # Set flag to prevent recursive signal
             instance._watermarking = True
-            
+
             # Delete the old file
-            old_file = instance.image
-            old_file.delete(save=False)
-            
-            # Save the watermarked image through Django's file system
+            instance.image.delete(save=False)
+
+            # Save the watermarked image
             instance.image.save(
                 original_name,
                 ContentFile(watermarked_bytes),
                 save=False
             )
-            
+
             # Mark as watermarked if field exists
             if hasattr(instance, 'is_watermarked'):
                 instance.is_watermarked = True
                 instance.save(update_fields=['image', 'is_watermarked'])
             else:
                 instance.save(update_fields=['image'])
-            
-            print(f"SUCCESS: Watermark applied to PropertyImage ID: {instance.id}")
+
             logger.info(f"Watermark applied successfully to image {instance.id}")
         else:
-            print(f"FAILED: Could not apply watermark to PropertyImage ID: {instance.id}")
             logger.error(f"Watermarking failed for image {instance.id}")
-            
+
     except Exception as e:
         logger.exception(f"Error in watermark signal for image {instance.id}: {str(e)}")
-        print(f"ERROR in signal: {e}")
-        import traceback
-        traceback.print_exc()

@@ -78,36 +78,109 @@ class EmailNotificationService:
 Utility functions for image processing
 """
 
-def apply_watermark(image_path, watermark_path, position='center', size_ratio=0.15, opacity=0.7):
+def apply_watermark_from_bytes(image_bytes, watermark_bytes, position='center', size_ratio=0.12, opacity=0.5):
+    """
+    Applies a watermark to an image from bytes and returns the watermarked image as bytes.
+    This version works with cloud storage (DigitalOcean Spaces, S3, etc.)
+
+    Args:
+        image_bytes: BytesIO or file-like object containing the base image
+        watermark_bytes: BytesIO or file-like object containing the watermark
+        position (str): Position of watermark ('center', 'bottom_right', 'bottom_left', 'top_right', 'top_left')
+        size_ratio (float): Size of watermark relative to base image (0.0 to 1.0)
+        opacity (float): Opacity of watermark (0.0 to 1.0)
+
+    Returns:
+        bytes: Watermarked image as JPEG bytes, or None if error occurs
+    """
+    try:
+        logger.info("Starting watermark process from bytes")
+
+        # Open images from bytes
+        base_image = Image.open(image_bytes).convert('RGBA')
+        watermark = Image.open(watermark_bytes).convert('RGBA')
+
+        logger.info(f"Base image size: {base_image.size}, Watermark size: {watermark.size}")
+
+        # --- Opacity Control ---
+        if opacity < 1.0:
+            alpha = watermark.split()[3]
+            alpha = ImageEnhance.Brightness(alpha).enhance(opacity)
+            watermark.putalpha(alpha)
+
+        # --- Sizing ---
+        img_width, img_height = base_image.size
+        wm_original_width, wm_original_height = watermark.size
+
+        # Calculate new watermark dimensions maintaining aspect ratio
+        new_wm_width = int(img_width * size_ratio)
+        new_wm_height = int(wm_original_height * (new_wm_width / wm_original_width))
+
+        watermark = watermark.resize((new_wm_width, new_wm_height), Image.Resampling.LANCZOS)
+
+        # --- Positioning ---
+        margin = int(img_width * 0.02)  # 2% margin
+
+        position_map = {
+            'bottom_right': (img_width - new_wm_width - margin, img_height - new_wm_height - margin),
+            'bottom_left': (margin, img_height - new_wm_height - margin),
+            'top_right': (img_width - new_wm_width - margin, margin),
+            'top_left': (margin, margin),
+            'center': (int((img_width - new_wm_width) / 2), int((img_height - new_wm_height) / 2))
+        }
+
+        pos = position_map.get(position)
+        if pos is None:
+            raise ValueError(f"Invalid position '{position}'. Must be one of: {list(position_map.keys())}")
+
+        # --- Apply Watermark ---
+        transparent_layer = Image.new('RGBA', base_image.size, (0, 0, 0, 0))
+        transparent_layer.paste(watermark, pos)
+
+        watermarked_image = Image.alpha_composite(base_image, transparent_layer)
+
+        # Convert to RGB for JPEG
+        final_image = watermarked_image.convert('RGB')
+
+        # Save to BytesIO
+        output = BytesIO()
+        final_image.save(output, format='JPEG', quality=92, optimize=True)
+        output.seek(0)
+
+        logger.info("Watermark applied successfully from bytes")
+        return output.read()
+
+    except Exception as e:
+        logger.exception(f"Watermark from bytes failed: {str(e)}")
+        return None
+
+
+def apply_watermark(image_path, watermark_path, position='center', size_ratio=0.12, opacity=0.5):
     """
     Applies a watermark to an image and returns the watermarked image as bytes.
-    
+
     Args:
         image_path (str): Path to the base image
         watermark_path (str): Path to the watermark image
         position (str): Position of watermark ('center', 'bottom_right', 'bottom_left', 'top_right', 'top_left')
-        size_ratio (float): Size of watermark relative to base image (0.0 to 1.0)
+        size_ratio (float): Size of watermark relative to base image (0.0 to 1.0) - now smaller default
         opacity (float): Opacity of watermark (0.0 to 1.0)
-    
+
     Returns:
         bytes: Watermarked image as JPEG bytes, or None if error occurs
     """
     try:
         logger.info(f"Starting watermark process for {image_path}")
-        print(f"DEBUG: Opening base image from {image_path}")
-        print(f"DEBUG: Opening watermark from {watermark_path}")
-        
+
         # Check file existence
         if not os.path.exists(image_path):
-            print(f"ERROR: Base image not found at {image_path}")
             logger.error(f"Base image not found: {image_path}")
             return None
-            
+
         if not os.path.exists(watermark_path):
-            print(f"ERROR: Watermark not found at {watermark_path}")
             logger.error(f"Watermark not found: {watermark_path}")
             return None
-        
+
         # Open images
         base_image = Image.open(image_path).convert('RGBA')
         watermark = Image.open(watermark_path).convert('RGBA')
