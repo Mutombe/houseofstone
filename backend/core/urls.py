@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import PublicPropertyListView, PublicPropertyDetailView, RegisterView,UserViewSet,PropertyLeadViewSet, LeadSourceViewSet , CustomTokenObtainPairView, ProfileView, PropertyViewSet, NeighborhoodViewSet, SavedSearchViewSet, FavoritePropertyViewSet, InquiryViewSet, MortgageCalculatorView, BlogPostViewSet, PropertyShareView, PropertyShareRedirect, PropertyInquiryView, PropertyFilterOptionsView, AdminDashboardView, UserDashboardView, PropertyStatsView, AdminUserManagementViewSet, AdminActionLogViewSet, AgentViewSet, NotificationViewSet
+from .views import PublicPropertyListView, PublicPropertyDetailView, RegisterView,UserViewSet,PropertyLeadViewSet, LeadSourceViewSet , CustomTokenObtainPairView, ProfileView, PropertyViewSet, NeighborhoodViewSet, SavedSearchViewSet, FavoritePropertyViewSet, InquiryViewSet, MortgageCalculatorView, BlogPostViewSet, PropertyShareView, PropertyShareRedirect, PropertyInquiryView, PropertyFilterOptionsView, AdminDashboardView, UserDashboardView, PropertyStatsView, AdminUserManagementViewSet, AdminActionLogViewSet, AgentViewSet, NotificationViewSet, ImageProxyView
 
 router = DefaultRouter()
 router.register(r'properties', PropertyViewSet, basename='property')
@@ -47,4 +47,7 @@ urlpatterns = [
     path('dashboard/admin/', AdminDashboardView.as_view()),
     path('admin/actions/', AdminActionLogViewSet.as_view({'get': 'list'})),
     path('dashboard/user/', UserDashboardView.as_view()),
+
+    # Image proxy for brochure PDF generation (bypasses CORS)
+    path('image-proxy/', ImageProxyView.as_view(), name='image-proxy'),
 ]

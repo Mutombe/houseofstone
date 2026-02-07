@@ -1498,5 +1498,55 @@ class AgentViewSet(viewsets.ModelViewSet):
             'sold_properties': sold_properties,
             'pending_properties': pending_properties,
         }
-        
+
         return Response(stats)
+
+
+class ImageProxyView(APIView):
+    """
+    Proxy endpoint to fetch images from external sources (DigitalOcean Spaces).
+    This bypasses CORS restrictions for PDF brochure generation.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        import requests
+        import base64
+
+        image_url = request.query_params.get('url')
+
+        if not image_url:
+            return Response({'error': 'No URL provided'}, status=400)
+
+        # Only allow fetching from trusted domains
+        allowed_domains = [
+            'hsp-bucket.nyc3.digitaloceanspaces.com',
+            'hsp-bucket.nyc3.cdn.digitaloceanspaces.com',
+            'nyc3.digitaloceanspaces.com',
+        ]
+
+        from urllib.parse import urlparse
+        parsed = urlparse(image_url)
+
+        if not any(domain in parsed.netloc for domain in allowed_domains):
+            return Response({'error': 'Domain not allowed'}, status=403)
+
+        try:
+            response = requests.get(image_url, timeout=30)
+
+            if response.status_code != 200:
+                return Response({'error': f'Failed to fetch image: {response.status_code}'}, status=502)
+
+            # Get content type
+            content_type = response.headers.get('Content-Type', 'image/jpeg')
+
+            # Convert to base64
+            image_base64 = base64.b64encode(response.content).decode('utf-8')
+
+            return Response({
+                'data': f'data:{content_type};base64,{image_base64}',
+                'content_type': content_type,
+            })
+
+        except requests.RequestException as e:
+            return Response({'error': str(e)}, status=502)

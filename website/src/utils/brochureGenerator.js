@@ -10,20 +10,41 @@ const WHITE = [255, 255, 255];
 const LIGHT_GRAY = [245, 245, 245];
 const TEXT_DARK = [30, 41, 59];
 
-// Fetch image as base64
+// API base URL for the image proxy
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://hsp-backend.onrender.com';
+
+// Fetch image as base64 - uses backend proxy for external URLs to bypass CORS
 const fetchImageAsBase64 = async (url) => {
   try {
-    // Handle relative URLs
-    const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
-    const response = await fetch(fullUrl, { mode: 'cors' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    // Handle relative URLs (like /logo.png) - fetch directly
+    if (!url.startsWith('http')) {
+      const fullUrl = `${window.location.origin}${url}`;
+      const response = await fetch(fullUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    // External URLs (DigitalOcean, etc.) - use backend proxy to bypass CORS
+    const proxyUrl = `${API_BASE_URL}/api/image-proxy/?url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
+
+    if (!response.ok) {
+      throw new Error(`Proxy request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return data.data; // Returns the base64 data URL
   } catch (error) {
     console.error('Error fetching image:', url, error);
     return null;
