@@ -31,7 +31,10 @@ const fetchImageAsBase64 = async (url) => {
     }
 
     // External URLs (DigitalOcean, etc.) - use backend proxy to bypass CORS
-    const proxyUrl = `${API_BASE_URL}/api/image-proxy/?url=${encodeURIComponent(url)}`;
+    // Remove trailing slash from API_BASE_URL if present, then add the path
+    const baseUrl = API_BASE_URL.replace(/\/$/, '');
+    const proxyUrl = `${baseUrl}/image-proxy/?url=${encodeURIComponent(url)}`;
+    console.log('Fetching via proxy:', proxyUrl);
     const response = await fetch(proxyUrl);
 
     if (!response.ok) {
@@ -76,7 +79,14 @@ export const generatePropertyBrochure = async (property, getPrimaryAgent, setIsG
 
     // Fetch property images (up to 5)
     const imageUrls = property.images?.slice(0, 5).map(img => img.image) || [];
-    const imagePromises = imageUrls.map(url => fetchImageAsBase64(url));
+    console.log('Image URLs to fetch:', imageUrls);
+
+    const imagePromises = imageUrls.map(async (url, index) => {
+      console.log(`Fetching image ${index + 1}:`, url);
+      const result = await fetchImageAsBase64(url);
+      console.log(`Image ${index + 1} result:`, result ? 'SUCCESS' : 'FAILED');
+      return result;
+    });
     const fetchedImages = await Promise.all(imagePromises);
     const validImages = fetchedImages.filter(img => img !== null);
 

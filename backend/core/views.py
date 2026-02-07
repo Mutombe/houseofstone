@@ -1520,6 +1520,10 @@ class ImageProxyView(APIView):
 
         # Only allow fetching from trusted domains
         allowed_domains = [
+            'hspmedia.sgp1.digitaloceanspaces.com',
+            'hspmedia.sgp1.cdn.digitaloceanspaces.com',
+            'sgp1.digitaloceanspaces.com',
+            # Legacy domains (keep for backwards compatibility)
             'hsp-bucket.nyc3.digitaloceanspaces.com',
             'hsp-bucket.nyc3.cdn.digitaloceanspaces.com',
             'nyc3.digitaloceanspaces.com',
