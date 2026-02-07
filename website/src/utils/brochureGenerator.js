@@ -1,36 +1,22 @@
-// Professional PDF Brochure Generator using jsPDF
-// This generates high-quality brochures with property images from DigitalOcean
+// Professional Real Estate Brochure Generator
+// Matches reference design: image-focused block layout with gold accents
 
 import jsPDF from 'jspdf';
 
-// Color palette
-const COLORS = {
-  primary: '#0f172a',      // Dark navy
-  secondary: '#1e293b',    // Lighter navy
-  gold: '#CBA65F',         // Brand gold
-  goldLight: '#d4b676',    // Lighter gold
-  white: '#ffffff',
-  gray: '#64748b',
-  lightGray: '#f1f5f9',
-  green: '#10b981',
-  text: '#1e293b',
-  textLight: '#475569',
-};
+// Colors
+const GOLD = [203, 166, 95];       // #CBA65F
+const DARK_BLUE = [15, 23, 42];    // #0f172a
+const WHITE = [255, 255, 255];
+const LIGHT_GRAY = [245, 245, 245];
+const TEXT_DARK = [30, 41, 59];
 
-// Convert hex to RGB
-const hexToRgb = (hex) => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : { r: 0, g: 0, b: 0 };
-};
-
-// Fetch image and convert to base64
+// Fetch image as base64
 const fetchImageAsBase64 = async (url) => {
   try {
-    const response = await fetch(url);
+    // Handle relative URLs
+    const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+    const response = await fetch(fullUrl, { mode: 'cors' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const blob = await response.blob();
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -39,35 +25,12 @@ const fetchImageAsBase64 = async (url) => {
       reader.readAsDataURL(blob);
     });
   } catch (error) {
-    console.error('Error fetching image:', error);
+    console.error('Error fetching image:', url, error);
     return null;
   }
 };
 
-// Load logo as base64
-const loadLogo = async () => {
-  try {
-    // Try to load from public folder
-    const response = await fetch('/hsp2.png');
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.error('Error loading logo:', error);
-    return null;
-  }
-};
-
-// Draw rounded rectangle
-const drawRoundedRect = (doc, x, y, width, height, radius, fill = true, stroke = false) => {
-  doc.roundedRect(x, y, width, height, radius, radius, fill ? 'F' : stroke ? 'S' : 'FD');
-};
-
-// Main brochure generator function
+// Main brochure generator
 export const generatePropertyBrochure = async (property, getPrimaryAgent, setIsGenerating) => {
   if (setIsGenerating) setIsGenerating(true);
 
@@ -80,308 +43,312 @@ export const generatePropertyBrochure = async (property, getPrimaryAgent, setIsG
 
     const pageWidth = 210;
     const pageHeight = 297;
-    const margin = 15;
-    const contentWidth = pageWidth - (margin * 2);
+    const margin = 8;
 
-    // Load logo
-    const logoBase64 = await loadLogo();
+    // Fetch logo
+    let logoBase64 = null;
+    try {
+      logoBase64 = await fetchImageAsBase64('/logo.png');
+    } catch (e) {
+      console.log('Logo fetch failed:', e);
+    }
 
-    // Fetch property images (first 4)
-    const imagePromises = property.images?.slice(0, 4).map(img => fetchImageAsBase64(img.image)) || [];
-    const propertyImages = await Promise.all(imagePromises);
-    const validImages = propertyImages.filter(img => img !== null);
+    // Fetch property images (up to 5)
+    const imageUrls = property.images?.slice(0, 5).map(img => img.image) || [];
+    const imagePromises = imageUrls.map(url => fetchImageAsBase64(url));
+    const fetchedImages = await Promise.all(imagePromises);
+    const validImages = fetchedImages.filter(img => img !== null);
 
-    let yPos = 0;
+    console.log(`Fetched ${validImages.length} of ${imageUrls.length} images`);
 
-    // ==================== PAGE 1: COVER ====================
+    let y = margin;
 
-    // Header background
-    const headerColor = hexToRgb(COLORS.primary);
-    doc.setFillColor(headerColor.r, headerColor.g, headerColor.b);
-    doc.rect(0, 0, pageWidth, 95, 'F');
+    // ============ ROW 1: LOGO + HEADER ============
+    const headerHeight = 45;
 
-    // Gold accent line under header
-    const goldColor = hexToRgb(COLORS.gold);
-    doc.setFillColor(goldColor.r, goldColor.g, goldColor.b);
-    doc.rect(0, 95, pageWidth, 3, 'F');
+    // Logo section (left side - white background)
+    doc.setFillColor(...WHITE);
+    doc.rect(margin, y, 60, headerHeight, 'F');
 
-    // Logo (white background box)
+    // Add logo
     if (logoBase64) {
-      doc.setFillColor(255, 255, 255);
-      drawRoundedRect(doc, margin, 12, 50, 25, 3);
       try {
-        doc.addImage(logoBase64, 'PNG', margin + 3, 14, 44, 21);
+        doc.addImage(logoBase64, 'PNG', margin + 5, y + 5, 50, 35);
       } catch (e) {
-        console.log('Logo add failed:', e);
+        // Fallback: draw text
+        doc.setFontSize(16);
+        doc.setTextColor(...GOLD);
+        doc.setFont('helvetica', 'bold');
+        doc.text('HSP', margin + 25, y + 25, { align: 'center' });
       }
     }
 
-    // Tagline
-    doc.setTextColor(goldColor.r, goldColor.g, goldColor.b);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('YOUR PROPERTY, OUR PRIORITY', pageWidth - margin, 25, { align: 'right' });
+    // Header section (right side - gold background)
+    doc.setFillColor(...GOLD);
+    doc.rect(margin + 60, y, pageWidth - margin * 2 - 60, headerHeight, 'F');
 
-    // Property Title
-    doc.setTextColor(255, 255, 255);
+    // "HOUSE FOR SALE" or status text
     doc.setFontSize(28);
+    doc.setTextColor(...DARK_BLUE);
     doc.setFont('helvetica', 'bold');
-    const titleLines = doc.splitTextToSize(property.title || 'Property Brochure', contentWidth);
-    doc.text(titleLines, margin, 52);
+    const statusText = property.category === 'rent' ? 'FOR RENT' : 'FOR SALE';
+    doc.text(statusText, margin + 65, y + 18);
 
-    // Location
-    doc.setFontSize(12);
+    // Property title (truncated if too long)
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(226, 232, 240);
-    doc.text(`📍 ${property.location || 'Location not specified'}`, margin, 70);
+    const titleText = property.title?.substring(0, 40) || 'Premium Property';
+    doc.text(titleText, margin + 65, y + 28);
 
-    // Price and Status
-    doc.setTextColor(goldColor.r, goldColor.g, goldColor.b);
-    doc.setFontSize(32);
+    // Price
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     const priceText = property.price ? `$${parseFloat(property.price).toLocaleString()}` : 'Price on Request';
-    doc.text(priceText, margin, 88);
+    doc.text(priceText, margin + 65, y + 40);
 
-    // Status badge
-    const statusText = (property.status || 'Available').toUpperCase();
-    const greenColor = hexToRgb(COLORS.green);
-    doc.setFillColor(greenColor.r, greenColor.g, greenColor.b);
-    const statusWidth = doc.getTextWidth(statusText) * 0.35 + 16;
-    drawRoundedRect(doc, margin + doc.getTextWidth(priceText) * 0.35 + 10, 78, statusWidth, 12, 6);
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
-    doc.text(statusText, margin + doc.getTextWidth(priceText) * 0.35 + 10 + statusWidth/2, 86, { align: 'center' });
+    y += headerHeight + 3;
 
-    yPos = 108;
+    // ============ ROW 2: MAIN HERO IMAGE ============
+    const heroHeight = 85;
 
-    // ==================== MAIN PROPERTY IMAGE ====================
     if (validImages.length > 0) {
       try {
-        const mainImgHeight = 90;
-        doc.addImage(validImages[0], 'JPEG', margin, yPos, contentWidth, mainImgHeight, undefined, 'MEDIUM');
-        yPos += mainImgHeight + 5;
+        doc.addImage(validImages[0], 'JPEG', margin, y, pageWidth - margin * 2, heroHeight, undefined, 'MEDIUM');
       } catch (e) {
-        console.log('Main image failed:', e);
-        yPos += 10;
+        // Fallback: gray box with text
+        doc.setFillColor(...LIGHT_GRAY);
+        doc.rect(margin, y, pageWidth - margin * 2, heroHeight, 'F');
+        doc.setFontSize(14);
+        doc.setTextColor(150, 150, 150);
+        doc.text('Property Image', pageWidth / 2, y + heroHeight / 2, { align: 'center' });
       }
+    } else {
+      doc.setFillColor(...LIGHT_GRAY);
+      doc.rect(margin, y, pageWidth - margin * 2, heroHeight, 'F');
+      doc.setFontSize(12);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Property Image', pageWidth / 2, y + heroHeight / 2, { align: 'center' });
     }
 
-    // ==================== SECONDARY IMAGES (3 in a row) ====================
-    if (validImages.length > 1) {
-      const smallImgWidth = (contentWidth - 6) / 3;
-      const smallImgHeight = 45;
+    // Location label on hero image
+    doc.setFillColor(0, 0, 0, 0.6);
+    doc.rect(margin, y + heroHeight - 12, pageWidth - margin * 2, 12, 'F');
+    doc.setFontSize(10);
+    doc.setTextColor(...WHITE);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`📍 ${property.location || 'Prime Location'}`, margin + 5, y + heroHeight - 4);
 
-      for (let i = 1; i < Math.min(4, validImages.length); i++) {
+    y += heroHeight + 3;
+
+    // ============ ROW 3: 4 SMALLER IMAGES WITH LABELS ============
+    const smallImgWidth = (pageWidth - margin * 2 - 9) / 4;
+    const smallImgHeight = 40;
+
+    const imageLabels = ['EXTERIOR', 'INTERIOR', 'BEDROOM', 'KITCHEN'];
+
+    for (let i = 0; i < 4; i++) {
+      const x = margin + i * (smallImgWidth + 3);
+      const imgIndex = i + 1; // Start from second image
+
+      if (validImages[imgIndex]) {
         try {
-          const xOffset = margin + (i - 1) * (smallImgWidth + 3);
-          doc.addImage(validImages[i], 'JPEG', xOffset, yPos, smallImgWidth, smallImgHeight, undefined, 'MEDIUM');
+          doc.addImage(validImages[imgIndex], 'JPEG', x, y, smallImgWidth, smallImgHeight, undefined, 'MEDIUM');
         } catch (e) {
-          console.log(`Image ${i} failed:`, e);
+          doc.setFillColor(...LIGHT_GRAY);
+          doc.rect(x, y, smallImgWidth, smallImgHeight, 'F');
         }
+      } else {
+        doc.setFillColor(...LIGHT_GRAY);
+        doc.rect(x, y, smallImgWidth, smallImgHeight, 'F');
       }
-      yPos += smallImgHeight + 10;
+
+      // Label overlay at bottom of each image
+      doc.setFillColor(...GOLD);
+      doc.rect(x, y + smallImgHeight - 8, smallImgWidth, 8, 'F');
+      doc.setFontSize(7);
+      doc.setTextColor(...DARK_BLUE);
+      doc.setFont('helvetica', 'bold');
+      doc.text(imageLabels[i], x + smallImgWidth / 2, y + smallImgHeight - 2, { align: 'center' });
     }
 
-    // ==================== PROPERTY DETAILS BOXES ====================
-    const detailsY = yPos;
-    const boxWidth = (contentWidth - 10) / 3;
-    const boxHeight = 28;
+    y += smallImgHeight + 5;
+
+    // ============ ROW 4: PROPERTY DETAILS GRID ============
+    const detailBoxWidth = (pageWidth - margin * 2 - 15) / 6;
+    const detailBoxHeight = 22;
 
     const details = [
-      { label: 'BEDROOMS', value: property.beds || 'N/A' },
-      { label: 'BATHROOMS', value: property.baths || 'N/A' },
-      { label: 'GARAGE', value: property.garage || 'N/A' },
+      { label: 'BEDS', value: property.beds || '-' },
+      { label: 'BATHS', value: property.baths || '-' },
+      { label: 'GARAGE', value: property.garage || '-' },
+      { label: 'LAND', value: property.sqft || '-' },
+      { label: 'FLOOR', value: property.floor_size || '-' },
+      { label: 'YEAR', value: property.year_built || '-' },
     ];
 
-    details.forEach((detail, index) => {
-      const x = margin + index * (boxWidth + 5);
+    details.forEach((detail, i) => {
+      const x = margin + i * (detailBoxWidth + 3);
 
       // Box background
-      doc.setFillColor(248, 250, 252);
-      drawRoundedRect(doc, x, detailsY, boxWidth, boxHeight, 2);
+      doc.setFillColor(...LIGHT_GRAY);
+      doc.rect(x, y, detailBoxWidth, detailBoxHeight, 'F');
 
-      // Gold top accent
-      doc.setFillColor(goldColor.r, goldColor.g, goldColor.b);
-      doc.rect(x, detailsY, boxWidth, 3, 'F');
-
-      // Label
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(100, 116, 139);
-      doc.text(detail.label, x + boxWidth/2, detailsY + 12, { align: 'center' });
+      // Gold top bar
+      doc.setFillColor(...GOLD);
+      doc.rect(x, y, detailBoxWidth, 3, 'F');
 
       // Value
-      doc.setFontSize(18);
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(15, 23, 42);
-      doc.text(String(detail.value), x + boxWidth/2, detailsY + 23, { align: 'center' });
+      doc.setTextColor(...DARK_BLUE);
+      doc.text(String(detail.value), x + detailBoxWidth / 2, y + 12, { align: 'center' });
+
+      // Label
+      doc.setFontSize(6);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+      doc.text(detail.label, x + detailBoxWidth / 2, y + 18, { align: 'center' });
     });
 
-    // ==================== PAGE 2: DETAILS & CONTACT ====================
-    doc.addPage();
-    yPos = margin;
+    y += detailBoxHeight + 5;
 
-    // More property details
-    const moreDetails = [
-      { label: 'LAND SIZE', value: property.sqft || 'N/A' },
-      { label: 'FLOOR SIZE', value: property.floor_size || 'N/A' },
-      { label: 'YEAR BUILT', value: property.year_built || 'N/A' },
-    ];
+    // ============ ROW 5: ABOUT + CONTACT SECTION ============
+    const bottomSectionHeight = 55;
+    const aboutWidth = (pageWidth - margin * 2) * 0.6;
+    const contactWidth = (pageWidth - margin * 2) * 0.4 - 3;
 
-    moreDetails.forEach((detail, index) => {
-      const x = margin + index * (boxWidth + 5);
-
-      doc.setFillColor(248, 250, 252);
-      drawRoundedRect(doc, x, yPos, boxWidth, boxHeight, 2);
-
-      doc.setFillColor(goldColor.r, goldColor.g, goldColor.b);
-      doc.rect(x, yPos, boxWidth, 3, 'F');
-
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(100, 116, 139);
-      doc.text(detail.label, x + boxWidth/2, yPos + 12, { align: 'center' });
-
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(15, 23, 42);
-      doc.text(String(detail.value), x + boxWidth/2, yPos + 23, { align: 'center' });
-    });
-
-    yPos += boxHeight + 15;
-
-    // ==================== ABOUT THIS PROPERTY ====================
-    // Section title
-    doc.setFontSize(18);
+    // ABOUT THE PROPERTY section
+    // Gold header bar
+    doc.setFillColor(...GOLD);
+    doc.rect(margin, y, aboutWidth, 8, 'F');
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(15, 23, 42);
-    doc.text('About This Property', margin, yPos);
-
-    // Gold underline
-    doc.setFillColor(goldColor.r, goldColor.g, goldColor.b);
-    doc.rect(margin, yPos + 2, 50, 2, 'F');
-
-    yPos += 12;
+    doc.setTextColor(...DARK_BLUE);
+    doc.text('ABOUT THE PROPERTY', margin + 3, y + 5.5);
 
     // Description box
-    const descBoxHeight = 55;
-    doc.setFillColor(248, 250, 252);
-    drawRoundedRect(doc, margin, yPos, contentWidth, descBoxHeight, 3);
-
-    // Gold left border
-    doc.setFillColor(goldColor.r, goldColor.g, goldColor.b);
-    doc.rect(margin, yPos, 3, descBoxHeight, 'F');
+    doc.setFillColor(...WHITE);
+    doc.rect(margin, y + 8, aboutWidth, bottomSectionHeight - 8, 'F');
+    doc.setDrawColor(230, 230, 230);
+    doc.rect(margin, y + 8, aboutWidth, bottomSectionHeight - 8, 'S');
 
     // Description text
-    doc.setFontSize(10);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(71, 85, 105);
-    const descriptionText = property.description || 'No description available.';
-    const descLines = doc.splitTextToSize(descriptionText, contentWidth - 15);
-    doc.text(descLines.slice(0, 8), margin + 8, yPos + 8);
+    doc.setTextColor(...TEXT_DARK);
+    const description = property.description?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || 'Contact us for more details about this property.';
+    const descLines = doc.splitTextToSize(description, aboutWidth - 6);
+    doc.text(descLines.slice(0, 6), margin + 3, y + 14);
 
-    yPos += descBoxHeight + 15;
+    // CONTACT section (right side)
+    const contactX = margin + aboutWidth + 3;
 
-    // ==================== KEY FEATURES ====================
+    // Dark blue background
+    doc.setFillColor(...DARK_BLUE);
+    doc.rect(contactX, y, contactWidth, bottomSectionHeight, 'F');
+
+    // Gold accent bar
+    doc.setFillColor(...GOLD);
+    doc.rect(contactX, y, contactWidth, 3, 'F');
+
+    // Company name
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...GOLD);
+    doc.text('HOUSE OF STONE', contactX + 5, y + 12);
+    doc.text('PROPERTIES', contactX + 5, y + 18);
+
+    // Contact details
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...WHITE);
+
+    const agent = getPrimaryAgent?.(property)?.agent;
+    const agentName = agent?.first_name ? `${agent.first_name} ${agent.surname || ''}` : 'Contact Us';
+    const agentPhone = agent?.cell_number || '+263 867 717 3442';
+    const agentEmail = agent?.email || 'info@hsp.co.zw';
+
+    doc.text(`Agent: ${agentName}`, contactX + 5, y + 26);
+    doc.text(`Phone: ${agentPhone}`, contactX + 5, y + 32);
+    doc.text(`Email: ${agentEmail}`, contactX + 5, y + 38);
+    doc.text('Web: www.hsp.co.zw', contactX + 5, y + 44);
+
+    // Phone number prominent
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...GOLD);
+    doc.text('+263 867 717 3442', contactX + 5, y + 52);
+
+    y += bottomSectionHeight + 3;
+
+    // ============ FOOTER BAR ============
+    doc.setFillColor(...GOLD);
+    doc.rect(margin, y, pageWidth - margin * 2, 6, 'F');
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...DARK_BLUE);
+    doc.text('YOUR PROPERTY, OUR PRIORITY', pageWidth / 2, y + 4, { align: 'center' });
+
+    // ============ PAGE 2: FEATURES (if applicable) ============
     if (property.features && property.features.length > 0) {
+      doc.addPage();
+      y = margin;
+
+      // Header
+      doc.setFillColor(...DARK_BLUE);
+      doc.rect(0, 0, pageWidth, 30, 'F');
+
+      doc.setFillColor(...GOLD);
+      doc.rect(0, 27, pageWidth, 3, 'F');
+
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(15, 23, 42);
-      doc.text('Key Features', margin, yPos);
+      doc.setTextColor(...WHITE);
+      doc.text('KEY FEATURES', margin, 18);
 
-      doc.setFillColor(goldColor.r, goldColor.g, goldColor.b);
-      doc.rect(margin, yPos + 2, 40, 2, 'F');
+      y = 40;
 
-      yPos += 12;
+      // Features grid (2 columns)
+      const featureColWidth = (pageWidth - margin * 2 - 5) / 2;
+      const featureHeight = 10;
 
-      const featureColWidth = (contentWidth - 5) / 2;
-      const featuresPerCol = Math.ceil(Math.min(property.features.length, 8) / 2);
-
-      property.features.slice(0, 8).forEach((feature, index) => {
-        const col = Math.floor(index / featuresPerCol);
-        const row = index % featuresPerCol;
+      property.features.slice(0, 16).forEach((feature, index) => {
+        const col = index % 2;
+        const row = Math.floor(index / 2);
         const x = margin + col * (featureColWidth + 5);
-        const y = yPos + row * 12;
+        const featureY = y + row * (featureHeight + 3);
 
         // Feature box
         doc.setFillColor(240, 253, 244);
-        drawRoundedRect(doc, x, y - 3, featureColWidth, 10, 2);
+        doc.rect(x, featureY, featureColWidth, featureHeight, 'F');
 
-        // Green left border
-        doc.setFillColor(34, 197, 94);
-        doc.rect(x, y - 3, 3, 10, 'F');
+        // Gold left border
+        doc.setFillColor(...GOLD);
+        doc.rect(x, featureY, 3, featureHeight, 'F');
 
-        // Checkmark and text
+        // Feature text
         doc.setFontSize(9);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(22, 101, 52);
-        doc.text(`✓ ${feature.feature || feature}`, x + 6, y + 3);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...TEXT_DARK);
+        const featureText = feature.feature || feature;
+        doc.text(`✓ ${featureText}`, x + 6, featureY + 6.5);
       });
 
-      yPos += featuresPerCol * 12 + 15;
+      // Footer on page 2
+      doc.setFillColor(...DARK_BLUE);
+      doc.rect(0, pageHeight - 20, pageWidth, 20, 'F');
+      doc.setFillColor(...GOLD);
+      doc.rect(0, pageHeight - 20, pageWidth, 2, 'F');
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...GOLD);
+      doc.text('House of Stone Properties', margin, pageHeight - 10);
+
+      doc.setFontSize(8);
+      doc.setTextColor(...WHITE);
+      doc.text('info@hsp.co.zw | +263 867 717 3442 | www.hsp.co.zw', pageWidth - margin, pageHeight - 10, { align: 'right' });
     }
-
-    // ==================== CONTACT OUR AGENT ====================
-    const agent = getPrimaryAgent?.(property)?.agent;
-
-    // Agent section background
-    doc.setFillColor(headerColor.r, headerColor.g, headerColor.b);
-    const agentBoxHeight = 50;
-    drawRoundedRect(doc, margin, yPos, contentWidth, agentBoxHeight, 4);
-
-    // Gold top accent
-    doc.setFillColor(goldColor.r, goldColor.g, goldColor.b);
-    doc.rect(margin, yPos, contentWidth, 3, 'F');
-
-    // Section title
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(goldColor.r, goldColor.g, goldColor.b);
-    doc.text('Contact Our Agent', margin + 10, yPos + 15);
-
-    // Agent details
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(255, 255, 255);
-
-    const agentName = agent?.first_name ? `${agent.first_name} ${agent.surname || ''}` : 'House of Stone Properties';
-    const agentEmail = agent?.email || 'info@hsp.co.zw';
-    const agentPhone = agent?.cell_number || '+263 867 717 3442';
-
-    doc.text(`Name: ${agentName}`, margin + 10, yPos + 26);
-    doc.text(`Email: ${agentEmail}`, margin + 10, yPos + 34);
-    doc.text(`Phone: ${agentPhone}`, margin + contentWidth/2, yPos + 26);
-    doc.text('Office: +263 867 717 3442', margin + contentWidth/2, yPos + 34);
-
-    yPos += agentBoxHeight + 15;
-
-    // ==================== FOOTER ====================
-    // Footer background
-    const footerY = pageHeight - 35;
-    doc.setFillColor(headerColor.r, headerColor.g, headerColor.b);
-    doc.rect(0, footerY, pageWidth, 35, 'F');
-
-    // Gold top line
-    doc.setFillColor(goldColor.r, goldColor.g, goldColor.b);
-    doc.rect(0, footerY, pageWidth, 2, 'F');
-
-    // Company info
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(goldColor.r, goldColor.g, goldColor.b);
-    doc.text('House of Stone Properties', margin, footerY + 12);
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(203, 213, 225);
-    doc.text('Your Property, Our Priority', margin, footerY + 19);
-    doc.text(`Generated on ${new Date().toLocaleDateString()}`, margin, footerY + 26);
-
-    // Contact info (right side)
-    doc.setTextColor(226, 232, 240);
-    doc.text('Email: info@hsp.co.zw', pageWidth - margin, footerY + 12, { align: 'right' });
-    doc.text('Phone: +263 867 717 3442', pageWidth - margin, footerY + 19, { align: 'right' });
-    doc.text('Website: www.hsp.co.zw', pageWidth - margin, footerY + 26, { align: 'right' });
 
     // Save PDF
     const filename = `${(property.title || 'Property').replace(/[^a-z0-9]/gi, '_')}_Brochure.pdf`;
