@@ -11,7 +11,7 @@ const LIGHT_GRAY = [245, 245, 245];
 const TEXT_DARK = [30, 41, 59];
 
 // API base URL for the image proxy
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://hsp-backend.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://houseofstone-backend1.onrender.com/';
 
 // Fetch image as base64 - uses backend proxy for external URLs to bypass CORS
 const fetchImageAsBase64 = async (url) => {
