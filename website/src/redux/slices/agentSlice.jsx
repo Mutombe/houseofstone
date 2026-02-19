@@ -294,15 +294,12 @@ const agentSlice = createSlice({
         state.error = action.payload;
       })
       
-      // Delete/deactivate agent
+      // Delete agent - remove from list
       .addCase(deleteAgent.fulfilled, (state, action) => {
         const { id } = action.payload;
-        const index = state.agents.findIndex(agent => agent.id === id);
-        if (index !== -1) {
-          state.agents[index].is_active = false;
-        }
+        state.agents = state.agents.filter(agent => agent.id !== id);
         if (state.selectedAgent?.id === id) {
-          state.selectedAgent.is_active = false;
+          state.selectedAgent = null;
         }
       })
       

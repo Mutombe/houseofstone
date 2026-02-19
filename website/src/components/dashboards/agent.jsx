@@ -48,6 +48,7 @@ import {
   DollarSign,
   Activity,
   Clock,
+  Settings,
 } from "lucide-react";
 import LeadForm from "./leadform";
 import PropertyAnalyticsModal from "./agentpropertystats";
@@ -58,6 +59,7 @@ import {
   LoadingSpinner,
 } from "../ui/Skeleton";
 import { showSuccess, showError } from "../../redux/slices/toastSlice";
+import { changePassword } from "../../redux/slices/authSlice";
 import { FaRegCircleUser } from "react-icons/fa6";
 import { MdHouseSiding } from "react-icons/md";
 
@@ -187,6 +189,37 @@ const AgentDashboard = () => {
   const [statsPeriod, setStatsPeriod] = useState("7days");
   const [leadStatsPeriod, setLeadStatsPeriod] = useState("30days");
 
+  // Password change state
+  const [passwordData, setPasswordData] = useState({
+    current_password: "",
+    new_password: "",
+    confirm_password: "",
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showPasswords, setShowPasswords] = useState(false);
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      dispatch(showError("New passwords do not match", "Password Error"));
+      return;
+    }
+    if (passwordData.new_password.length < 8) {
+      dispatch(showError("Password must be at least 8 characters", "Password Error"));
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      await dispatch(changePassword(passwordData)).unwrap();
+      dispatch(showSuccess("Password changed successfully!", "Password Updated"));
+      setPasswordData({ current_password: "", new_password: "", confirm_password: "" });
+    } catch (error) {
+      dispatch(showError(error?.error || "Failed to change password", "Password Error"));
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   useEffect(() => {
     dispatch(fetchAgents());
     dispatch(fetchProperties());
@@ -315,6 +348,12 @@ const AgentDashboard = () => {
               onClick={() => setActiveTab("analytics")}
             >
               Analytics
+            </TabButton>
+            <TabButton
+              active={activeTab === "settings"}
+              onClick={() => setActiveTab("settings")}
+            >
+              Settings
             </TabButton>
           </motion.div>
         </div>
@@ -984,6 +1023,78 @@ const AgentDashboard = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </motion.div>
+        )}
+        {/* Settings Tab */}
+        {activeTab === "settings" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-2xl"
+          >
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
+              <div className="p-6 border-b border-white/10">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-[#C9A962]" />
+                  Change Password
+                </h2>
+                <p className="text-sm text-gray-400 mt-1">Update your account password</p>
+              </div>
+              <form onSubmit={handleChangePassword} className="p-6 space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
+                  <input
+                    type={showPasswords ? "text" : "password"}
+                    value={passwordData.current_password}
+                    onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962] focus:ring-1 focus:ring-[#C9A962] transition-all"
+                    placeholder="Enter current password"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                  <input
+                    type={showPasswords ? "text" : "password"}
+                    value={passwordData.new_password}
+                    onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                    required
+                    minLength={8}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962] focus:ring-1 focus:ring-[#C9A962] transition-all"
+                    placeholder="Enter new password (min 8 characters)"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
+                  <input
+                    type={showPasswords ? "text" : "password"}
+                    value={passwordData.confirm_password}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
+                    required
+                    minLength={8}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962] focus:ring-1 focus:ring-[#C9A962] transition-all"
+                    placeholder="Confirm new password"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="agentShowPasswords"
+                    checked={showPasswords}
+                    onChange={() => setShowPasswords(!showPasswords)}
+                    className="rounded border-white/20 bg-white/5 text-[#C9A962] focus:ring-[#C9A962]"
+                  />
+                  <label htmlFor="agentShowPasswords" className="text-sm text-gray-400 cursor-pointer">Show passwords</label>
+                </div>
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="w-full py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {passwordLoading ? "Changing Password..." : "Change Password"}
+                </button>
+              </form>
             </div>
           </motion.div>
         )}

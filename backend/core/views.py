@@ -1363,16 +1363,14 @@ class AgentViewSet(viewsets.ModelViewSet):
     
     def destroy(self, request, *args, **kwargs):
         """
-        Delete an agent (soft delete by setting is_active to False)
+        Delete an agent permanently
         """
         instance = self.get_object()
-        
-        # Soft delete - set is_active to False instead of actual deletion
-        instance.is_active = False
-        instance.save()
-        
+        agent_name = f"{instance.first_name} {instance.surname}"
+        instance.delete()
+
         return Response(
-            {'message': 'Agent deactivated successfully'}, 
+            {'message': f'Agent "{agent_name}" deleted successfully'},
             status=status.HTTP_200_OK
         )
     
@@ -1554,3 +1552,49 @@ class ImageProxyView(APIView):
 
         except requests.RequestException as e:
             return Response({'error': str(e)}, status=502)
+
+
+class ChangePasswordView(APIView):
+    """
+    Allows authenticated users to change their own password.
+    Requires current_password, new_password, and confirm_password.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+
+        if not all([current_password, new_password, confirm_password]):
+            return Response(
+                {'error': 'All fields are required: current_password, new_password, confirm_password'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if new_password != confirm_password:
+            return Response(
+                {'error': 'New passwords do not match'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if len(new_password) < 8:
+            return Response(
+                {'error': 'New password must be at least 8 characters long'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = request.user
+        if not user.check_password(current_password):
+            return Response(
+                {'error': 'Current password is incorrect'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response(
+            {'message': 'Password changed successfully'},
+            status=status.HTTP_200_OK
+        )

@@ -85,6 +85,7 @@ import {
 import { Snackbar, Alert } from "@mui/material";
 import { PropertyForm } from "./propertyForm";
 import { showSuccess, showError } from "../../redux/slices/toastSlice";
+import { changePassword } from "../../redux/slices/authSlice";
 import { MdHouseSiding } from "react-icons/md";
 import { MdOutlineBedroomParent } from "react-icons/md";
 import { PiBathtub } from "react-icons/pi";
@@ -1190,6 +1191,15 @@ const PropertyDashboard = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [agentsSearchTerm, setAgentsSearchTerm] = useState("");
 
+  // Password change state
+  const [passwordData, setPasswordData] = useState({
+    current_password: "",
+    new_password: "",
+    confirm_password: "",
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showPasswords, setShowPasswords] = useState(false);
+
   // Confirmation modal state
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -1549,6 +1559,28 @@ const PropertyDashboard = () => {
 
   const showPropertyAnalytics = (property) => {
     setAnalyticsProperty(property);
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      dispatch(showError("New passwords do not match", "Password Error"));
+      return;
+    }
+    if (passwordData.new_password.length < 8) {
+      dispatch(showError("Password must be at least 8 characters", "Password Error"));
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      await dispatch(changePassword(passwordData)).unwrap();
+      dispatch(showSuccess("Password changed successfully!", "Password Updated"));
+      setPasswordData({ current_password: "", new_password: "", confirm_password: "" });
+    } catch (error) {
+      dispatch(showError(error?.error || "Failed to change password", "Password Error"));
+    } finally {
+      setPasswordLoading(false);
+    }
   };
 
   const initialFormState = {
@@ -2108,6 +2140,13 @@ const PropertyDashboard = () => {
             onClick={() => setActiveTab("stats")}
             collapsed={sidebarCollapsed}
           />
+          <SidebarItem
+            icon={Settings}
+            label="Settings"
+            active={activeTab === "settings"}
+            onClick={() => setActiveTab("settings")}
+            collapsed={sidebarCollapsed}
+          />
         </div>
 
         {/* User Profile */}
@@ -2144,6 +2183,7 @@ const PropertyDashboard = () => {
                 {activeTab === "agents" && "Agents"}
                 {activeTab === "notifications" && "Notifications"}
                 {activeTab === "stats" && "Statistics"}
+                {activeTab === "settings" && "Settings"}
               </h1>
               <p className="text-xs sm:text-sm text-gray-400 mt-0.5 sm:mt-1 flex items-center gap-1 sm:gap-2">
                 <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -3151,6 +3191,75 @@ const PropertyDashboard = () => {
           {/* Notifications Tab */}
           {activeTab === "notifications" && (
             <NotificationPanel maxHeight="max-h-[calc(100vh-280px)]" />
+          )}
+
+          {/* Settings Tab */}
+          {activeTab === "settings" && (
+            <div className="max-w-2xl">
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
+                <div className="p-6 border-b border-white/10">
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Settings className="w-5 h-5 text-[#C9A962]" />
+                    Change Password
+                  </h2>
+                  <p className="text-sm text-gray-400 mt-1">Update your account password</p>
+                </div>
+                <form onSubmit={handleChangePassword} className="p-6 space-y-5">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
+                    <input
+                      type={showPasswords ? "text" : "password"}
+                      value={passwordData.current_password}
+                      onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
+                      required
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962] focus:ring-1 focus:ring-[#C9A962] transition-all"
+                      placeholder="Enter current password"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                    <input
+                      type={showPasswords ? "text" : "password"}
+                      value={passwordData.new_password}
+                      onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                      required
+                      minLength={8}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962] focus:ring-1 focus:ring-[#C9A962] transition-all"
+                      placeholder="Enter new password (min 8 characters)"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
+                    <input
+                      type={showPasswords ? "text" : "password"}
+                      value={passwordData.confirm_password}
+                      onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
+                      required
+                      minLength={8}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#C9A962] focus:ring-1 focus:ring-[#C9A962] transition-all"
+                      placeholder="Confirm new password"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="showPasswords"
+                      checked={showPasswords}
+                      onChange={() => setShowPasswords(!showPasswords)}
+                      className="rounded border-white/20 bg-white/5 text-[#C9A962] focus:ring-[#C9A962]"
+                    />
+                    <label htmlFor="showPasswords" className="text-sm text-gray-400 cursor-pointer">Show passwords</label>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={passwordLoading}
+                    className="w-full py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {passwordLoading ? "Changing Password..." : "Change Password"}
+                  </button>
+                </form>
+              </div>
+            </div>
           )}
         </main>
       </div>

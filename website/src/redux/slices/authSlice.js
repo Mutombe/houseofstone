@@ -93,6 +93,20 @@ export const resendVerificationEmail = createAsyncThunk(
   }
 );
 
+export const changePassword = createAsyncThunk(
+  "auth/changePassword",
+  async (passwordData, { rejectWithValue }) => {
+    try {
+      const response = await api.post("/change-password/", passwordData);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data || { error: "Failed to change password" }
+      );
+    }
+  }
+);
+
 export const refreshTokens = async (refreshToken) => {
   const response = await api.post("auth/refresh/", { refresh: refreshToken });
   return {

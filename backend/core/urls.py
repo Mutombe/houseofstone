@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import PublicPropertyListView, PublicPropertyDetailView, RegisterView,UserViewSet,PropertyLeadViewSet, LeadSourceViewSet , CustomTokenObtainPairView, ProfileView, PropertyViewSet, NeighborhoodViewSet, SavedSearchViewSet, FavoritePropertyViewSet, InquiryViewSet, MortgageCalculatorView, BlogPostViewSet, PropertyShareView, PropertyShareRedirect, PropertyInquiryView, PropertyFilterOptionsView, AdminDashboardView, UserDashboardView, PropertyStatsView, AdminUserManagementViewSet, AdminActionLogViewSet, AgentViewSet, NotificationViewSet, ImageProxyView
+from .views import PublicPropertyListView, PublicPropertyDetailView, RegisterView,UserViewSet,PropertyLeadViewSet, LeadSourceViewSet , CustomTokenObtainPairView, ProfileView, PropertyViewSet, NeighborhoodViewSet, SavedSearchViewSet, FavoritePropertyViewSet, InquiryViewSet, MortgageCalculatorView, BlogPostViewSet, PropertyShareView, PropertyShareRedirect, PropertyInquiryView, PropertyFilterOptionsView, AdminDashboardView, UserDashboardView, PropertyStatsView, AdminUserManagementViewSet, AdminActionLogViewSet, AgentViewSet, NotificationViewSet, ImageProxyView, ChangePasswordView
 
 router = DefaultRouter()
 router.register(r'properties', PropertyViewSet, basename='property')
@@ -50,4 +50,7 @@ urlpatterns = [
 
     # Image proxy for brochure PDF generation (bypasses CORS)
     path('image-proxy/', ImageProxyView.as_view(), name='image-proxy'),
+
+    # Password change
+    path('change-password/', ChangePasswordView.as_view(), name='change-password'),
 ]
