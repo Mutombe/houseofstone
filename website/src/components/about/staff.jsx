@@ -28,14 +28,6 @@ const OurStaff = () => {
       approach: "Provides exceptional client care while guiding clients through the housing market"
     },
     {
-      name: "Arthur Tumbwe",
-      position: "Executive Personal Assistant to CEO",
-      experience: "Over a decade in commercial industry",
-      passion: "Sustainable business growth and innovation, transforming business and technology into ground-breaking solutions",
-      activities: "Dedicated mentor and speaker, hiking, playing chess, reading science books, learning car mechanics",
-      philosophy: "Encourages aspiring creators to embrace their unique talents and voices"
-    },
-    {
       name: "Sarah Mugwenhi",
       position: "Administrator",
       education: "Special Honours Degree in Monitoring and Evaluation (2.1 - Lupane State University), Bachelor of Arts in Development Studies Honours Degree (2.1 - Midlands State University)",
