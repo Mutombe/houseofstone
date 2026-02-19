@@ -370,11 +370,9 @@ USE_SPACES = os.environ.get('USE_SPACES', 'True').lower() == 'true'
 if USE_SPACES:
     # Static files
     STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
-    STATICFILES_STORAGE = 'dospace.storage.StaticStorage'
 
     # Media files
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
-    DEFAULT_FILE_STORAGE = 'dospace.storage.MediaStorage'
 
     # Storage backends configuration (Django 4.2+)
     STORAGES = {

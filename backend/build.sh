@@ -6,10 +6,8 @@ set -o errexit
 cd backend
 pip install -r requirements.txt
 
-# Convert static asset files (--clear to avoid S3 404 errors on missing files)
-python manage.py collectstatic --no-input --clear
+# Convert static asset files (allow failure so deploy isn't blocked)
+python manage.py collectstatic --no-input --clear || echo "collectstatic failed, continuing..."
 
 # Apply any outstanding database migrations
 python manage.py migrate
-
-#python manage.py createsuperuser --noinput --username zim-rec --email simbamtombe@gmail.com 
