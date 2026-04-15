@@ -100,8 +100,10 @@ class Property(models.Model):
     ]
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, default='')
-    price = models.DecimalField(max_digits=12, decimal_places=2)
-    location = models.CharField(max_length=200)
+    # Nullable so unpublished drafts can be saved without a price set yet.
+    price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    # Blank-allowed so drafts can be saved before location is finalized.
+    location = models.CharField(max_length=200, blank=True, default='')
     property_type = models.CharField(max_length=20, choices=PROPERTY_TYPES)
     category = models.CharField(max_length=20, choices=CATEGORY_TYPES, default='sale')
     

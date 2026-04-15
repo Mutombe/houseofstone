@@ -618,11 +618,20 @@ export const PropertyForm = ({
     setIsSubmitting(true);
     setFieldErrors({}); // Clear previous errors
 
+    // The "Save as Draft" button posts with name="save-draft" and
+    // formNoValidate so admins can save partial work. Force is_published
+    // off in that path regardless of the toggle state.
+    const submitter = e.nativeEvent?.submitter;
+    const saveAsDraft = submitter?.name === "save-draft";
+
     const propertyFormData = new FormData();
 
     const fieldsToProcess = {
       ...formData,
-      price: parseFloat(formData.price),
+      is_published: saveAsDraft ? false : formData.is_published,
+      price: formData.price === "" || formData.price == null
+        ? null
+        : parseFloat(formData.price),
       beds: formData.beds ? parseInt(formData.beds) : null,
       baths: formData.baths ? parseInt(formData.baths) : null,
       area_measurement: formData.area_measurement ? parseFloat(formData.area_measurement) : null,
@@ -1351,6 +1360,20 @@ export const PropertyForm = ({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
+                    name="save-draft"
+                    formNoValidate
+                    disabled={loading}
+                    className="px-6 py-3 bg-white/10 border border-white/20 text-white font-medium rounded-xl hover:bg-white/15 transition-all flex items-center gap-2 disabled:opacity-50"
+                    title="Save without publishing — required fields can be filled in later."
+                  >
+                    <EyeOff className="w-5 h-5" />
+                    Save as Draft
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    name="publish"
                     disabled={loading}
                     className="px-6 py-3 bg-gradient-to-r from-[#C9A962] to-[#B8985A] text-[#0A1628] font-semibold rounded-xl hover:shadow-lg hover:shadow-[#C9A962]/25 transition-all flex items-center gap-2 disabled:opacity-50"
                   >
@@ -1362,7 +1385,11 @@ export const PropertyForm = ({
                     ) : (
                       <>
                         <IoCheckmarkDoneCircleOutline className="w-5 h-5" />
-                        {currentForm === "edit" ? "Update Property" : "Add Property"}
+                        {currentForm === "edit"
+                          ? selectedProperty?.is_published === false
+                            ? "Publish"
+                            : "Update Property"
+                          : "Add Property"}
                       </>
                     )}
                   </motion.button>

@@ -86,11 +86,20 @@ def get_admin_emails():
 def property_created_notification(sender, instance, created, **kwargs):
     """Send notification when a new property is created"""
     if created:
+        # Drafts shouldn't notify anyone — they're not visible to users yet.
+        if not instance.is_published:
+            return
+
+        if instance.price is not None:
+            message = f'Property "{instance.title}" has been listed for ${instance.price:,.2f}'
+        else:
+            message = f'Property "{instance.title}" has been listed'
+
         # Create in-app notification
         Notification.objects.create(
             notification_type='property_created',
             title='New Property Listed',
-            message=f'Property "{instance.title}" has been listed for ${instance.price:,.2f}' if instance.price else f'Property "{instance.title}" has been listed',
+            message=message,
             data={
                 'property_id': instance.id,
                 'property_title': instance.title,
