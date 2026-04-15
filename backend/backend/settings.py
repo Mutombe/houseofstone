@@ -204,6 +204,14 @@ DEFAULT_FROM_EMAIL = 'HSP <sales@hsp.co.zw>'
 SERVER_EMAIL = 'sales@hsp.co.zw'  # For error notifications
 SITE_NAME = "House of Stone Properties"
 
+# Cap SMTP socket wait so a slow/unreachable mail server can't stall a worker.
+EMAIL_TIMEOUT = 5
+
+# Master switch for transactional emails fired from signals. Off by default
+# because the sends are synchronous — the request waits for each SMTP call.
+# Turn back on when a real background worker is in place.
+NOTIFICATION_EMAILS_ENABLED = False
+
 # Celery settings for async email sending (optional but recommended)
 CELERY_BEAT_SCHEDULE = {
     'check-property-alerts': {

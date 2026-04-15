@@ -33,29 +33,34 @@ ADMIN_EMAILS = ['admin@zim-rec.co.zw','simbamtombe@gmail.com']
 # Email template rendering helper
 def send_notification_email(subject, template_name, context, recipient_list, from_email=None):
     """
-    Send HTML email with fallback to plain text
+    Send HTML email with fallback to plain text.
+
+    Sync SMTP calls block the request (2–10s each) and we have no background
+    worker, so this is gated on settings.NOTIFICATION_EMAILS_ENABLED. Flip
+    that on once a worker (Celery + broker) is available.
     """
+    if not getattr(settings, 'NOTIFICATION_EMAILS_ENABLED', False):
+        return False
+
     try:
         if not from_email:
             from_email = settings.DEFAULT_FROM_EMAIL
-        
-        # Render HTML template
+
         html_content = render_to_string(f'emails/{template_name}.html', context)
         text_content = strip_tags(html_content)
-        
-        # Create email message
+
         msg = EmailMultiAlternatives(
             subject=subject,
             body=text_content,
             from_email=from_email,
-            to=recipient_list
+            to=recipient_list,
         )
         msg.attach_alternative(html_content, "text/html")
-        msg.send()
-        
+        msg.send(fail_silently=True)
+
         logger.info(f"Email sent successfully: {subject} to {recipient_list}")
         return True
-        
+
     except Exception as e:
         logger.error(f"Failed to send email: {subject} - Error: {str(e)}")
         return False
@@ -616,7 +621,10 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
 
 
-@receiver(post_save, sender=PropertyImage)
+# Watermarking is disabled for now — the download/re-upload round-trip to
+# DigitalOcean Spaces on every image save was adding 5–20s per image to the
+# request. Re-enable by putting `@receiver(post_save, sender=PropertyImage)`
+# back above this function and moving the work to a background worker.
 def add_watermark_to_image(sender, instance, created, **kwargs):
     """
     Signal to add watermark to property images after they're saved.
