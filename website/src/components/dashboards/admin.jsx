@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import StatisticsDashboard from "./stats";
 import NotificationPanel from "./NotificationPanel";
@@ -1153,6 +1154,8 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, confirm
 
 const PropertyDashboard = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const properties = useSelector((state) => state.properties?.adminProperties);
   const pagination = useSelector(selectAdminPagination);
   const loadingStatus = useSelector((state) => state.properties.status);
@@ -1161,6 +1164,18 @@ const PropertyDashboard = () => {
   const [analyticsProperty, setAnalyticsProperty] = useState(null);
   const error = useSelector((state) => state.properties.error);
   const user = useSelector((state) => state.auth.user);
+
+  // Kick unauthenticated users off the admin page — catches logout while
+  // the dashboard is open and direct visits without a session.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
   const adminStats = useSelector((state) => state.admin.stats);
   const users = useSelector((state) => state.user.list);
   const usersStatus = useSelector((state) => state.user.status);
